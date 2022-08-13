@@ -228,7 +228,7 @@ int sys_syscall(CTXTdeclc int callno)
   }
   case SYS_create: {
     // TES: need to use different macro forms with clang when updating the POSIX vzaersion
-#if defined(DARWIN)
+#if defined(DARWIN) || defined(__NetBSD__)
     result = open(ptoc_longstring(CTXTc 3),O_CREAT|O_EXCL,S_IRUSR|S_IWUSR);
 #else
     result = open(ptoc_longstring(CTXTc 3),O_CREAT|O_EXCL,S_IREAD|S_IWRITE);

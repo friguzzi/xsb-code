@@ -1000,7 +1000,7 @@ fi
 # xsbpy package
 if test -d "$topdir/packages/xsbpy"; then
     AC_OUTPUT([
-    '"${prefix}/packages/xsbpy/configvars.sh"':'"${prefix}/packages/xsbpy/configvars.in"'
+    '"${topdir}/packages/xsbpy/configvars.sh"':'"${topdir}/packages/xsbpy/configvars.in"'
     ])
 
     cd "$topdir/packages/xsbpy"
@@ -1926,6 +1926,8 @@ windows/xsb_config.h:windows/def_config.in
 windows/xsb_debug.h:def_debug.in
 windows64/xsb_config.h:windows64/def_config.in
 windows64/xsb_debug.h:def_debug.in
+windows64arm/xsb_config.h:windows64arm/def_config.in
+windows64arm/xsb_debug.h:def_debug.in
 '"${arch_config_prefix}/xsb_debug.h"':def_debug.in])
 
 
@@ -1938,17 +1940,19 @@ AC_OUTPUT([ '"${arch_config_prefix}/topMakefile"':topMakefile.in
         '"${arch_config_file}"':xsb_configuration.in
 	windows/xsb_configuration.P:windows/xsb_configuration.in
 	windows64/xsb_configuration.P:windows64/xsb_configuration.in
+	windows64arm/xsb_configuration.P:windows64arm/xsb_configuration.in
         makexsb:makexsb.in
         '"${scriptdir}/chr_pp${config_tag}"':chr_pp.in
         '"${scriptdir}/xsb${config_tag}"':xsb.in
         '"${scriptdir}/xsb.bat"':xsb.bat.in
         '"${scriptdir}/xsb64.bat"':xsb64.bat.in
+        '"${scriptdir}/xsb64arm.bat"':xsb64arm.bat.in
         '"${arch_config_prefix}/banner.msg"':banner.in
         windows/banner.msg:windows/banner.in
-        windows64/banner.msg:windows64/banner.in
+        windows64arm/banner.msg:windows64arm/banner.in
         windows/MSVC_mkfile.mak:windows/MSVC_mkfile.in
-        windows64/MSVC_mkfile.mak:windows64/MSVC_mkfile.in
-        '"${prefix}/packages/xmc/xmc-gui"':xmc-gui.in
+        windows64arm/MSVC_mkfile.mak:windows64arm/MSVC_mkfile.in
+        '"${topdir}/packages/xmc/xmc-gui"':xmc-gui.in
         ])
 
 chmod 644 "${arch_config_file}"
