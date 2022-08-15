@@ -3174,7 +3174,7 @@ A PDB term is automatically interned (or hash-consed) by all
 predicates operating on this data type, i.e., it is copied to a global
 space where all sub-terms are stored only once.  PDBs are then
 accessed through their ``names,'' which are Prolog atoms that encode
-the terms addresses in the global space.  (See {\tt term\_name/2}.)
+the terms' addresses in the global space.  (See {\tt term\_name/2}.)
 Only these atomic names are passed through the Prolog program that
 uses these PDBs, so they can be tabled efficiently.
 
