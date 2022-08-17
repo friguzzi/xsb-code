@@ -469,7 +469,7 @@ push_current_vcpp(MSVC_version) :-
     push_current_vcpp(MSVC_version,HostCpu).
 
 pop_current_vcpp :-
-    retract(push_current_vcpp(_,_)),
+    retract(user_current_vcpp(_,_)),
     !.
 
 escape_path(Path,Path) :-
