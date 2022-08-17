@@ -1313,10 +1313,14 @@ You can find the location of that file by running the query
 \end{verbatim}
 %% 
 For example,
+\small
 \begin{verbatim}
 :- export msvc_spec/3.
-msvc_spec(vcpp_ce81, x64, 'vcvarsall.bat x64 8.1').
+msvc_spec(vcpp_ce81, x64, 
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\
+\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64 8.1').
 \end{verbatim}
+\normalsize
 indicates that for the {\tt x64} cpu type, the indicated command should
 be used to set the necessary environment variables.  If such a fact is
 defined, the (first) one with the cpu type matching the cpu type of
