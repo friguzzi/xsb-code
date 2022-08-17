@@ -62,7 +62,10 @@
    %% Add the $USER_HOME/.xsb/config/<arch> directory -- the place for
    %% dynamically compiles *.so files and similar stuff.
    xsb_configuration(user_config_libdir, Libdir5),
-   assert(library_directory(Libdir5)).
+   assert(library_directory(Libdir5)),
+   %% Add the $USER_HOME/.xsb/ directory
+   xsb_configuration(user_auxdir, Libdir6),
+   assert(library_directory(Libdir6)).
 
 
 /* this will go away in the future; its purpose is to make sure that
