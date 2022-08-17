@@ -321,17 +321,34 @@ be moved.
 \index{xsbrc.P initialization file} 
 \subsubsection{A user's configuration file: {\tt xsbrc.P}}
 
+The user's configuration file  \texttt{xsbrc.P} 
+is loaded by XSB at initialization time
+and thus it can be used to load and execute user-provided XSB statements
+just before XSB is ready to issue the first user prompt.
+The directory of that file can be found by executing the following query at
+XSB prompt:
+%% 
+\begin{verbatim}
+| ?- xsb_configuration(user_auxdir, UsrAuxDir).
+UsrAuxDir = /home/me/.xsb
+yes
+\end{verbatim}
+Therefore, here the user configuration file is
+\texttt{/home/me/.xsb/xsbrc.P}. 
+
 Returning to the previous example, executing the two directives causes
 the user's home directory to be searched first, then {\tt
   "/usr/lib/xsbprolog/"}, then XSB's system library directories, and
 finally the current working directory.  Although these directives
-byexecuting the directives at the command line or by loading a file
-with these directives, it can also be performed automatically whenever
-XSB is started by using an {\tt .xsb/xsbrc.P} file.
+can be executed at command line or by loading a file
+with these directives, the same can be performed automatically whenever
+XSB is started by putting these directives in the user configuration
+file.
 
 %Xsb also uses {\tt library\_directory/1} for internal
 %purposes.  
-This file works as follows.  Before the user's {\verb|.xsb/xsbrc.P|}
+This file works as follows.  Before the user's {\verb|xsbrc.P|}
+file
 is consulted, XSB puts both the {\tt packages} directory and the
 directory \verb|.xsb/config/$CONFIGURATION| on the library search
 path.  The directory \verb'.xsb/config/$CONFIGURATION' is used to
@@ -348,12 +365,12 @@ If a user wished, say, to search the current working directory {\em
 \begin{verbatim}
              :- add_lib_dir(a('./')).
 \end{verbatim}
-to her {\verb|.xsb/xsbrc.P|} file (or anywhere else).  The file
-{\verb|.xsb/xsbrc.P|} is not limited to setting the library search
+to her {\verb|xsbrc.P|} file (or anywhere else).  The file
+{\verb|xsbrc.P|} is not limited to setting the library search
 path.  In fact, arbitrary Prolog code can go there so that XSB can be
 initialized in any manner desired.
 
-We emphasize that in the presence of a {\verb|.xsb/xsbrc.P|} file {\em
+We emphasize that in the presence of a {\verb|xsbrc.P|} file {\em
 it is the user's responsibility to avoid module name clashes with
 modules in XSB's system library directories}.  Such name clashes can
 cause unexpected behavior as system code may try to load a user's
