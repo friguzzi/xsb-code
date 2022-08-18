@@ -422,16 +422,15 @@ get_MSVC_env_script(Script) :-
     %% the user can alter the current vcpp using
     %% foreign:push_current_vcpp/1/2 and foreign:pop_current_vcpp/0.
     current_vcpp(MSVC_version, HostCpu),
-    (predicate_defined(xsbrc:msvc_spec(_,_,_))
-    -> once(msvc_spec(MSVC_version,HostCpu,Script)),
-       atom(Script)
-    ;  shell_to_list('where vcvarsall.bat',Out,_Err,Res),
-       (Res =:= 0,
-	Out = [Out1|_],
-	concat_atom(Out1,' ',OutA),
-	str_match(':\\Program Files',OutA,forward,_,_)
-        -> concat_atom(['vcvarsall.bat ',HostCpu],Script)
-        ;  misc_error('Cannot find vcvarsall.bat script to set environment variables.
+    (catch(once(msvc_spec(MSVC_version,HostCpu,Script)),_Error,fail)
+     -> atom(Script)
+     ;  shell_to_list('where vcvarsall.bat',Out,_Err,Res),
+	(Res =:= 0,
+	 Out = [Out1|_],
+	 concat_atom(Out1,' ',OutA),
+	 str_match(':\\Program Files',OutA,forward,_,_)
+          -> concat_atom(['vcvarsall.bat ',HostCpu],Script)
+          ;  misc_error('Cannot find vcvarsall.bat script to set environment variables.
     See XSB Programmer''s Manual, Volume 1, Chapter 12.6 for ways to fix this.')
        )
     ).
@@ -456,8 +455,7 @@ push_current_vcpp(MSVC_version,HostCpu) :-
     asserta(user_current_vcpp(MSVC_version,HostCpu)).
 
 check_msvc_spec_args(MSVC_version,HostCpu) :-
-    (predicate_defined(xsbrc:msvc_spec(_,_,_)),
-     msvc_spec(MSVC_version,HostCpu,_),
+    (catch(msvc_spec(MSVC_version,HostCpu,_),_Error,fail),
      atom(HostCpu), atom(MSVC_version)
      -> true
      ;  misc_error(('(push_current_vcpp/2): Arguments ',MSVC_version,HostCpu,

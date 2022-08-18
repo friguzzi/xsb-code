@@ -60,13 +60,13 @@ shell(Cmd, ErrCode) :- shell(Cmd, none, none, none, ErrCode).
 :- mode shell(+).
 shell(Cmd) :- shell(Cmd, none, none, none, _).
 
-:- mode shell_to_list(+,+,-).
+:- mode shell_to_list(+,-,-).
 shell_to_list(Cmd, List,ErrCode) :- 
 	shell(Cmd, none, Output, none, ErrCode),
  	file_to_list(Output,List),
 	close(Output).
 
-:- mode shell_to_list(+,+,+,-).
+:- mode shell_to_list(+,-,-,-).
 shell_to_list(Cmd, OList,EList,ErrCode) :- 
 	shell(Cmd, none, Ostr, Estr, ErrCode),
  	file_to_list(Ostr,OList),

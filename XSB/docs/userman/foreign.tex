@@ -1303,28 +1303,28 @@ special libraries.
 If your version of MSVC does not support environment setting by {\tt
   vcvarsall.bat} or you want a different setting from the default
 above, you can define {\em and export} a predicate {\tt
-  msvc\_spec(Name,CpuType,VCVarScript)} in the \texttt{xsbrc.P} file 
-with facts that provide the vcvar-setting command for a given cpu
-type.
-You can find the location of that file by running the query
+  msvc\_spec(Name,CpuType,VCVarScript)} in a file named
+\texttt{~\\.xsb\\msvc\_spec.P} with facts that provide the
+vcvar-setting command for a given cpu type.  You can find the location
+of the {\tt .xsb} directory that must contain the {\tt msvc\_spec.P}
+file by running the query
 %% 
 \begin{verbatim}
-| ?- xsb_configuration(user_auxdir, Home).
+| ?- xsb_configuration(user_auxdir, AuxDir).
 \end{verbatim}
 %% 
 For example,
-\small
 \begin{verbatim}
 :- export msvc_spec/3.
 msvc_spec(vcpp_ce81, x64, 
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\
+          '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\
 \\VC\\Auxiliary\\Build\\vcvarsall.bat" x64 8.1').
 \end{verbatim}
-\normalsize
-indicates that for the {\tt x64} cpu type, the indicated command should
-be used to set the necessary environment variables.  If such a fact is
-defined, the (first) one with the cpu type matching the cpu type of
-the running XSB will be used.
+indicates that for the {\tt x64} cpu type, the indicated
+command should be used to set the necessary environment variables.  If
+such a fact is defined, the (first) one with the cpu type matching the
+cpu type of the running XSB will be used.  Multiple facts may be given
+for various cpus and installations.
 
 You may also use {\tt push\_current\_vcpp/1/2} and {\tt
   pop\_current\_vcpp/0} at runtime to cause the auto-compilation to
