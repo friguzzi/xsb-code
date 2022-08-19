@@ -318,22 +318,39 @@ filename of XSB code files, and allowing directories of libraries to
 be moved.
 \end{description}
 
-\index{xsbrc.P initialization file} 
-\subsubsection{A user's configuration file: {\tt xsbrc.P}}
+\index{.xsb/ configuration directory}
+\subsubsection{The user's configuration directory: {\tt .xsb/}}
+\label{sec-user-config-dir}
 
-The user's configuration file  \texttt{xsbrc.P} 
-is loaded by XSB at initialization time
-and thus it can be used to load and execute user-provided XSB statements
-just before XSB is ready to issue the first user prompt.
-The directory of that file can be found by executing the following query at
-XSB prompt:
+The user's configuration directory can be found by running the query
+\texttt{xsb\_configuration(user\_auxdir,UsrAuxDir)}, e.g.,  
 %% 
 \begin{verbatim}
 | ?- xsb_configuration(user_auxdir, UsrAuxDir).
 UsrAuxDir = /home/me/.xsb
 yes
 \end{verbatim}
-Therefore, here the user configuration file is
+%%
+Since this directory is automatically on the XSB's search path,
+it is a good place
+to keep small custom modules
+that might be used by many programs of the user. One such shared file is
+\texttt{xsbrc.P}, the user's initialization file, described next.
+Another is \texttt{msvc\_spec.P} described in the Section~\ref{foreign}
+on foreign language interface.
+The user is free to place additional shared files in this directory.
+
+
+\index{xsbrc.P initialization file} 
+\subsubsection{The user's initialization file: {\tt xsbrc.P}}
+
+The user's initialization file  \texttt{xsbrc.P} 
+lives in the user's configuration directory described above. It
+is loaded by XSB into \texttt{usermod}  at initialization time
+and thus it can be used to load and execute user-provided XSB statements
+just before XSB is ready to issue the first user prompt.
+If the user's configuration directory is \texttt{/home/me/.xsb}, as above,
+then the XSB initialization file would be
 \texttt{/home/me/.xsb/xsbrc.P}. 
 
 Returning to the previous example, executing the two directives causes
@@ -342,7 +359,7 @@ the user's home directory to be searched first, then {\tt
 finally the current working directory.  Although these directives
 can be executed at command line or by loading a file
 with these directives, the same can be performed automatically whenever
-XSB is started by putting these directives in the user configuration
+XSB is started by putting these directives in the initialization
 file.
 
 %Xsb also uses {\tt library\_directory/1} for internal
