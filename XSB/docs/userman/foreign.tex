@@ -1295,6 +1295,9 @@ setting script, {\tt vcvarsall.bat}\footnote{
   \texttt{C:$\backslash$Program Files (x86)$\backslash$Microsoft Visual Studio$\backslash$20XX$\backslash$Community$\backslash$VC$\backslash$Auxiliary$\backslash$Build$\backslash$}
   \\
   where 20XX is the issue year of the particular MS Studio.
+  Beginning with 2022, the directory is
+  \\
+  \texttt{C:$\backslash$Program Files$\backslash$Microsoft Visual Studio$\backslash$20XX$\backslash$Community$\backslash$VC$\backslash$Auxiliary$\backslash$Build$\backslash$}
   }
 with a parameter of the xsb
 configuration cpu flag, commonly {\tt x64} or {\tt x86}.  For this
@@ -1325,6 +1328,9 @@ For example, the msvc\_config.P file might contain:
 \begin{verbatim}
 :- export msvc_env/2.
 :- dynamic msvc_env/2.
+msvc_env(msvc2022,
+          '"C:\\Program Files\\Microsoft Visual Studio\\2022\\Community
+\\VC\\Auxiliary\\Build\\vcvarsall.bat" x64').
 msvc_env(ver_8,
           '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community
 \\VC\\Auxiliary\\Build\\vcvarsall.bat" x64 8.1').
@@ -1416,7 +1422,7 @@ can be used by code that uses either the lower- or higher-level
 interface.
 
 \begin{description}
-\ourCitem{void xsb\_domain\_error(CTXTdeclc char *valid\_domain,Cell culprit,char *pred,int arity,int arg)}{xsb\_domain\_error}
+\ourCitem{\small void xsb\_domain\_error(CTXTdeclc char *valid\_domain,Cell culprit,char *pred,int arity,int arg)}{xsb\_domain\_error}
 %
 Used to throw an ISO-style domain error from foreign code, indicating
 that {\tt culprit} is not in domain {\tt valid\_domain} in argument
@@ -1439,7 +1445,7 @@ in {\tt atom\_length/2} gives rise to the behavior
 
 %----------------
 
-\ourCitem{void xsb\_existence\_error(CTXTdeclc char *objType,Cell culprit,char *pred,int arity,int arg)}{xsb\_existence\_error}
+\ourCitem{\small void xsb\_existence\_error(CTXTdeclc char *objType,Cell culprit,char *pred,int arity,int arg)}{xsb\_existence\_error}
 %
 Used to throw an ISO-style existence error from foreign code,
 indicating that an object {\tt culprit} of type {\tt objType} does not
@@ -1491,7 +1497,7 @@ Used to throw a non ISO-error from foreign code, printing {\tt
 
 %----------------
 
-\ourCitem{void xsb\_permission\_error(CTXTdeclc char *op,char *obj,Cell culprit,char *pred,int arity)}{xsb\_permission\_error}
+\ourCitem{\small void xsb\_permission\_error(CTXTdeclc char *op,char *obj,Cell culprit,char *pred,int arity)}{xsb\_permission\_error}
 %
 Used to throw an ISO-style permission error from foreign code,
 indicating that an operation of type {\tt op} on type {\tt obj} is not
@@ -1531,7 +1537,7 @@ in {\tt thread\_create/1} gives rise to a the behavior
 If the number of system threads has been exceeded.
 
 %----------------
-\ourCitem{void xsb\_type\_error(CTXTdeclc char *valid\_type,Cell culprit,char *pred,int arity,int arg) }{xsb\_type\_error}
+\ourCitem{\small void xsb\_type\_error(CTXTdeclc char *valid\_type,Cell culprit,char *pred,int arity,int arg) }{xsb\_type\_error}
 %
 Used to throw an ISO-style type error from foreign code, indicating
 that {\tt culprit} is not in ISO type {\tt valid\_type} in argument
