@@ -1289,7 +1289,14 @@ work under cygwin.)
 When a C file is to be loaded and no DLL for it is found, XSB tries to
 use the C compiler that created the XSB executable, normally the MSVC
 C++ compiler (cl.exe).  It (by default) uses the MSVC environment
-setting script, {\tt vcvarsall.bat} with a parameter of the xsb
+setting script, {\tt vcvarsall.bat}\footnote{
+  Typically found in the directory
+  \\
+  \texttt{C:$\backslash$Program Files (x86)$\backslash$Microsoft Visual Studio$\backslash$20XX$\backslash$Community$\backslash$VC$\backslash$Auxiliary$\backslash$Build$\backslash$}
+  \\
+  where 20XX is the issue year of the particular MS Studio.
+  }
+with a parameter of the xsb
 configuration cpu flag, commonly {\tt x64} or {\tt x86}.  For this
 auto-compilation to work, this bat file must be accessible through the
 current PATH environment variable.  Assuming this succeeds, XSB then
@@ -1318,22 +1325,31 @@ For example, the msvc\_config.P file might contain:
 \begin{verbatim}
 :- export msvc_env/2.
 :- dynamic msvc_env/2.
-msvc_spec(ver_8,
+msvc_env(ver_8,
           '"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community
 \\VC\\Auxiliary\\Build\\vcvarsall.bat" x64 8.1').
 \end{verbatim}
 This file indicates that the indicated command should be used to set
 the necessary environment variables for the confguration directory
 this file is in.  (Note that we can tell from the ``x64'' in the
-script that this will file will be in the
+script that this file will be in the
 \verb|<ucl>\config\x64_pc_windows| directory.)  The script of the {\em
   first} {\tt msvc\_env/2} fact will be used to set the MSVC
 environment variables prior to compilation.
 
-Multiple facts {\tt msvc\_env/2} may be provided, perhaps one for each
-of various installations of the MSVC compiler.  The first ({\tt Name})
-field of these facts may be used to identify various scripts.  The
-names may be any atoms and can be used by the programmer to access a
+Multiple facts {\tt msvc\_env/2} may be provided, one for each
+of various windows architectures, e.g., \texttt{x86-pc-windows},
+\texttt{x64-pc-windows}, or \texttt{arm64-pc-windows}.
+The appropriate location for any running instance of XSB can be found by
+running the query
+%%
+\begin{verbatim}
+| ?- xsb_configuration(user_config_libdir, AuxDir).
+\end{verbatim}
+%%
+In \texttt{msvc\_env/2}, the  first field, {\tt Name},
+may be used to identify various scripts.  These
+names are atoms and can be used by the programmer to access a
 particular script.  For example, if a programmer wants to use a
 different environment-setting script for a particular compilation,
 they can retrieve that script by name, and use {\tt asserta/1} to add
