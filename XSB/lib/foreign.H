@@ -34,7 +34,7 @@
 
 :- import asm_magic/2 from asm.
 :- import asm_putlength/2 from asmpass2.
-   :- import (dynamic)/1, asserta/1, retract/1, assert/1, retractall/1 from assert.
+:- import assert/1, retractall/1 from assert.
 :- import message/1, time_message/2 from auxlry.
 :- import memberchk/2 from basics.
 :- import current_compiled_module/1 from compile.
@@ -68,7 +68,7 @@
 :- import write_int/2 from xsb_writ.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import private_obj_filename/2 from loader.
-:- import msvc_spec/3 from msvc_spec.
+:- import msvc_env/2 from msvc_config.
 :- import shell_to_list/4 from shell.
 :- import str_match/5 from string.
 

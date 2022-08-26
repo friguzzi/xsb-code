@@ -420,55 +420,19 @@ compile_H(Modname,Base,Options,ToLoc,ExList,LdOption,CompComm,TempFile) :-
 
 get_MSVC_env_script(Script) :-
     %% the user can alter the current vcpp using
-    %% foreign:push_current_vcpp/1/2 and foreign:pop_current_vcpp/0.
-    current_vcpp(MSVC_version, HostCpu),
-    (catch(once(msvc_spec(MSVC_version,HostCpu,Script)),_Error,fail)
+    (catch(once(msvc_env(_Name,Script)),_Error,fail)
      -> atom(Script)
      ;  shell_to_list('where vcvarsall.bat',Out,_Err,Res),
 	(Res =:= 0,
 	 Out = [Out1|_],
 	 concat_atom(Out1,' ',OutA),
 	 str_match(':\\Program Files',OutA,forward,_,_)
-          -> concat_atom(['vcvarsall.bat ',HostCpu],Script)
+          -> xsb_configuration(host_cpu,HostCpu),
+	     concat_atom(['vcvarsall.bat ',HostCpu],Script)
           ;  misc_error('Cannot find vcvarsall.bat script to set environment variables.
     See XSB Programmer''s Manual, Volume 1, Chapter 12.6 for ways to fix this.')
        )
     ).
-
-:- dynamic user_current_vcpp/2.
-
-current_vcpp(MSVC_version,HostCpu) :-
-    (user_current_vcpp(MSVC_version,HostCpu), %% the user DID set the current vcpp
-     atom(MSVC_version), atom(HostCpu)
-     -> true
-     ;  %% the user did NOT set the current vcpp
-	xsb_configuration(host_cpu,HostCpu)
-    ).
-
-:- export
-   push_current_vcpp/2,
-   push_current_vcpp/1,
-   pop_current_vcpp/0.
-
-push_current_vcpp(MSVC_version,HostCpu) :-
-    check_msvc_spec_args(MSVC_version,HostCpu), %% TODO. must be atoms and match msvc_spec
-    asserta(user_current_vcpp(MSVC_version,HostCpu)).
-
-check_msvc_spec_args(MSVC_version,HostCpu) :-
-    (catch(msvc_spec(MSVC_version,HostCpu,_),_Error,fail),
-     atom(HostCpu), atom(MSVC_version)
-     -> true
-     ;  misc_error(('(push_current_vcpp/2): Arguments ',MSVC_version,HostCpu,
-		    ' must select a tuple in msvc_spec/3 defined in ~/.xsb/xsbrc.P'))
-    ).
-
-push_current_vcpp(MSVC_version) :-
-    xsb_configuration(host_cpu, HostCpu),
-    push_current_vcpp(MSVC_version,HostCpu).
-
-pop_current_vcpp :-
-    retract(user_current_vcpp(_,_)),
-    !.
 
 escape_path(Path,Path) :-
     xsb_configuration(configuration,Configuration),
