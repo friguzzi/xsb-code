@@ -13,13 +13,6 @@ xsb -e "[xsbdoc], xsbdoc(prolog_db_format,pdf),halt."
 /***
 For better performance, could do:
 
-1. implement pdb_unnumbervars in C.  This would speed up retrieving
-rules (since only bodies need unnumbervarring), important when calling
-rule-defined predicates in DB.
-
-2. implement find_in_radix_tree for lookup (i.e. when key is given) as
-a builtin.
-
 New pred to add:
 
 select_db(+PrefixTerm,+TemplPrefixTerm,+DB0,?DB): takes a prefix term, a
@@ -85,16 +78,19 @@ a pure way, since trie-terms are simply Prolog terms and so earlier
 trie-term database states are automatically recovered on backtracking
 (unlike with Prolog's built-in assert and retract operations).
 
-Trie-terms can be used to represent sets of @em{ground} Prolog terms (i.e.,
-ground facts), which can be interpreted and manipulated as sets of
-relations over Prolog terms.  Operations are provided for adding
-elements to sets/relations generating new sets/relations, and for
-deletion and lookup.  Also several set operations, e.g., union,
-intersection, and difference, are provided.  These operations take
-advantage of the indexed structure of a trie-term to sometimes provide
-much better performance than more naive tuple-at-a-time algorithms.
-This module also provides several restricted relational operators that
-can also take advantage of the indexed data structure.
+In fact, any Prolog term can be the head (or body) of a clause, so in
+particular integers, floats and variables are supported.  Therefore,
+trie-terms can be used to represent sets of @em{ground} Prolog terms
+(i.e., ground facts), which either be interpreted simply as sets of
+terms or as sets of relations over Prolog terms.  Operations are
+provided for adding elements to sets/relations generating new
+sets/relations, and for deletion and lookup.  Also several set
+operations, e.g., union, intersection, and difference, are provided.
+These operations take advantage of the indexed structure of a
+trie-term to sometimes provide much better performance than more naive
+tuple-at-a-time algorithms.  This module also provides several
+restricted relational operators that can also take advantage of the
+indexed data structure.
 
 The complexity of adding, deleting, and looking up single elements in
 a trie-term is approximately linear in the the number of symbols in
@@ -137,41 +133,40 @@ sorting eliminates duplicates and canonicalizes a list to a set, so
 then list equality implements set equality.  This works well for small
 sets but, when sets get larger than a few 10's of items, performance
 can suffer signicantly.  This can be avoided by using the
-@tt{prolog_db} data type.  A new empty set, @var{_S0}, is created
-with @pred{new_db(_S0)}; an element, say 'George', is added to it
-with @pred{assert_in_db('George',_S0,_S1)} creating the set with
-'George' added in @var{_S1}.  For example,
+@tt{prolog_db} data type.  The empty set is represented by the empty
+list; an element, say 'George', is added to it with
+@pred{assert_in_db('George',[],_S1)} creating the set with 'George'
+added in @var{_S1}.  For example,
 
 @begin{verbatim}
-| ?- new_db(_S0),assert_in_db('George',_S0,_S1),dump_db(userout,_S1).
-'George'.
+| ?- assert_in_db('George',[],_S1),write_db(userout,_S1).
+George.
 @end{verbatim}
 
-@noindent Dumping out the contents of @var{_S1}, we see it contains
+@noindent Writing out the contents of @var{_S1}, we see it contains
 just the atom 'George'.
 
 Sets can be compared for identity with the Prolog operation @pred{==}
 (or @pred{=}.)
 
 @begin{verbatim}
-| ?- new_db(_S0),assert_in_db('George',_S0,_S1),assert_in_db('Mary',_S1,_S2),
-     assert_in_db('Mary',_S0,_S1B),assert_in_db('George',_S1B,_S2B),
-     _S2 == _S2B, dump_db(userout,_S2).
-'Mary'.
-'George'.
+| ?- assert_in_db('George',[],_S1),assert_in_db('Mary',_S1,_S2),
+     assert_in_db('Mary',[],_S1B),assert_in_db('George',_S1B,_S2B),
+     _S2 == _S2B, write_db(userout,_S2).
+Mary, George.
 @end{verbatim}
 
 @noindent Here we have added 'George' to the empty set and then added
 'Mary' to that set to obtain @var{_S2}.  Then we added 'Mary' to the
 empty set and added 'George' to that set to obtain @var{_S2B}, then
-checked that those two sets were equal (which they were, so it
+checked that those two sets are equal (which they are, so it
 continued) and dumped the contents of one.
 
 A set can be checked to see if it contains a constant 'George' using
 @pred{in_db('George',Set1)}.
 
 @begin{verbatim}
-| ?- new_db(_S0),assert_in_db('George',_S0,_S1),assert_in_db('Mary',_S1,_S2),
+| ?- assert_in_db('George',[],_S1),assert_in_db('Mary',_S1,_S2),
    (in_db('George',_S2) -> writeln('contains George') ; writeln(oops)),
    (in_db('William',_S2) -> writeln(oops) ; writeln('but not William')).
 contains George
@@ -182,9 +177,9 @@ but not William
 @pred{subset_db(Set1,Set2)}.  For example,
 
 @begin{verbatim}
-| ?- new_db(_S0),assert_in_db('George',_S0,_S1),assert_in_db('Mary',_S1,_S2),
+| ?- assert_in_db('George',[],_S1),assert_in_db('Mary',_S1,_S2),
    (subset_db(_S1,_S2) -> writeln('correctly subset') ; writeln(oops)),
-   (subset_db(_S2,_S0) -> writeln('oops') ; writeln('correctly not subset')).
+   (subset_db(_S2,[]) -> writeln('oops') ; writeln('correctly not subset')).
 correctly subset
 correctly not subset
 @end{verbatim}
@@ -193,7 +188,7 @@ The union of sets @var{Set1} and @var{Set2} can be computed into
 @var{Set3} using @pred{union_db(Set1,Set2,Set3)}.  For example,
 
 @begin{verbatim}
-| ?- new_db(_S0),assert_in_db('George',_S0,_S1),assert_in_db('Mary',_S0,_S2),
+| ?- assert_in_db('George',[],_S1),assert_in_db('Mary',[],_S2),
      union_db(_S1,_S2,_S3),dump_db(userout,_S3).
 'Mary'.
 'George'.
@@ -211,7 +206,7 @@ the underscores that prefix the set variable names in our previous
 queries.  So repeating the union query above, we get:
 
 @begin{verbatim}
-| ?- new_db(S0),assert_in_db('George',S0,S1),assert_in_db('Mary',S0,S2),
+| ?- assert_in_db('George',[],S1),assert_in_db('Mary',[],S2),
      union_db(S1,S2,S3),dump_db(userout,S3).
 'Mary'.
 'George'.
@@ -225,14 +220,13 @@ S3 = }]]}0000028A1F567C11
 @noindent We see that a named set is represented as an atom whose name
 encodes the address of the trie-term structure in interned space.
 (The prefix '}]]}' is to try to avoid name conflicts with user
-strings.)  The empty set is a special case, since it is not a
-structured term, but just the constant [ ].
+strings.)  
 
 Of course, elements can be deleted from sets.  This is done using
 @tt{retractall_in_db(Atom,Set0,Set)}.  For example:
 
 @begin{verbatim}
-| ?- new_db(_S0),assert_in_db(['George','Mary'],_S0,_S1),dump_db(userout,_S1),
+| ?- new_db([]),assert_in_db(['George','Mary'],[],_S1),dump_db(userout,_S1),
      retractall_in_db('George',_S1,_S2),nl,dump_db(userout,_S2).
 'Mary'.
 'George'.
@@ -865,6 +859,27 @@ record).
 
 We will call these trees, index trees.
 
+So the actual details of our radix trees (index tree) is as follows:
+
+A radix tree is:
+  [] (if empty),  or
+  Collisions, or
+  rt(RT1,RT2,RT3,RT4) where each RTi is a radix tree.
+
+A Colisions structure is a term of the form:
+  [], or
+  rt(Key,Value,Collisions) where Key is a key, Value is its associated value, and
+    Collisions is a Collisions structure with more Key Value pairs that 
+    collide to this location.
+
+
+*/
+
+
+
+
+
+
 For our trie-terms, we want to index on the symbols in a Prolog term,
 and not n-bit integers.  But we can turn symbols into n-bit integers
 by choosing a hash function whose output value is an appropriately
@@ -951,6 +966,7 @@ assert_in_db(Clauses,H0,H) :-
     ).
 
 %% simpler alias if desired.
+:- comment(add/3,"@pred{add/3} is an alias for @pred{assert_in_db/3}.").
 :- mode add(?,+,?).
 add(Clauses,H0,H) :- assert_in_db(Clauses,H0,H).
 
@@ -958,7 +974,6 @@ add(Clauses,H0,H) :- assert_in_db(Clauses,H0,H).
 %%:- import (table)/1 from standard.
 %%:- table tab_intern_termhash/2 as intern.
 :- mode tab_intern_termhash(+,?),tab_intern_termhash(?,+).
-:- mode_on_success tab_intern_termhash(+,+).
 tab_intern_termhash(DB0,H0) :-
     intern_termhash(DB0,H0).
 
@@ -994,7 +1009,7 @@ assert1_in_db_b(Clause,DB0,DB) :-
      ;	Head = Clause,
 	Body = true
     ),
-    add_to_trie(Head,Body,DB0,DB).
+    add_to_trie_dict(Head,Body,DB0,DB).
 
 :- comment(assert_in_db/2, "@pred{assert_in_db(+Clause,?DB)} adds a
 clause, @var{Clause}, (or a sequence of clauses, if @var{Clause} is a
@@ -1006,23 +1021,25 @@ assert_in_db(Clauses,H) :-
     tab_intern_termhash(DB,H).
 
 %% simpler alias if desired.
+:- comment(add/2,"@pred{add/2} is an alias for @pred{assert_in_db/2}.").
+:- mode add(+,-).
 add(Clauses,H) :- assert_in_db(Clauses,H).
 
-add_to_trie(Head,Body,Trie0,Trie) :-
+add_to_trie_dict(Head,Body,Dict0,Dict) :-
     (ground([Head|Body])
-     ->	add_tuple_to_trie([Head],Body,Trie0,Trie)
+     ->	add_trie_dict([Head],Body,Dict0,Dict)
      ;	copy_term([Head|Body],[Head1|Body1]),
 	my_numbervars([Head1|Body1],0,_),
-	add_tuple_to_trie([Head1],Body1,Trie0,Trie)
+	add_trie_dict([Head1],Body1,Dict0,Dict)
     ).
 
-:- mode add_tuple_to_trie(+,+,+,?).
-add_tuple_to_trie(Terms,Body,Trie0,Trie) :-
-    (Terms \== []
-     ->	get_key_new_terms(Terms,Key,NTerms),
-	add_to_radix_tree(Key,NewSubTrie,OldSubTrie,Trie0,Trie),
-	add_tuple_to_trie(NTerms,Body,OldSubTrie,NewSubTrie)
-     ;	order_insert(Trie0,Body,Trie)
+:- mode add_trie_dict(+,?,+,-).
+add_trie_dict(KeyTerms,Value,Dict0,Dict) :-
+    (KeyTerms \== []
+     ->	get_key_new_terms(KeyTerms,Key,NKeyTerms),
+	add_radix_dict(Key,NewSubDict,Dict0,Dict,OldSubDict),
+	add_trie_dict(NKeyTerms,Value,OldSubDict,NewSubDict)
+     ;	order_insert(Dict0,Value,Dict)
     ).
 
 order_insert(ACVs,V,NVs) :-
@@ -1039,8 +1056,10 @@ order_insert(ACVs,V,NVs) :-
 	)
     ).
 
-%%:- table hash_key/2. % breaks it, why? Certainly looks like a
-%%bug. Maybe complications with in_db metainterp
+%%:- table hash_key/2. % breaks it, because arguments are sometimes
+%%           interned and sometimes not.
+
+%% note _$Var(i) hashes to same place for all i, intentional, I think...
 %%#define HASHBASE 536870027
 
 hash_key(Key,HashCode) :-
@@ -1081,70 +1100,138 @@ match_key_new_terms([Term|Terms],Key,NTerms) :-
 	NTerms = Terms
     ).
 
-% add_to_radix_tree/5
-add_to_radix_tree(Key,NVal,OVal,Tree0,Tree) :-
+:- comment(add_radix_dict/5,
+"add_radix_dict(+Term,?NewVal,+HashTree0,-HashTree,-OldVal) adds a
+new key-value pair (or finds and replaces an existing pair),
+@var{Term} and @var{NewVal}, to the hash-tree, @var{HashTree0},
+producing the new hash-tree, @var{HashTree}.  @var{OldVal} is bound to
+the previous value for this key in the hash table (or to [] if this is
+a new key.)").
+
+% add_radix_dict/5
+add_radix_dict(Key,NVal,Tree0,Tree,OVal) :-
     hash_key(Key,HashCode),
-    add_to_radix_tree(Tree0,Key,NVal,HashCode,0,OVal,Tree).
+    add_radix_dict(Tree0,Key,NVal,HashCode,0,OVal,Tree).
     
-%add_to_radix_tree(Tree0,Key,NVal,HashCode,Depth,OVal,Tree)
-add_to_radix_tree([],Key,Val,_,_,[],rtl(Key,Val,[])).
-add_to_radix_tree(ORTL,Key,Val,HashCode,Depth,OVal,Tree) :- ORTL = rtl(OKey,_,_),
+%add_radix_dict(Tree0,Key,NVal,HashCode,Depth,OVal,Tree)
+add_radix_dict([],Key,Val,_,_,[],rtl(Key,Val,[])).
+add_radix_dict(ORTL,Key,Val,HashCode,Depth,OVal,Tree) :- ORTL = rtl(OKey,_,_),
     hash_key(OKey,HashOCode),
     (HashCode =:= HashOCode
      ->	rtl_insert(ORTL,Key,Val,OVal,Tree)
      ;	OVal = [], % adding a new entry so old is []
 	add_pair_to_empty_radix_tree(HashCode,Key,Val,HashOCode,ORTL,Depth,Tree)
     ).
-add_to_radix_tree(RT,Key,ValTran,HashCode,Depth,OVal,Tree) :- RT = rt(_,_,_,_),
+add_radix_dict(RT,Key,Val,HashCode,Depth,OVal,Tree) :- RT = rt(RT1,RT2,RT3,RT4),
     Index is (HashCode >> Depth) /\ 3,
     NDepth is Depth + 2,
-    add_to_right_radix_tree(RT,Key,ValTran,HashCode,NDepth,OVal,Tree,Index).
+    updated_rt(Index,RT1,RT2,RT3,RT4,ORT,NRT,Tree),
+/**    (Index =< 1
+    -> (Index =:= 0
+        -> ORT = RT1,
+	   Tree = rt(NRT,RT2,RT3,RT4)
+        ;  ORT = RT2,
+	   Tree = rt(RT1,NRT,RT3,RT4)
+       )
+    ;  (Index =:= 2
+        -> ORT = RT3,
+	   Tree = rt(RT1,RT2,NRT,RT4)
+        ;  ORT = RT4,
+	   Tree = rt(RT1,RT2,RT3,NRT)
+       )
+    ), ***/
+    add_radix_dict(ORT,Key,Val,HashCode,NDepth,OVal,NRT).
 
-:- index add_to_right_radix_tree/8-8.
-add_to_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(NRT,RT2,RT3,RT4),0) :-
-    add_to_radix_tree(RT1,Key,VT,HashCode,D,OVal,NRT).
-add_to_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(RT1,NRT,RT3,RT4),1) :-
-    add_to_radix_tree(RT2,Key,VT,HashCode,D,OVal,NRT).
-add_to_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(RT1,RT2,NRT,RT4),2) :-
-    add_to_radix_tree(RT3,Key,VT,HashCode,D,OVal,NRT).
-add_to_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(RT1,RT2,RT3,NRT),3) :-
-    add_to_radix_tree(RT4,Key,VT,HashCode,D,OVal,NRT).
+updated_rt(0,RT1,RT2,RT3,RT4,RT1,NRT,rt(NRT,RT2,RT3,RT4)).
+updated_rt(1,RT1,RT2,RT3,RT4,RT2,NRT,rt(RT1,NRT,RT3,RT4)).
+updated_rt(2,RT1,RT2,RT3,RT4,RT3,NRT,rt(RT1,RT2,NRT,RT4)).
+updated_rt(3,RT1,RT2,RT3,RT4,RT4,NRT,rt(RT1,RT2,RT3,NRT)).
 
+
+add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,Depth,Tree) :-
+    Index is (HashCode >> Depth) /\ 3,
+    OIndex is (OHashCode >> Depth) /\ 3,
+    (Index =\= OIndex
+     -> updated_leaf_rtl(Index,OIndex,rtl(Key,Val,[]),ORTL,Tree)
+     ;  updated_leaf_rtl_same(Index,NT,Tree),
+	NDepth is Depth + 2,
+	add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,NDepth,NT)
+    ).
+
+:- import (index)/2 from standard.
+:- dynamic updated_leaf_rtl/5.
+:- index(updated_leaf_rtl/5,[1+2]).
+updated_leaf_rtl(0,1,NRTL,ORTL,rt(NRTL,ORTL,[],[])).
+updated_leaf_rtl(0,2,NRTL,ORTL,rt(NRTL,[],ORTL,[])).
+updated_leaf_rtl(0,3,NRTL,ORTL,rt(NRTL,[],[],ORTL)).
+updated_leaf_rtl(1,0,NRTL,ORTL,rt(ORTL,NRTL,[],[])).
+updated_leaf_rtl(1,2,NRTL,ORTL,rt([],NRTL,ORTL,[])).
+updated_leaf_rtl(1,3,NRTL,ORTL,rt([],NRTL,[],ORTL)).
+updated_leaf_rtl(2,0,NRTL,ORTL,rt(ORTL,[],NRTL,[])).
+updated_leaf_rtl(2,1,NRTL,ORTL,rt([],ORTL,NRTL,[])).
+updated_leaf_rtl(2,3,NRTL,ORTL,rt([],[],NRTL,ORTL)).
+updated_leaf_rtl(3,0,NRTL,ORTL,rt(ORTL,[],[],NRTL)).
+updated_leaf_rtl(3,1,NRTL,ORTL,rt([],ORTL,[],NRTL)).
+updated_leaf_rtl(3,2,NRTL,ORTL,rt([],[],ORTL,NRTL)).
+
+updated_leaf_rtl_same(0,NT,rt(NT,[],[],[])).
+updated_leaf_rtl_same(1,NT,rt([],NT,[],[])).
+updated_leaf_rtl_same(2,NT,rt([],[],NT,[])).
+updated_leaf_rtl_same(3,NT,rt([],[],[],NT)).
+
+
+/***********
 add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,Depth,Tree) :-
     (HashCode =:= OHashCode
      ->	rtl_insert(ORTL,Key,Val,_OVal,Tree)
      ;	Index is (HashCode >> Depth) /\ 3,
 	OIndex is (OHashCode >> Depth) /\ 3,
 	(Index =\= OIndex
-	 -> PIndex is 4*Index + OIndex,
-	    add_pair(PIndex,rtl(Key,Val,[]),ORTL,Tree)
-	 ;  Depth1 is Depth + 2,
-	    build_and_add(HashCode,Key,Val,OHashCode,ORTL,Depth1,Tree,Index)
+	 -> NRTL = rtl(Key,Val,[]),
+	    (Index =< 1
+	     -> (Index =:= 0
+		 -> (OIndex =:= 1
+		     -> Tree = rt(NRTL,ORTL,[],[])
+		     ; OIndex =:= 2
+		     -> Tree = rt(NRTL,[],ORTL,[])
+		     ;  Tree = rt(NRTL,[],[],ORTL)
+		    )
+		 ;  (OIndex =:= 0
+		     -> Tree = rt(ORTL,NRTL,[],[])
+		     ; OIndex =:= 2
+		     -> Tree = rt([],NRTL,ORTL,[])
+		     ;  Tree = rt([],NRTL,[],ORTL)
+		    )
+		)
+	     ;  (Index =:= 2
+		 -> (OIndex =:= 0
+		     -> Tree = rt(ORTL,[],NRTL,[])
+		     ; OIndex =:= 1
+		     -> Tree = rt([],ORTL,NRTL,[])
+		     ;  Tree = rt([],[],NRTL,ORTL)
+		    )
+	         ;  (OIndex =:= 0
+		     -> Tree = rt(ORTL,[],[],NRTL)
+		     ; OIndex =:= 1
+		     -> Tree = rt([],ORTL,[],NRTL)
+		     ;  Tree = rt([],[],ORTL,NRTL)
+		    )
+		)
+	    )
+	 ;  NDepth is Depth + 2,
+	    (Index =< 1
+	    -> (Index =:= 0
+	       -> Tree = rt(NT,[],[],[])
+	       ;  Tree = rt([],NT,[],[])
+	       )
+	    ; (Index =:= 2
+	      -> Tree = rt([],[],NT,[])
+	      ;  Tree = rt([],[],[],NT)
+	      )
+	    ),
+	    add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,NDepth,NT)
 	)
-    ).
-
-:- index build_and_add/8-8.
-build_and_add(HashCode,Key,Val,OHashCode,ORTL,D,rt(NT,[],[],[]),0) :-
-    add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,D,NT).
-build_and_add(HashCode,Key,Val,OHashCode,ORTL,D,rt([],NT,[],[]),1) :-
-    add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,D,NT).
-build_and_add(HashCode,Key,Val,OHashCode,ORTL,D,rt([],[],NT,[]),2) :-
-    add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,D,NT).
-build_and_add(HashCode,Key,Val,OHashCode,ORTL,D,rt([],[],[],NT),3) :-
-    add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,D,NT).
-
-add_pair(1/*0,1*/,NRTL,ORTL,rt(NRTL,ORTL,[],[])).
-add_pair(2/*0,2*/,NRTL,ORTL,rt(NRTL,[],ORTL,[])).
-add_pair(3/*0,3*/,NRTL,ORTL,rt(NRTL,[],[],ORTL)).
-add_pair(4/*1,0*/,NRTL,ORTL,rt(ORTL,NRTL,[],[])).
-add_pair(6/*1,2*/,NRTL,ORTL,rt([],NRTL,ORTL,[])).
-add_pair(7/*1,3*/,NRTL,ORTL,rt([],NRTL,[],ORTL)).
-add_pair(8/*2,0*/,NRTL,ORTL,rt(ORTL,[],NRTL,[])).
-add_pair(9/*2,1*/,NRTL,ORTL,rt([],ORTL,NRTL,[])).
-add_pair(11/*2,3*/,NRTL,ORTL,rt([],[],NRTL,ORTL)).
-add_pair(12/*3,0*/,NRTL,ORTL,rt(ORTL,[],[],NRTL)).
-add_pair(13/*3,1*/,NRTL,ORTL,rt([],ORTL,[],NRTL)).
-add_pair(14/*3,2*/,NRTL,ORTL,rt([],[],ORTL,NRTL)).
+    ). ***********/
 
 /***********************************************************/
 
@@ -1169,7 +1256,7 @@ clause_in_db(Head,Body,Vars,H) :-
     (H == module
      ->	clause(Head,Body)
      ;	tab_intern_termhash(DB,H),
-	find_tuple_in_trie([Head],Body,Vars,DB)
+	lookup_trie_vdict([Head],Body,Vars,DB)
     ).
 
 :- comment(fact_in_db/2, "@pred{fact_in_db(?Fact,+DB)} unifies, in
@@ -1180,79 +1267,100 @@ fact_in_db(Head,H) :-
     tab_intern_termhash(DB,H),
     (DB == internalDB
      ->	call0(Head)
-     ;	find_tuple_in_trie([Head],true,_Vars,DB)
+     ;	lookup_trie_vdict([Head],true,_Vars,DB)
     ).
 
-clause_in_db_b(Head,Body,Trie) :-
-    find_tuple_in_trie([Head],Body0,Vars,Trie),
+clause_in_db_b(Head,Body,Dict) :-
+    lookup_trie_vdict([Head],Body0,Vars,Dict),
     (Body0 == true
      ->	Body = true
      ;	pdb_unnumbervars(Body0,0,Body,Vars)
     ).
 
-find_tuple_in_trie([],Body,_Vars,Trie) :- 
-    member(Body,Trie).
+lookup_trie_vdict([],Body,_Vars,Dict) :- 
+    member(Body,Dict).
 %% Use nonstandard '_$Var$' to not conflict with normal numbervar (hack)
-find_tuple_in_trie(Terms,Body,Vars,Trie) :- Terms = [Term|RTerms],
-    (find_in_radix_tree_b('_$Var$'(VNo),Val,Trie),
+lookup_trie_vdict(Terms,Body,Vars,Dict) :- Terms = [Term|RTerms],
+    (lookup_radix_dict('_$Var$'(VNo),Val,Dict),
      integer(VNo),
      log_ith(VNo,Vars,Term),
-     find_tuple_in_trie(RTerms,Body,Vars,Val)
+     lookup_trie_vdict(RTerms,Body,Vars,Val)
      ;
      get_key_new_terms(Terms,Key,NTerms),
      (nonvar(Key), \+ varno(Key)
-      -> find_in_radix_tree_b(Key,Val,Trie),
-	 find_tuple_in_trie(NTerms,Body,Vars,Val)
-      ;	 find_in_radix_tree_b(Key,Val,Trie),
+      -> lookup_radix_dict(Key,Val,Dict),
+	 lookup_trie_vdict(NTerms,Body,Vars,Val)
+      ;	 lookup_radix_dict(Key,Val,Dict),
 	 Key =.. [_|NArgs],
 	 append(NArgs,NTerms,NNTerms),
-	 find_tuple_in_trie(NNTerms,Body,Vars,Val)
+	 lookup_trie_vdict(NNTerms,Body,Vars,Val)
      )
     ).
 
+:- comment(gfact_in_db/2, "@pred{gfact_in_db(?Term,+DB)}
+nondeterministically unifies @var{Term} with each ground fact in
+prolog DB @var{DB}.").
+:- mode gfact_in_db(?,+).
+gfact_in_db(Term,H) :- 
+    tab_intern_termhash(DB,H),
+    lookup_trie_dict([Term],DB).
+
+lookup_trie_dict([],Dict) :- 
+    member(true,Dict).
+lookup_trie_dict(Terms,Dict) :-
+    get_key_new_terms(Terms,Key,NTerms),
+    (nonvar(Key)
+     -> lookup_radix_dict(Key,Val,Dict),
+	lookup_trie_dict(NTerms,Val)
+     ;	lookup_radix_dict(Key,Val,Dict),
+	Key =.. [_|NArgs],
+	append(NArgs,NTerms,NNTerms),
+	lookup_trie_dict(NNTerms,Val)
+    ).
+
+/*** Does NOT define variant, more variables at same places...
 variant_clause_in_db(Head,Body,H) :-
     tab_intern_termhash(DB,H),
     copy_term((Head,Body),(HeadC,BodyC)),
     my_numbervars((HeadC,BodyC),0,_),
-    find_variant_tuple_in_trie([HeadC],BodyC,DB).
+    lookup_trie_dict([HeadC],BodyC,DB).
 
-find_variant_tuple_in_trie([],Body,Trie) :- 
-    member(Body,Trie).
-%% Use nonstandard '_$Var$' to not conflict with normal numbervar (hack)
-find_variant_tuple_in_trie(Terms,Body,Trie) :-
+lookup_trie_dict([],Body,Dict) :- 
+    member(Body,Dict).
+lookup_trie_dict(Terms,Body,Dict) :-
     get_key_new_terms(Terms,Key,NTerms),
     (nonvar(Key)
-     ->	find_in_radix_tree_b(Key,Val,Trie),
-	find_variant_tuple_in_trie(NTerms,Body,Val)
-     ;	find_in_radix_tree_b(Key,Val,Trie),
+     ->	lookup_radix_dict(Key,Val,Dict),
+	lookup_trie_dict(NTerms,Body,Val)
+     ;	lookup_radix_dict(Key,Val,Dict),
 	Key =.. [_|NArgs],
 	append(NArgs,NTerms,NNTerms),
-	find_variant_tuple_in_trie(NNTerms,Body,Val)
-    ).
+	lookup_trie_dict(NNTerms,Body,Val)
+    ). ****/
 
 varno(Var) :- Var = '_$Var$'(VNo), integer(VNo).
 
 varno(Var,VNo) :- Var = '_$Var$'(VNo), integer(VNo).
 
 
-find_in_radix_tree_b(Key,Val,Tree) :-
+lookup_radix_dict(Key,Val,Tree) :-
     (Tree @= rtl(_,_,_)
      ->	rtl_member(Key,Val,Tree)
      ;	nonvar(Key)
      ->	hash_key(Key,HashCode),
-	find_in_radix_tree(Tree,HashCode,Key,Val) % key bound, det (make builtin?)
-     ;	find_in_radix_tree(Tree,HashCode,Key,Val)
+	lookup_radix_vdict(Tree,HashCode,Key,Val) % key bound, det (make builtin?)
+     ;	lookup_radix_vdict(Tree,HashCode,Key,Val)
     ).
 
-find_in_radix_tree(RTL,_,Key,Val) :- RTL = rtl(_,_,_),
+lookup_radix_vdict(RTL,_,Key,Val) :- RTL = rtl(_,_,_),
     rtl_member(Key,Val,RTL).
-find_in_radix_tree(RT,HashCode,Key,Val) :- RT = rt(_,_,_,_),
+lookup_radix_vdict(RT,HashCode,Key,Val) :- RT = rt(_,_,_,_),
     (nonvar(Key)
      ->	Index is HashCode /\ 3,
 	NHashCode is HashCode >> 2,
 	%% much better code generated w/this dupl, should fix compiler
-	find_in_right_radix_tree(RT,NHashCode,Key,Val,Index) 
-     ;	find_in_right_radix_tree(RT,NHashCode,Key,Val,Index)
+	lookup_sub_radix_vdict(RT,NHashCode,Key,Val,Index) 
+     ;	lookup_sub_radix_vdict(RT,NHashCode,Key,Val,Index)
     ).
 
 %% lookahead hackery to avoid laying down choicepoint in most cases
@@ -1261,8 +1369,8 @@ find_in_radix_tree(RT,HashCode,Key,Val) :- RT = rt(_,_,_,_),
 %%    needed for handling:
 %%  assert_in_db(p('_$Var$'(X)),DB),trace,clause_in_db(p('_$Var$'(1)),true,DB).
 /*
-rtl_member('_$Var$'(X),V,rtl(functor(usermod,'_$Var$',1),SubTrie,[]|RTL)) :-
-    find_in_radix_tree(X,V,SubTrie).  doesn't work..... need higher access...
+rtl_member('_$Var$'(X),V,rtl(functor(usermod,'_$Var$',1),SubDict,[]|RTL)) :-
+    lookup_radix_vdict(X,V,SubDict).  doesn't work..... need higher access...
 */
 rtl_member(K,V,rtl(K1,V1,RTL)) :-
     (RTL == []
@@ -1282,15 +1390,15 @@ rtl_member2(K,V,K1,V1,RTL) :-
      rtl_member(K,V,RTL)
     ).
 
-:- index find_in_right_radix_tree/5-5.
-find_in_right_radix_tree(rt(RT1,_,_,_),HashCode,Key,Val,0) :-
-    find_in_radix_tree(RT1,HashCode,Key,Val).
-find_in_right_radix_tree(rt(_,RT2,_,_),HashCode,Key,Val,1) :-
-    find_in_radix_tree(RT2,HashCode,Key,Val).
-find_in_right_radix_tree(rt(_,_,RT3,_),HashCode,Key,Val,2) :-
-    find_in_radix_tree(RT3,HashCode,Key,Val).
-find_in_right_radix_tree(rt(_,_,_,RT4),HashCode,Key,Val,3) :-
-    find_in_radix_tree(RT4,HashCode,Key,Val).
+:- index lookup_sub_radix_vdict/5-5.
+lookup_sub_radix_vdict(rt(RT1,_,_,_),HashCode,Key,Val,0) :-
+    lookup_radix_vdict(RT1,HashCode,Key,Val).
+lookup_sub_radix_vdict(rt(_,RT2,_,_),HashCode,Key,Val,1) :-
+    lookup_radix_vdict(RT2,HashCode,Key,Val).
+lookup_sub_radix_vdict(rt(_,_,RT3,_),HashCode,Key,Val,2) :-
+    lookup_radix_vdict(RT3,HashCode,Key,Val).
+lookup_sub_radix_vdict(rt(_,_,_,RT4),HashCode,Key,Val,3) :-
+    lookup_radix_vdict(RT4,HashCode,Key,Val).
 
 /***********************************************************/
 
@@ -1312,6 +1420,7 @@ retractall_in_db(Clauses,H0,H) :-
     ).
 
 %% simpler alias if desired
+:- comment(remove/3,"@pred{remove/3} is an alias for @pred{retractall_in_db/3}.").
 :- mode remove(?,+,?).
 remove(Clauses,H0,H) :- retractall_in_db(Clauses,H0,H).
 
@@ -1341,32 +1450,29 @@ retractall1_in_db(Clause,DB0,DB) :-
 	)
      ;	Head = Clause
     ),
-    delete_from_trie_b(Head,Body,DB0,_Vars,DB).
+    delete_trie_vdict([Head],Body,_Vars,DB0,DB).
 
-delete_from_trie_b(Head,Body,DB0,Vars,DB) :-
-    delete_tuple_from_trie([Head],Body,Vars,DB0,DB).
-
-delete_tuple_from_trie([],Body,Vars,Trie0,Trie) :-
+delete_trie_vdict([],Body,Vars,Dict0,Dict) :-
     (var(Body)
-     ->	Trie = []		% delete all
-     ;	order_delete(Trie0,Body,Vars,Trie)
+     ->	Dict = []		% delete all
+     ;	order_delete(Dict0,Body,Vars,Dict)
     ).
-delete_tuple_from_trie(Terms,Body,Vars,Trie0,Trie) :- Terms = [Frst|NTermsT],
+delete_trie_vdict(Terms,Body,Vars,Dict0,Dict) :- Terms = [Frst|NTermsT],
     (is_most_general_term(Terms)
-     ->	Trie = []
-     ;	findall(VNo,find_in_radix_tree_b('_$Var$'(VNo),_,Trie0),VNos),
-	delete_list_vns_from_trie_list(VNos,Frst,NTermsT,Body,Vars,Trie0,Trie1),
+     ->	Dict = []
+     ;	findall(VNo,lookup_radix_dict('_$Var$'(VNo),_,Dict0),VNos),
+	delete_list_vns_from_trie_list(VNos,Frst,NTermsT,Body,Vars,Dict0,Dict1),
         get_key_new_terms(Terms,VKey,NTerms),
 	(nonvar(Key), varno(VKey,VNo)
 	 -> log_ith(VNo,Vars,Key)
 	 ;  Key = VKey
 	),
 	(var(Key)
-	 -> findall(Terms,find_tuple_in_trie(Terms,Body,Vars,Trie0),TermsList),
+	 -> findall(Terms,lookup_trie_vdict(Terms,Body,Vars,Dict0),TermsList),
 	    TermsList \== [],
-	    delete_list_from_trie_list(TermsList,Body,Vars,Trie0,Trie)
-	 ;  ValTrans = lambda(OSTrie,STrie,delete_tuple_from_trie(NTerms,Body,Vars,OSTrie,STrie)),
-	    delete_from_radix_tree_b(Key,ValTrans,Vars,Trie1,Trie)
+	    delete_list_from_trie_list(TermsList,Body,Vars,Dict0,Dict)
+	 ;  ValTrans = lambda(OSDict,SDict,delete_trie_vdict(NTerms,Body,Vars,OSDict,SDict)),
+	    delete_radix_vdict(Key,ValTrans,Vars,Dict1,Dict)
 	)
     ).
 
@@ -1389,29 +1495,29 @@ order_delete([CV|CVs],V,Vars,NVs) :-
 	)
     ).
 
-delete_list_from_trie_list([],_,_,Trie,Trie).
-delete_list_from_trie_list([Terms|TermsList],Body,Vars,Trie0,Trie) :-
+delete_list_from_trie_list([],_,_,Dict,Dict).
+delete_list_from_trie_list([Terms|TermsList],Body,Vars,Dict0,Dict) :-
     copy_term(t(Terms,Body,Vars),t(NTerms,NBody,NVars)),
     NTerms = [Key|TermsTail],
     (var(Key)
-     ->	ValTrans = lambda(OSTrie,STrie,delete_tuple_from_trie(TermsTail,NBody,NVars,OSTrie,STrie)),
-	delete_from_radix_tree_b(Key,ValTrans,Vars,Trie0,Trie1)
-     ;	delete_tuple_from_trie(NTerms,NBody,NVars,Trie0,Trie1)
+     ->	ValTrans = lambda(OSDict,SDict,delete_trie_vdict(TermsTail,NBody,NVars,OSDict,SDict)),
+	delete_radix_vdict(Key,ValTrans,Vars,Dict0,Dict1)
+     ;	delete_trie_vdict(NTerms,NBody,NVars,Dict0,Dict1)
      ),
-    delete_list_from_trie_list(TermsList,Body,Vars,Trie1,Trie).
+    delete_list_from_trie_list(TermsList,Body,Vars,Dict1,Dict).
 
-delete_list_vns_from_trie_list([],_Term,_NTerms,_Body,_Vars,Trie,Trie).
-delete_list_vns_from_trie_list([VNo|VNos],Term,NTerms,Body,Vars,Trie0,Trie) :-
+delete_list_vns_from_trie_list([],_Term,_NTerms,_Body,_Vars,Dict,Dict).
+delete_list_vns_from_trie_list([VNo|VNos],Term,NTerms,Body,Vars,Dict0,Dict) :-
     (copy_term(t(Term,NTerms,Body,Vars),t(NTerm,NNTerms,NBody,NVars)),
      log_ith(VNo,NVars,NTerm),
-     ValTrans = lambda(OSTrie,STrie,delete_tuple_from_trie(NNTerms,NBody,NVars,OSTrie,STrie)),
-     delete_from_radix_tree_b('_$Var$'(VNo),ValTrans,NVars,Trie0,Trie1)
+     ValTrans = lambda(OSDict,SDict,delete_trie_vdict(NNTerms,NBody,NVars,OSDict,SDict)),
+     delete_radix_vdict('_$Var$'(VNo),ValTrans,NVars,Dict0,Dict1)
      ->	true			% must always succeed
-     ;	Trie1 = Trie0
+     ;	Dict1 = Dict0
     ),
-    delete_list_vns_from_trie_list(VNos,Term,NTerms,Body,Vars,Trie1,Trie).
+    delete_list_vns_from_trie_list(VNos,Term,NTerms,Body,Vars,Dict1,Dict).
 
-delete_from_radix_tree_b(Key,ValTran,Vars,Tree0,Tree) :-
+delete_radix_vdict(Key,ValTran,Vars,Tree0,Tree) :-
     (nonvar(Key)
      ->	hash_key(Key,HashCode)
      ;	true
@@ -1582,10 +1688,10 @@ rtl_union(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
 order_union([],L,L).
 order_union(L1,L2,L3) :- L1 = [_|_],
     order_union_list(L1,L2,L3).
-order_union(Trie1,Trie2,Trie3) :- Trie1 = rtl(_,_,_),
-    union_db_b(Trie1,Trie2,Trie3).
-order_union(Trie1,Trie2,Trie3) :- Trie1 = rt(_,_,_,_),
-    union_db_b(Trie1,Trie2,Trie3).
+order_union(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
+    union_db_b(Dict1,Dict2,Dict3).
+order_union(Dict1,Dict2,Dict3) :- Dict1 = rt(_,_,_,_),
+    union_db_b(Dict1,Dict2,Dict3).
 
 order_union_list([],L,L).
 order_union_list(L1,L2,L3) :- L1 = [V1|L1r],
@@ -1826,10 +1932,10 @@ intersect_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth,T) :-
 order_intersect([],L,L).
 order_intersect(L1,L2,L3) :- L1 = [_|_],
     order_intersect_list(L1,L2,L3).
-order_intersect(Trie1,Trie2,Trie3) :- Trie1 = rtl(_,_,_),
-    intersect_db_b(Trie1,Trie2,Trie3).
-order_intersect(Trie1,Trie2,Trie3) :- Trie1 = rt(_,_,_,_),
-    intersect_db_b(Trie1,Trie2,Trie3).
+order_intersect(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
+    intersect_db_b(Dict1,Dict2,Dict3).
+order_intersect(Dict1,Dict2,Dict3) :- Dict1 = rt(_,_,_,_),
+    intersect_db_b(Dict1,Dict2,Dict3).
 
 
 order_intersect_list([],_L,[]).
@@ -1987,10 +2093,10 @@ rtl_difference(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
 order_difference([],_L,[]).
 order_difference(L1,L2,L3) :- L1 = [_|_],
     order_difference_list(L1,L2,L3).
-order_difference(Trie1,Trie2,Trie3) :- Trie1 = rtl(_,_,_),
-    difference_db_b(Trie1,Trie2,Trie3).
-order_difference(Trie1,Trie2,Trie3) :- Trie1 = rt(_,_,_,_),
-    difference_db_b(Trie1,Trie2,Trie3).
+order_difference(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
+    difference_db_b(Dict1,Dict2,Dict3).
+order_difference(Dict1,Dict2,Dict3) :- Dict1 = rt(_,_,_,_),
+    difference_db_b(Dict1,Dict2,Dict3).
 
 order_difference_list([],_,[]).
 order_difference_list(L1,L2,L3) :- L1 = [V1|L1r],
@@ -2092,10 +2198,10 @@ subset_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth) :-
 order_subset([],_L).
 order_subset(L1,L2) :- L1 = [_|_],
     order_subset_list(L1,L2).
-order_subset(Trie1,Trie2) :- Trie1 = rtl(_,_,_),
-    subset_db_b(Trie1,Trie2).
-order_subset(Trie1,Trie2) :- Trie1 = rt(_,_,_,_),
-    subset_db_b(Trie1,Trie2).
+order_subset(Dict1,Dict2) :- Dict1 = rtl(_,_,_),
+    subset_db_b(Dict1,Dict2).
+order_subset(Dict1,Dict2) :- Dict1 = rt(_,_,_,_),
+    subset_db_b(Dict1,Dict2).
 
 order_subset_list([],_).
 order_subset_list(L1,L2) :- L1 = [V1|L1r],
@@ -2255,10 +2361,10 @@ rtl_sym_diff(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
 order_sym_diff([],L,L).
 order_sym_diff(L1,L2,L3) :- L1 = [_|_],
     order_sym_diff_list(L1,L2,L3).
-order_sym_diff(Trie1,Trie2,Trie3) :- Trie1 = rtl(_,_,_),
-    sym_diff_db_b(Trie1,Trie2,Trie3).
-order_sym_diff(Trie1,Trie2,Trie3) :- Trie1 = rt(_,_,_,_),
-    sym_diff_db_b(Trie1,Trie2,Trie3).
+order_sym_diff(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
+    sym_diff_db_b(Dict1,Dict2,Dict3).
+order_sym_diff(Dict1,Dict2,Dict3) :- Dict1 = rt(_,_,_,_),
+    sym_diff_db_b(Dict1,Dict2,Dict3).
 
 order_sym_diff_list([],L,L).
 order_sym_diff_list(L1,L2,L3) :- L1 = [V1|L1r],
@@ -2361,10 +2467,10 @@ disjoint_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth) :-
 order_disjoint([],L) :- L == [].
 order_disjoint(L1,L2) :-  L1 = [_|_],
     order_disjoint_list(L1,L2).
-order_disjoint(Trie1,Trie2) :- Trie1 = rtl(_,_,_),
-    disjoint_db_b(Trie1,Trie2).
-order_disjoint(Trie1,Trie2) :- Trie1 = rt(_,_,_,_),
-    disjoint_db_b(Trie1,Trie2).
+order_disjoint(Dict1,Dict2) :- Dict1 = rtl(_,_,_),
+    disjoint_db_b(Dict1,Dict2).
+order_disjoint(Dict1,Dict2) :- Dict1 = rt(_,_,_,_),
+    disjoint_db_b(Dict1,Dict2).
 
 order_disjoint_list([],_L).
 order_disjoint_list(L1,L2) :- L1 = [V1|L1r],
@@ -2456,7 +2562,7 @@ xprod_in_db_b(Pref1,Pref2,Pref3,DB0,DB) :-
 	(TLen3 =\= TLen1+TLen2
 	 -> misc_error(('[prolog_db:xprod_in_db] ',Pref1,', ',Pref2,', and ',
 			Pref3,' are inconsistent for cross product.'))
-	 ;  update_subtrie_for_prefix([Pref3a],NSHT,_OSHT,TLen3,DB0,DB),
+	 ;  update_subtrie([Pref3a],NSHT,_OSHT,TLen3,DB0,DB),
 	    xprod_tries(HT1,HT2,NSHT)
 	)
      ;  retractall_in_db_b(Pref3a,DB0,DB) % one or other component is empty
@@ -2620,7 +2726,7 @@ apply_op_in_db_b(lambda(HT1,HT2,HT3,Op),Pref1,Pref2,Pref3,DB0,DB) :-
 	check_prefix_term([Pref2a],TL,'*_in_db/5')
     ),
     call(Op),
-    (update_subtrie_for_prefix([Pref3a],HT3,_,TL,DB0,DB)
+    (update_subtrie([Pref3a],HT3,_,TL,DB0,DB)
      ->	true
      ;	misc_error(('[*_in_db/5] Predicate selection pattern: ',Pref3a,
 		    ' is inconsistent with other patterns.'))
@@ -2669,7 +2775,7 @@ returned in @var{TailLen}.").
 find_subtrie_for_prefix([HeadTerm|HeadTail],HT,TailLen,SHT) :-
     nonvar(HeadTerm),
     get_key_new_terms([HeadTerm],Key,HTerms),
-    find_in_radix_tree_b(Key,SHT0,HT),
+    lookup_radix_dict(Key,SHT0,HT),
     append(HTerms,HeadTail,NHeadTail),
     (is_most_general_term(NHeadTail)
      ->	length(NHeadTail,TailLen),
@@ -2678,8 +2784,8 @@ find_subtrie_for_prefix([HeadTerm|HeadTail],HT,TailLen,SHT) :-
     ).
 
 %% rename to update_subtrie/4.
-:- comment(update_subtrie_for_prefix/6,
-"@pred{update_subtrie_for_prefix(+HeadTail,+NSHT,+OSHT,-TailLen,+HT0,-HT)}
+:- comment(update_subtrie/6,
+"@pred{update_subtrie(+HeadTail,+NSHT,+OSHT,-TailLen,+HT0,-HT)}
 replaces the ht-trie that is associated in the ht-trie @var{HT0} with
 the first variable subterm of @var{HeadTail} with the ht-trie
 @var{NSHT}.  The ht-trie that is replaced is returned in @var{OSHT}.
@@ -2689,62 +2795,25 @@ bound terms followed by a sequence of distinct variables.  If this
 condition does not hold, the predicate fails.  ").
 
 %% DSW: can we combine this with assert_ref_with_trie, and have both efficient?
-:- mode update_subtrie_for_prefix(?,+,?,?,+,?).
-update_subtrie_for_prefix(HeadTail,NSHT,OSHT,TailLen,HT0,HT) :-
+:- mode update_subtrie(?,+,?,?,+,?).
+update_subtrie(HeadTail,NSHT,OSHT,TailLen,HT0,HT) :-
     (NSHT == []
      ->	check_prefix_term(HeadTail,TailLen,'*_in_db/5'),
-	delete_tuple_from_trie(HeadTail,_,_,HT0,HT)
-     ;	update_subtrie_for_prefix_1(HeadTail,NSHT,OSHT,TailLen,HT0,HT)
+	delete_trie_vdict(HeadTail,_,_,HT0,HT)
+     ;	update_subtrie_1(HeadTail,NSHT,OSHT,TailLen,HT0,HT)
     ).
 
-update_subtrie_for_prefix_1([HeadTerm|HeadTail],NSHT,OSHT,TailLen,HT0,HT) :-
+update_subtrie_1([HeadTerm|HeadTail],NSHT,OSHT,TailLen,HT0,HT) :-
     nonvar(HeadTerm),
     NSHT \== [],
     get_key_new_terms([HeadTerm],Key,HTerms),
     append(HTerms,HeadTail,NHeadTail),
     (is_most_general_term(NHeadTail)
      ->	length(NHeadTail,TailLen),
-	update_radix_tree(Key,NSHT,OSHT,HT0,HT)
-     ;	update_radix_tree(Key,NSHT0,OSHT0,HT0,HT),
-	update_subtrie_for_prefix_1(NHeadTail,NSHT,OSHT,TailLen,OSHT0,NSHT0)
+	add_radix_dict(Key,NSHT,HT0,HT,OSHT)
+     ;	add_radix_dict(Key,NSHT0,HT0,HT,OSHT0),
+	update_subtrie_1(NHeadTail,NSHT,OSHT,TailLen,OSHT0,NSHT0)
     ).
-
-:- comment(update_radix_tree/5,
-"update_radix_tree(+Term,?NewVal,-OldVal,+HashTree0,-HashTree) adds a
-new key-value pair (or finds and replaces an existing pair),
-@var{Term} and @var{NewVal}, to the hash-tree, @var{HashTree0},
-producing the new hash-tree, @var{HashTree}.  @var{OldVal} is bound to
-the previous value for this key in the hash table (or to [] if this is
-a new key.)").
-
-% update_radix_tree/5
-update_radix_tree(Key,NVal,OVal,Tree0,Tree) :-
-    hash_key(Key,HashCode),
-    update_radix_tree(Tree0,Key,NVal,HashCode,0,OVal,Tree).
-    
-%update_radix_tree(Tree0,Key,NVal,HashCode,Depth,OVal,Tree)
-update_radix_tree([],Key,Val,_,_,[],rtl(Key,Val,[])).  % add if not there
-update_radix_tree(ORTL,Key,Val,HashCode,Depth,OVal,Tree) :- ORTL = rtl(OKey,_,_),
-    hash_key(OKey,HashOCode),
-    (HashCode =:= HashOCode
-     ->	rtl_insert(ORTL,Key,Val,OVal,Tree) % ?? why insert?
-     ;	OVal = [], % adding a new entry so old is []
-	add_pair_to_empty_radix_tree(HashCode,Key,Val,HashOCode,ORTL,Depth,Tree)
-    ).
-update_radix_tree(RT,Key,ValTran,HashCode,Depth,OVal,Tree) :- RT = rt(_,_,_,_),
-    Index is (HashCode >> Depth) /\ 3,
-    NDepth is Depth + 2,
-    update_right_radix_tree(RT,Key,ValTran,HashCode,NDepth,OVal,Tree,Index).
-
-:- index update_right_radix_tree/8-8.
-update_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(NRT,RT2,RT3,RT4),0) :-
-    update_radix_tree(RT1,Key,VT,HashCode,D,OVal,NRT).
-update_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(RT1,NRT,RT3,RT4),1) :-
-    update_radix_tree(RT2,Key,VT,HashCode,D,OVal,NRT).
-update_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(RT1,RT2,NRT,RT4),2) :-
-    update_radix_tree(RT3,Key,VT,HashCode,D,OVal,NRT).
-update_right_radix_tree(rt(RT1,RT2,RT3,RT4),Key,VT,HashCode,D,OVal,rt(RT1,RT2,RT3,NRT),3) :-
-    update_radix_tree(RT4,Key,VT,HashCode,D,OVal,NRT).
 
 check_taillen(T1,T2,HeadTail,MsgPred) :-
     (T1 = T2
@@ -2813,28 +2882,44 @@ split_prefix_term_b0(Terms,Tail,DB0,DB) :- Terms = [Term|Terms1],
     (var(Term)
      ->	Tail = Terms, DB = DB0
      ;	get_key_new_terms(Terms,Key,NTerms),
-	find_in_radix_tree_b(Key,SDB,DB0),
+	lookup_radix_dict(Key,SDB,DB0),
 	split_prefix_term_b0(NTerms,Tail,SDB,DB)
     ).
     
 split_clause_in_db_b(Terms,Body,DB) :-
-    find_tuple_in_trie(Terms,Body0,Vars,DB),
+    lookup_trie_vdict(Terms,Body0,Vars,DB),
     pdb_unnumbervars(Body0,0,Body,Vars).
 ***/
 
 /***********************************************************/
 
 rtl_insert([],Key,Val,[],rtl(Key,Val,[])).
-rtl_insert(rtl(OK,OVal0,RTLr),K,Val,OVal,NRTL) :-
-    (OK @< K
-     ->	NRTL = rtl(OK,OVal0,NRTLr),
-	rtl_insert(RTLr,K,Val,OVal,NRTLr)
-     ; OK == K
-     ->	OVal = OVal0,
-	NRTL = rtl(OK,Val,RTLr)	
-     ;	OVal = [],
-	NRTL = rtl(K,Val,rtl(OK,OVal0,RTLr))
-    ).
+rtl_insert(rtl(OK,OVal0,RTLr),Key,Val,OVal,NRTL) :-
+    (OK @< Key
+     -> NRTL = rtl(OK,OVal0,NRTLr),
+        rtl_insert(RTLr,Key,Val,OVal,NRTLr)
+      ; OK == Key
+      -> OVal = OVal0,
+         NRTL = rtl(OK,Val,RTLr)	
+      ;  OVal = [],
+         NRTL = rtl(Key,Val,rtl(OK,OVal0,RTLr))
+     ).
+
+/**rtl_insert(RTL,Key,Val,OVal,NRTL) :-
+    (RTL == []
+     -> OVal = [],
+	NRTL = rtl(Key,Val,[])
+     ;  RTL = rtl(OK,OVal0,RTLr),
+	(OK @< Key
+	 -> NRTL = rtl(OK,OVal0,NRTLr),
+	    rtl_insert(RTLr,Key,Val,OVal,NRTLr)
+	 ; OK == Key
+	 -> OVal = OVal0,
+	    NRTL = rtl(OK,Val,RTLr)	
+	 ;  OVal = [],
+	    NRTL = rtl(Key,Val,rtl(OK,OVal0,RTLr))
+	)
+     ).***/
 
 appl(lambda(X,Y,G),X,Y) :- call0(G). % HiLog
 %%appl(lambda(X,G),X) :- call_c(G).	 % HiLog
@@ -2874,6 +2959,7 @@ cvt_pa(PA1,PA2,PSkel1,PSkel2) :-
     ).
 
 
+:- mode my_numbervars(?,+,?).
 my_numbervars(Y,I,J) :-
     term_type(Y,T),
     my_numbervars(Y,I,J,T).
@@ -2907,6 +2993,11 @@ my_numbervars(Y,I,J,N,A) :-
     ).
 
 
+:- comment(pdb_unnumbervars/4,
+"@pred{pdb_unnumbervars(?TermIn,+FirstN,?TermOut,?Vars)} copies
+@var{TermIn} to @var{TermOut} changing all occurrences of subterms of
+the form '_$Var$'(i) to the i^th element in the log_ith list
+@var{Vars}.").
 :- mode pdb_unnumbervars(?,+,?,?).
 pdb_unnumbervars(TermIn,FirstN,TermOut,Vars) :-
     unnumbervars(TermIn,FirstN,TermOut,Vars,'_$Var$'(_)).
@@ -2967,13 +3058,14 @@ instance of @var{Goal} that is proved using the clauses of
 in_db(Goal,H) :-
     (var(Goal)
      ->	misc_error('[prolog_db] in_db/2, Illegal argument 1, must not be a variable')
-     ; H == module
+    ; H == module
      ->	call(Goal)
      ;	tab_intern_termhash(DB,H),
 	in_db_b(Goal,DB)
     ).
 
 %% simpler alias, if desired.
+:- comment(in/2,"@pred{in/2} is and alias for @pred{in_db}.").
 :- mode in(?,+).
 in(Goal,H) :- in_db(Goal,H).
 
@@ -3054,32 +3146,57 @@ dump_db_b(Filename,DB) :-
      ;	close(OStr)
     ).
 
+:- comment(write_db/1,"@pred{write_db(+DB)} uses Prolog's
+@pred{write/1} predicate to write to userout all the elements of
+prolog db @var{DB}. The elements are written (in no particular order)
+on a single lince, separated by commas and terminated by a period
+(full stop).").
 :- mode write_db(+).
 write_db(DB) :- write_db(userout,DB).
 
+:- comment(write_label_db/2,"@pred{write_label_db(+Label,+DB)} first
+writes the term @var{Label} followed by a colon.  Then it uses
+@pred{write_db(DB)} to write out the contents of prolog db
+@var{DB}.").
 :- mode write_label_db(+,+).
 write_label_db(Label,DB) :-
     write(Label), write(': '),
     write_db(userout,DB).
 
+:- comment(write_label_db/3,
+"@pred{write_label_db(+OutFile,+Label,+DB)} is similar to
+@pred{write_label_db/2} but writes it output to file
+@var{OutFile}.").
 :- mode write_label_db(+,?,+).
 write_label_db(Filename,Label,DB) :-
     write(Filename,Label), write(Filename,': '),
     write_db(Filename,DB).
 
+:- comment(writeln_db/1, "@pred{writeln_db(+DB)} is like
+@pred{write_db/1} but writes a newline after printing the database
+contents.").
 :- mode writeln_db(+).
 writeln_db(DB) :- writeln_db(userout,DB).
 
+:- comment(writeln_label_db/2, "@pred{writeln_label_db(+Label,+DB)} is
+like @pred{write_label_db/2} but writes a newline after printing the
+database contents.").
 :- mode writeln_label_db(+,+).
 writeln_label_db(Label,DB) :-
     write(Label), write(': '),
     writeln_db(DB).
 
+:- comment(writeln_label_db/3,
+"@pred{writeln_label_db(+OutFile,+Label,+DB)} is like
+@pred{write_label_db/3} but writes a newline after printing the
+database contents.").
 :- mode writeln_label_db(+,+,+).
 writeln_label_db(Filename,Label,DB) :-
     write(Filename,Label), write(Filename,': '),
     writeln_db(Filename,DB).
 
+
+:- comment(write_db/2, "@pred{write_db(+OutFile,+DB)} is like @pred{write_db(+DB)} but writes its output to the file @var{OutFile}").
 :- mode write_db(+,+).
 write_db(Filename,DB) :-
     (Filename == userout
@@ -3098,6 +3215,10 @@ write_db(Filename,DB) :-
      ;	close(OStr)
     ).
     
+:- comment(writeln_db/2, "@pred{writeln_db(+OutFile,+DB)} writes the
+contents of prolog DB @var{DB} to file @var{OutFile}, followed by a
+newline.  If @var{OutFile} is 'userout', then it is written to
+userout.").
 :- mode writeln_db(+,+).
 writeln_db(Filename,DB) :-
     (Filename == userout
@@ -3129,7 +3250,7 @@ write_clause(OStr,Clause) :-
      ;	write(OStr,Clause)
     ).
 
-:- comment(pure_in_db/2,"@pred{pure_in_db(+G,+DB)} has the
+:- comment(pure_in_db/2, "@pred{pure_in_db(+G,+DB)} has the
 same functionality as @pred{in_db(G,DB)}, but it is implemented
 without cuts, so it can be used when this file is loaded into a DB by
 @pred{load_in_db/2}. ").
@@ -3147,7 +3268,7 @@ pure_in_db_b(G,Vars,DB) :-
      ;	G \== true,functor(G,F,A),std_xsb:standard_symbol(F,A,_)
      ->	pdb_unnumbervars(G,0,G0,Vars), call_c(G0)
 %%     ;	clause_in_db_b(G,B,DB),
-     ;  pdb_unnumbervars(G,0,G0,Vars), find_tuple_in_trie([G0],B,Vars1,DB),
+     ;  pdb_unnumbervars(G,0,G0,Vars), lookup_trie_vdict([G0],B,Vars1,DB),
 	pure_in_db_b(B,Vars1,DB)
     ).
 
@@ -3369,7 +3490,7 @@ join_in_db_b(Pref1,Pref2,NJoin,Pref3,DB0,DB) :-
     join_tries(HT1,HT2,NJoin,HT3),
     (HT3 == []
      ->	retractall_in_db_b(Pref3a,DB0,DB)
-     ;	update_subtrie_for_prefix([Pref3a],HT3,_,_,DB0,DB)
+     ;	update_subtrie([Pref3a],HT3,_,_,DB0,DB)
     ).
 
 join_tries(T1,T2,NJoin,T) :-
@@ -3509,8 +3630,8 @@ reorder_in_db_b(PrefI,PrefO,DB0,DB) :-
     length(IArgs,NArgs),
     append(IArgs,_,IVars),
     check_prefix_term([PrefOa],TLen,'reorder_in_db/4'),
-    reorder_trie(IHT,IVars,ReOrdVars,OVars,[],OutTupTrie),
-    update_subtrie_for_prefix([PrefO],OutTupTrie,_,_,DB0,DB).
+    reorder_trie(IHT,IVars,ReOrdVars,OVars,[],OutTupDict),
+    update_subtrie([PrefO],OutTupDict,_,_,DB0,DB).
 
 num_common_tail_vars(IV,OV,ODiffVars,NCom) :-
     (IV == OV
@@ -3522,35 +3643,35 @@ num_common_tail_vars(IV,OV,ODiffVars,NCom) :-
 	num_common_tail_vars(IVt,OVt,ODiffVars1,NCom)
     ).
 
-/*reorder_trie(InpTupleTrie,InpTerms,ReordVars,OutPrefTail,OutTupTrie0,OutTupTrie).
-InpTupleTrie: the input tuple trie
-InpTerms: list of variables for InpTupleTrie
+/*reorder_trie(InpTupleDict,InpTerms,ReordVars,OutPrefTail,OutTupDict0,OutTupDict).
+InpTupleDict: the input tuple trie
+InpTerms: list of variables for InpTupleDict
 ReordVars: List of variables being reordered (must become ground to assert)
-OutPrefTail: Terms of out prefix term subtrie (to add to OutTupleTrie)
-OutTupTrie0: input tuple trie collecting output tuples
-OutTupTrie: output tuple trie collecting output tuples
+OutPrefTail: Terms of out prefix term subtrie (to add to OutTupleDict)
+OutTupDict0: input tuple trie collecting output tuples
+OutTupDict: output tuple trie collecting output tuples
 */
 
-reorder_trie([],_Terms,_Reord,_OutPref,OutSubTrie,OutSubTrie).
-reorder_trie(RTL,Terms,ReordVars,OutPrefTail,OutSubTrie0,OutSubTrie) :-
+reorder_trie([],_Terms,_Reord,_OutPref,OutSubDict,OutSubDict).
+reorder_trie(RTL,Terms,ReordVars,OutPrefTail,OutSubDict0,OutSubDict) :-
     RTL = rtl(_,_,_),
-    reorder_trie_rtl(RTL,Terms,ReordVars,OutPrefTail,OutSubTrie0,OutSubTrie).
-reorder_trie(InpSubTrie,InpTuple,ReordVars,OutPrefTail,OutSubTrie0,OutSubTrie) :-
-    InpSubTrie = rt(RT1,RT2,RT3,RT4),
-    reorder_trie(RT1,InpTuple,ReordVars,OutPrefTail,OutSubTrie0,OutSubTrie1),
-    reorder_trie(RT2,InpTuple,ReordVars,OutPrefTail,OutSubTrie1,OutSubTrie2),
-    reorder_trie(RT3,InpTuple,ReordVars,OutPrefTail,OutSubTrie2,OutSubTrie3),
-    reorder_trie(RT4,InpTuple,ReordVars,OutPrefTail,OutSubTrie3,OutSubTrie).
+    reorder_trie_rtl(RTL,Terms,ReordVars,OutPrefTail,OutSubDict0,OutSubDict).
+reorder_trie(InpSubDict,InpTuple,ReordVars,OutPrefTail,OutSubDict0,OutSubDict) :-
+    InpSubDict = rt(RT1,RT2,RT3,RT4),
+    reorder_trie(RT1,InpTuple,ReordVars,OutPrefTail,OutSubDict0,OutSubDict1),
+    reorder_trie(RT2,InpTuple,ReordVars,OutPrefTail,OutSubDict1,OutSubDict2),
+    reorder_trie(RT3,InpTuple,ReordVars,OutPrefTail,OutSubDict2,OutSubDict3),
+    reorder_trie(RT4,InpTuple,ReordVars,OutPrefTail,OutSubDict3,OutSubDict).
 
-reorder_trie_rtl([],_Terms,_ReordVars,_OutPrefTail,OutSubTrie,OutSubTrie).
-reorder_trie_rtl(rtl(K,Trie,RTLs),Terms,ReordVars,OutPrefTail,OutSubTrie0,OutSubTrie) :-
+reorder_trie_rtl([],_Terms,_ReordVars,_OutPrefTail,OutSubDict,OutSubDict).
+reorder_trie_rtl(rtl(K,Dict,RTLs),Terms,ReordVars,OutPrefTail,OutSubDict0,OutSubDict) :-
     copy_term(t(Terms,ReordVars,OutPrefTail),t(Terms1,ReordVars1,OutPrefTail1)),
     match_key_new_terms(Terms1,K,NTerms),
     (ground(ReordVars1)
-     ->	update_subtrie_for_prefix(OutPrefTail1,Trie,_,_,OutSubTrie0,OutSubTrie1)
-     ;	reorder_trie(Trie,NTerms,ReordVars1,OutPrefTail1,OutSubTrie0,OutSubTrie1)
+     ->	update_subtrie(OutPrefTail1,Dict,_,_,OutSubDict0,OutSubDict1)
+     ;	reorder_trie(Dict,NTerms,ReordVars1,OutPrefTail1,OutSubDict0,OutSubDict1)
     ),
-    reorder_trie_rtl(RTLs,Terms,ReordVars,OutPrefTail,OutSubTrie1,OutSubTrie).
+    reorder_trie_rtl(RTLs,Terms,ReordVars,OutPrefTail,OutSubDict1,OutSubDict).
 
 
 /********************************************************/
@@ -3584,35 +3705,35 @@ project_in_db_b(PrefI,NArgs,PrefO,DB0,DB) :-
 %%	project_ht(IHT,NArgs,OHT),
 	project_trie(IHT,NArgs,OHT),
 	(OHT == []
-	 -> delete_from_trie_b(PrefOa,_,DB0,_,DB)
-	 ;  update_subtrie_for_prefix([PrefOa],OHT,_,_,DB0,DB)
+	 -> delete_trie_vdict([PrefOa],_,_,DB0,DB)
+	 ;  update_subtrie([PrefOa],OHT,_,_,DB0,DB)
 	)
      ;  DB = DB0
     ).
 
 
-project_trie(Trie0,NArgs,Trie) :-
-    project_trie(Trie0,NArgs,[],Trie).
+project_trie(Dict0,NArgs,Dict) :-
+    project_trie(Dict0,NArgs,[],Dict).
 
-project_trie([],_NArgs,PTrie,PTrie).
-project_trie(Trie0,NArgs,PTrie0,PTrie) :-
-    Trie0 = rtl(_,_,_),
-    project_rtl(Trie0,NArgs,PTrie0,PTrie).
-project_trie(Trie0,NArgs,PTrie0,PTrie) :-
-    Trie0 = rt(RT1,RT2,RT3,RT4),
-    project_trie(RT1,NArgs,PTrie0,PTrie1),
-    project_trie(RT2,NArgs,PTrie1,PTrie2),
-    project_trie(RT3,NArgs,PTrie2,PTrie3),
-    project_trie(RT4,NArgs,PTrie3,PTrie).
+project_trie([],_NArgs,PDict,PDict).
+project_trie(Dict0,NArgs,PDict0,PDict) :-
+    Dict0 = rtl(_,_,_),
+    project_rtl(Dict0,NArgs,PDict0,PDict).
+project_trie(Dict0,NArgs,PDict0,PDict) :-
+    Dict0 = rt(RT1,RT2,RT3,RT4),
+    project_trie(RT1,NArgs,PDict0,PDict1),
+    project_trie(RT2,NArgs,PDict1,PDict2),
+    project_trie(RT3,NArgs,PDict2,PDict3),
+    project_trie(RT4,NArgs,PDict3,PDict).
 
-project_rtl([],_,PTrie,PTrie).
-project_rtl(rtl(_K,STrie,RTF),NArgs,PTrie0,PTrie) :-
+project_rtl([],_,PDict,PDict).
+project_rtl(rtl(_K,SDict,RTF),NArgs,PDict0,PDict) :-
     (NArgs =< 1
-     ->	union_tries(PTrie0,STrie,0,PTrie1),
-	project_rtl(RTF,NArgs,PTrie1,PTrie)
+     ->	union_tries(PDict0,SDict,0,PDict1),
+	project_rtl(RTF,NArgs,PDict1,PDict)
      ;	NArgs1 is NArgs - 1,
-	project_trie(STrie,NArgs1,PTrie0,PTrie1),
-	project_rtl(RTF,NArgs,PTrie1,PTrie)
+	project_trie(SDict,NArgs1,PDict0,PDict1),
+	project_rtl(RTF,NArgs,PDict1,PDict)
     ).
 
 /********************************************************/
@@ -3695,9 +3816,9 @@ to build the list of (possibly duplicated) answers.  DOES NOT NEST! (but should)
 findall_db(Template,Goal,DB) :-
     copy_term((Template,Goal),(NTemplate,NGoal)), % protect incoming vars
     (findall_db0(NTemplate,NGoal,DB0)
-     ->	abolish_table_pred(findall_db0(_,_,_)),
+     ->	abolish_table_call(findall_db0(NTemplate,NGoal,_)),
 	DB = DB0
-     ;	abolish_table_pred(findall_db0(_,_,_)),
+     ;	abolish_table_call(findall_db0(NTemplate,NGoal,_)),
 	new_db(DB)
     ).
     
@@ -3707,7 +3828,7 @@ findall_db0(Template,Goal,NTemplate) :-
     numbervars((Template,Goal),0,_), % aggr doesnt handle vars in group-by vars
     call(NGoal).
 
-:- export add_to_db/3.
+:- comment(add_to_db/3,"@pred{add_to_db/3} is an alias for @pred{assert1_in_db/3}.").
 :- mode add_to_db(+,+,?).
 add_to_db(DB0,Ans,DB) :-
     assert1_in_db(Ans,DB0,DB).
@@ -3768,7 +3889,7 @@ radix_tree_size(T,Size) :-
      gensym('_ctr',Ctr),
      conset(Ctr,0),
      (do_all
-      find_in_radix_tree_b(_,_,T),
+      lookup_radix_dict(_,_,T),
       coninc(Ctr)
      ),
      conget(Ctr,Size).
@@ -3799,7 +3920,7 @@ hash_bin(Term,BinList0,BinList) :-
 
 delete_from_radix_tree(Key,Val,Vars,Tree0,Tree) :-
     ValTrans = lambda(OV,NV,order_delete(OV,Val,NV)),
-    delete_from_radix_tree_b(Key,ValTrans,Vars,Tree0,Tree).
+    delete_radix_vdict(Key,ValTrans,Vars,Tree0,Tree).
 
 %% unused??
 delete_list_from_radix_tree([],T,T).
@@ -3831,8 +3952,8 @@ valid_radix_tree(T) :- T = rt(RT1,RT2,RT3,RT4),
 valid_rtl([]).
 valid_rtl(rtl(_,_,RTL)) :- valid_rtl(RTL).
 
-delete_list_from_trie([],Trie,Trie).
-delete_list_from_trie([H-B|List],Trie0,Trie) :-
-    delete_from_trie_b(H,B,Trie0,Trie1),
-    delete_list_from_trie(List,Trie1,Trie).
+delete_list_from_trie([],Dict,Dict).
+delete_list_from_trie([H-B|List],Dict0,Dict) :-
+    delete_trie_vdict([H],B,_,Dict0,Dict1),
+    delete_list_from_trie(List,Dict1,Dict).
 

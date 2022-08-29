@@ -1,6 +1,6 @@
 :- export new_db/1, is_db/1, assert_in_db/3, add/3, assert1_in_db/3, 
    assert_in_db/2, add/2, retractall_in_db/3, remove/3, clause_in_db/3, fact_in_db/2,
-   variant_clause_in_db/3,
+   gfact_in_db/2,
    in_db/2, in/2, in_db/3, load_in_db/3, load_in_db/2, subset_db/2,
    loadc_in_db/2, loadc_in_db/3, loadc_in_db/4,
    subsumed_db/2, size_db/2,
@@ -22,6 +22,9 @@
 :- export pdb_unnumbervars/4, clause_in_db/4.
 :- export eval_db/2.
 
+:- export add_to_db/3.
+
+
 :- import gensym/2, conset/2, coninc/1, conget/2 from gensym.
 :- import close/1, writeln/2, '=..'/2, file_exists/1, write/1,
    functor/3, functor/4, open/3, call/1, read/2, (\=)/2, write/2
@@ -31,7 +34,7 @@
 :- import standard_symbol/3 from std_xsb.
 
 :- import findall/3, term_variables/2, sort/2 from setof.
-:- import (tnot)/1, abolish_table_pred/1 from tables.
+:- import (tnot)/1, abolish_table_call/1 from tables.
    :- import numbervars/3, unnumbervars/5 from num_vars.
 :- import copy_term/2, length/2, append/3 from basics.
 
