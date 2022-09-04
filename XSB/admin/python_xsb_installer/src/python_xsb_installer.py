@@ -1,11 +1,15 @@
+# standard libraries
 import argparse
 import os
-import requests
 import shutil
 import sys
 import glob
 from subprocess import *
 import sysconfig
+
+# 3rd-party packagesf
+import requests
+#import find_libpython
 
 # python3.8 -m download
 
@@ -101,18 +105,38 @@ def install_xsb():
 
 #------------------------------------------------------
 
-def check_sys_path():
+def check_sys_path_conflicts():
     hits = []
+    error_string = ''
     for path in sys.path:
-        print('path: '+path)
+#        print('path: '+path)
         globlist = glob.glob(path+'/px*')
-        print('   glob: '+str(globlist))
+#        print('   glob: '+str(globlist))
         if globlist != []:
             for globfile in globlist:
 #                fullpath = path + '/' + globfile
                 hits.append(globfile)
+    if hits != []:
+#        if clargs.force:
+#            print("removing")
+#        else:
+        for elt in hits:
+            error_string = error_string + ' ' + elt
+#            print(elt,end=' ')
+#        print(' ')
+        raise(PermissionError('Possibe conflicting px implementations. ' + 
+                              'Check/remove manually:\n\n' + error_string))
     return hits
         
+#------------------------------------------------------
+
+def check_libpython(): 
+    v = sysconfig.get_config_vars()
+    maybe_paths = [os.path.join(v[pv], v['LDLIBRARY']) for pv in ('LIBDIR', 'LIBPL')]
+    if len(list(filter(os.path.exists, maybe_paths))) == 0:
+        raise FileNotFoundError('Cannot find libpython for ' + preferred_python +
+                                ' make sure the proper development library is installed')
+    
 #------------------------------------------------------
 # There has to be a better way to do this than introducing such a trivial file.
 # Anyway, not yet ysed, but in case I ever want for 1 version of python to download for another.
@@ -128,16 +152,8 @@ if __name__ == '__main__':
     parser = get_input_args()
     clargs = parser.parse_args()
     print(clargs)
-    conflicts = check_sys_path()
-#    print(conflicts)
-    if conflicts != []:
-        if clargs.force:
-            print("removing")
-        else:
-            for elt in conflicts:
-                print(elt,end=' ')
-            print(' ')
-            raise PermissionError('Possibly conflicting px implementations, remove manually:\n')
+    check_libpython()
+    conflicts = check_sys_path_conflicts()
     get_basedir()
     print('basedir =' + basedir)
     invoke_dir = os.getcwd()
@@ -172,3 +188,4 @@ if __name__ == '__main__':
 
 # todo
 # handle preferred_python = python3.7m
+
