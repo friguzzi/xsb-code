@@ -14,7 +14,7 @@ cd px
 @PYTHON_BIN@ -m pip install --upgrade setuptools wheel > ../px-install.log 2>&1
 
 @PYTHON_BIN@ .tmp_pxsetup.py bdist_wheel >> ../px-install.log 2>&1
-@PYTHON_BIN@  -m pip -v install --no-index --find-links=dist px >> ../px-install.log 2>&1
+@PYTHON_BIN@  -m pip -v install --no-index --force-reinstall --find-links=dist px >> ../px-install.log 2>&1
 #@PYTHON_BIN@  -m pip -v install --no-index --find-links=dist px --user >> ../px-install.log 2>&1 
 
 px_errors=`grep -i -e error ../px-install.log | grep -v Werror | grep -v "error checking the latest version of pip"`
