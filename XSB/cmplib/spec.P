@@ -297,7 +297,7 @@ specialise_pred(Sym, Calls, Representable, SymTab, CLin, CLout) :-
 	    ; non_overlapping_selection(Calls), Representable = 1
 	    )
 	  ) ->
-		message(('% Specialising partially instantiated calls to ',
+		quietload_message(('% Specialising partially instantiated calls to ',
 			 N, '/', A)),
 		'specialise pred'(Calls, N, A, Tabled, SymTab, CLin, CLout)
 	; CLout = CLin, Representable = 0,

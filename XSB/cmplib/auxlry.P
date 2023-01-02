@@ -26,6 +26,7 @@
 :- compiler_options([xpp_on,optimize,sysmod]).
 #include "standard.h"
 #include "celltags_xsb.h"
+#include "flag_defs_xsb.h"
 
 
 /*============================================================*/
@@ -36,6 +37,13 @@
 message(Message) :- ttywritenl(Message, STDMSG).
 
 messagenonl(Message) :- ttywrite(Message, STDMSG).
+
+quietload_message(Message):- 
+	stat_flag(BANNER_CTL,BannerCtl),
+	(BannerCtl mod QUIETLOAD =:= 0
+	 ->  true
+	 ;   message(Message)
+	 ).
 
 ttywrite((X,Y), File) :- !, ttywrite(X, File), ttywrite(Y, File).
 ttywrite(T, File) :- file_write(File, T).

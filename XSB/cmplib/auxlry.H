@@ -24,7 +24,7 @@
 */
 
 
-:- export message/1, warning/1, error/1, time_message/2, 
+:- export message/1, quietload_message/1, warning/1, error/1, time_message/2, 
 	  setoptions/1, setoptions1/1, subsumes/2, dict_lookup/3, option/1,
 	  verbo_time_message/2, subsumed_member/2, ll_arg/3,
 	  freeze/1, melt/2, writetop/2, set_global_compiler_options/1,
@@ -43,7 +43,7 @@
      from standard.
 :- import assert/1, retractall/1, (dynamic)/1 from assert.
 %%:- import sys_exit/1 from shell.
-:- import term_psc/2, term_type/2, psc_arity/2, term_arg/3
+:- import stat_flag/2, term_psc/2, term_type/2, psc_arity/2, term_arg/3
         from machine.
 :- import misc_error/1 from error_handler.
    :- import file_write/2 from xsb_writ.
