@@ -3698,7 +3698,7 @@ jaccard similarity.
 
 As discussed in Section~\ref{standard}, XSB supports UTF-8 unicode in
 its I/O and stream handling predicates, in standard predicates like
-{\tt atom\_codes/2} and {\tt atom\_chars/2} and in libraries {\tt
+{\tt atom\_codes/2} and {\tt atom\_chars/2} and in libraries like {\tt
   prpc\_files} that provides I/O for files in {\tt csv} and similar
 formats.  Beyond this basic support the {\tt xp\_unicode} library
 provides further unicode support for capitalizing and lowering unicode
@@ -3720,6 +3720,9 @@ The extra functionality provided by this initial version of {\tt
 
 \ourpylibitem{unicode\_lower(+Upper,-Lower)}{unicode\_lower/2}{xp\_unicode}
   Lower-cases any applicable Unicode characters in the atom {\tt Upper}.
+
+\ourpylibitem{unicode\_capitalize(+Input,-Capitalized)}{unicode\_capitalize/2}{xp\_unicode}
+Capitalizes the first Unicode character in {\tt Input}.
 
 \ourpylibitem{unicode\_char\_category(+Char,-Cat)}{unicode\_char\_category/2}{xp\_unicode}
 Obtains the category {\tt Cat} of any unicode character {\tt Char}:

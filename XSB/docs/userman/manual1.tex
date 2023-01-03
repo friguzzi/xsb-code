@@ -74,7 +74,8 @@
 \newcommand{\ourmoditem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
 \newcommand{\ourrepeatmoditem}[3]{\item[{\mbox{\tt #1}}]\index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\ \vspace*{-.35in}}
 
-\newcommand{\ourpylibitem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf Python-based module:} {\tt #3}}\ \\}
+%\newcommand{\ourpylibitem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\mbox{\sf Python-dependent module:} {\tt #3}}\ \\}
+\newcommand{\ourpylibitem}[3]{\item[{\mbox{\tt #1}}] \index{\texttt{#2}}\hspace*{\fill}{\tt #3} {\mbox{\sf (Python-dependent)}} \ \\}
 
 % Use for C predicates
 \newcommand{\ourCitem}[2]{\item[{\mbox{\tt #1}}]\index{\texttt{#2}{\texttt{()}}}\hspace*{\fill}{\mbox{\it C function}}\ \\}
@@ -201,7 +202,7 @@
 
 \title{\bf The XSB System \\ \version .x\\ Volume 1: Programmer's Manual}
 
-\author{{\includegraphics[width=2.5in]{\xsblogo}}\\
+\author{{\includegraphics[width=2.5in]{xsb-logo}}\\
         \ \\ 
         {\em Theresa Swift} \ \ \ 
         {\em David S. Warren} \\ 
