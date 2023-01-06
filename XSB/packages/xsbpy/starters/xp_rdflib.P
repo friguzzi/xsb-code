@@ -16,8 +16,11 @@
 % tested.  Sample files are in the apps directory.
 % for an understandable demo try: 
 % ?- read_rdf(File,Format,TripleList),member(Triple,TripList).
+%read_rdf(File,jsonld,TripleList):-!,
+%    pyfunc(xp_rdflib,rdflib_parse(File),TripleList),
+%    length(TripleList,Len),write(Len),writeln(' lines read.').
 read_rdf(File,Format,TripleList):-
-    member(Format,[turtle,nt]),!,
+    member(Format,[turtle,nt,jsonld]),!,
     pyfunc(xp_rdflib,rdflib_parse(File),[format=Format],TripleList),
     length(TripleList,Len),write(Len),writeln(' lines read.').
 read_rdf(File,nquads,TripleList):- !,
