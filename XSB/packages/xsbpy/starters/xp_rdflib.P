@@ -28,6 +28,8 @@ read_rdf(File,nquads,TripleList):- !,
     length(TripleList,Len),write(Len),writeln(' lines read.').
 read_rdf(File,ttl,TripleList):- !,
     read_rdf(File,turtle,TripleList).
+read_rdf(File,ntriples,TripleList):- !,
+    read_rdf(File,nt,TripleList).
 read_rdf(_File,_Format,_):-
     misc_error(['read_rdf/3 has currently only been tested on turtle, ttl, nt, and nquads.  ',
 		'Depending on the format it may be easy or hard to extend: see the rdflob ',
