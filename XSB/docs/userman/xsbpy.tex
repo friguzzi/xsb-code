@@ -1183,28 +1183,29 @@ that Python options needed to deserialize an RDFllb graph write are
 specific to the RDFlib plug-in for a particular format, and these
 plug-ins are not always consistent with one another.  As a result, if
 other formats are desired, minor modifications of {\tt xp\_rdflib} may
-be necessary.
+be necessary, though they will often be simple to make.
 
 The use of {\tt xp\_rdflib} differs on the RDF format used.  For the
-turtle, ntriples and nquads formats a file is read into XSB as a
+{\tt turtle} (or {\tt ttl}), {\tt nt} (or {\tt ntriples}) and {\tt
+  nquads} and {\tt jsonld} formats a file is read into XSB as a
 (large) list, and an XSB list of terms of the proper form can be
-transformed into RDF and written to a file.  For the hdt format the
-usage pattern is different: when an hdt file is loaded, it is simply
-memory mapped into a process and facts are loaded into a rdflib graph
-(and into XSB) purely on demand~\footnote{At least I think that's how
-  it works...}.
+transformed into RDF and written to a file.  For the {\tt hdt} format
+the usage pattern is different: when an {\tt hdt} file is loaded, it
+is simply memory mapped into a process and facts are loaded into a
+rdflib graph (and into XSB) purely on demand~\footnote{At least I
+think that's how it works...}.
 
-\subsubsection{Functionality for Turtle, Ntriples and Nquads Formats}
+\subsubsection{Functionality for Turtle, N-triples and N-quads Formats}
 
 \paragraph{Reading RDF}
 \begin{itemize}
 \item {\tt read\_rdf(+File,+Format,-TripleList)} reads RDF from a file
   containing an RDF graph formatted as {\tt Format}, where the formats
-  {\tt turtle}, {\tt nt} and {\tt nquads} have been tested (the format
-  {\tt ttl} is also allowed as a substitute for {\tt turtle}.  These
-  formats can be tested on {\tt sample.ttl}, {\tt sample.nt} and {\tt
-    sample.nq}, all of which are in the {\tt packages/xsbpy/starters}
-  directory.
+  {\tt turtle}, {\tt nt}, {\tt jsonld} and {\tt nquads} have been
+  tested.\footnote{The format {\tt ttl} is allowed as a substitute for
+  {\tt turtle}, and {\tt ntriples} for {\tt nt}.}.  These formats can
+  be tested on {\tt sample.ttl}, {\tt sample.nt} and {\tt sample.nq},
+  all of which are in the {\tt packages/xsbpy/starters} directory.
 
   Due to the structure of the Python {\tt RDFlib} graph, no guarantee
   is made that the order of facts in {\tt File} will match the order
@@ -1621,7 +1622,151 @@ called directly from Prolog.
   Prolog atom {\tt JsonAtom}.
 \end{itemize}  
 
-\subsection{Other Examples and Demos}
+\subsection{Querying Wikidata from XSB}
+%
+{\sc Documentation is under construction, but the first versions of
+  these modules are complete.}
+
+Wikidata is a multi-language ontology-style knowledge graph created
+from processing Wikipedia articles and from many other sources.  The
+Wikidata graph contains a huge amount of information with 14-15
+billion edges, This information consists of {\em Qnodes} which include
+people, places, things and their classes.  Among the more important
+Qnodes are of course, XSB ({\tt Q8042469}) and Prolog ({\tt Q163468}).
+Qnodes are related to each other using {\em Pnodes}: among the more
+important indicate that one node is a subclass of another ({\tt P279})
+or an instance of another ({\tt P31}).  Both Pnodes and Qnodes have
+various attributes such as their preferred label
+(\verb|http://www.w3.org/2004/02/skos/core#prefLabel|).
+
+Due to the amount of information it contains, Wikidata is widely used
+in knowledge internsive applications such as NLP, entity resolution,
+and content extraction along with many others.  However, Wikidata can
+be difficult to use due to its size and its design.
+
+In terms of its size, while Wikidata can be downloaded and stored in a
+database, this can be time and resource intensive.  Alternately,
+various Wikidata servers can be queried via REST interfaces, although
+the public servers limit the number of queries made from a given
+caller over a time period, making them useful only for a light query
+load.  Easily usable snapshots of a Wikidata at a given time are also
+available in RDF-HDT format (cf. Section
+\ref{secLxp-rdflib}).\footnote{Available at {\tt
+  https://www.rdfhdt.org/datasets}.}  In using XSB with Wikidata, one
+project found it worked well to query RDF-HDT first, with REST queries
+as a backup.
+
+The design of Wikidata also makes it difficult to use.  Information
+useful to one project may simply be noise to another.  In addition
+some WIkidata statements are reified, and others are not.  And
+finally, the need to use identifiers such as {\tt P31} means that
+aliases must be used for code readability.
+
+XSB's Wikidata interfaces help address many of these issues. The HDT
+interface {\tt xp\_wd} and the server interface {\tt xp\_wdi} were
+both developed during a project that heavily used both XSB and
+Wikidata.  While these interfaces worked well for our project, they
+make no claim to tame all of Wikidata's difficulties, just the ones we
+repeatedly ran into.
+
+\subsubsection{{\tt xp\_wd}: Querying Wikidata via HDT}
+
+\begin{description}
+  \indourmoditem{wd\_query(?Arg1,?Arg2,?Arg3,?Lang)}{wd\_query/4}{xp\_wd}
+  This predicate queries the HDT version of Wikidata and unifies the
+  various arguments with Wikidata triples that match the input, so
+  that the caller may backtrack trhough all results.  {\tt Arg1} and
+  {\tt Arg3} can either be concise Qnode identifiers (e.g., {\tt
+    Q144}: {\em dog}) or URLs that may or may not represent
+  Qnodes.\footnote{Qnode identifiers are automatically expanded to
+  URLs.}  Similarly, {\tt Arg2} may be a concise Pnode identifier
+  (e.g., {\tt P31}) or a full URL. {\tt Lang} is a 2 character language
+  designation, which serves as a filter if instantiated.  {\tt Arg3}
+  can also be a string like {\tt Italy} which {\tt xp\_wd} turns into
+  rdf form using Lang, e.g., {\tt Italy@en}.  This predicate is the
+  basis of many other predicates in this module.
+
+ In order to take advantage of HDT indexes, at least one of {\tt Arg1}
+ and {\tt Arg3} should be instantiated; otherwise the query can take a
+ long time.
+
+Finally, there are many properties indicating provinance and other
+meta-data that are not needed for many purposes.  The file {\tt
+  xp\_wd\_ignore.P} defines the predicate {\tt ignore\_1/1} that
+contains a number of Pnodes ({\tt Arg2} instantiations) that one
+project preferred to filter out of the {\tt wd\_query/4} answers.
+Filtering is off by default, and can be turned on by asserting {\tt
+  xp\_wd:use\_wd\_filter}.  Of course, since filtering may be
+application-specific, Pnodes can be added to or deleted from {\tt
+  xp\_wd\_ignore.P} as desired.
+
+\indourmoditem{wd\_get\_labels(+Qnode,-Label,?Lang)}{wd\_get\_labels/3}{xp\_wd}
+Backtracks through all preferred labels
+(\verb|http://www.w3.org/2004/02/skos/core#prefLabel|), and other
+labels (\verb|http://www.w3.org/2004/02/skos/core#prefLabel| and \\
+  \verb|http://www.w3.org/2000/01/rdf-schema#label|) whose language
+  unifies with {\tt Lang}.
+
+\indourmoditem{wd\_get\_label(+Qnode,-Label,?Lang)}{wd\_get\_label/3}{xp\_wd}
+Tries to find a good label for {\tt Qnode} that unifies with {\tt
+  Lang}, first trying for a preferred label, then
+\verb|http://www.w3.org/2004/02/skos/core#prefLabel|, and finally
+other labels (\verb|http://www.w3.org/2004/02/skos/core#prefLabel| and \\
+\verb|http://www.w3.org/2000/01/rdf-szvchema#label|.
+
+\ourrepeatmoditem{wd\_instance\_of(+SCNode,-CNode)}{wd\_instance\_of/2}{xp\_wd}
+\ourrepeatmoditem{wd\_subclass\_of(+InstNode,-CNode)}{wd\_subclass\_of/2}{xp\_wd}
+\indourmoditem{wd\_parent\_of(+Node,-Parent)}{wd\_parent\_of/2}{xp\_wd}
+%
+Because it is called with the first argument bound, {\tt
+  wd\_subclass\_of/2} and {\tt wd\_instance\_of/2} both go up the
+Wikidata ontology dag and should not have any problems with speed,
+since upward traversals are supported by the HDT indexes.  These
+predicate attempt to handle the case where the obtained class is a
+reified statement.  In this case, it attempts another call from the
+reified statement to try to get a Qnode, a strategy that works at
+least {\em sometimes}.\footnote{Its for reasons like this that this
+section is named {\tt starters} rather than {\tt
+  perefctly\_finished\_interfaces} -- {\tt xp\_wd} cuts through some
+of the brush, but not all of it.  And don't get me started on why some
+of the classes are reified.}
+
+In Wikidata, it is not always apparent whether a node has an instance
+or a subclass relation with its parent, so {\tt wd\_parent\_of/3} is a
+convenience predicate that calls both.
+
+\end{description}
+
+\subsubsection{{\tt xp\_wdi}: Querying Wikidata over the web}
+
+This package provides a simple interface to the Wikidata website via
+the Python library {\tt wikidataintegrator}.  It is one of two ways in
+which {\tt xsbpy} can be used to query Wikidata: the other is to query
+a compressed local snapshot of Wikidata via the {\tt hdt}
+functionality in {\tt xp\_rdflib}.  Each approach has advantages and
+disadvantages.  The use of {\tt hdt} can be much faster: in part
+because it requires no webservice calls, but also because the Wikidata
+site slows down responses to requests from a session that is using the
+site heavily.  On the other hand, to use {\tt hdt} the a Wikidata {\tt
+  hdt} file must be locally mounted; and when a process loads the hdt
+file, it must allocate a large amount of virtual memory, although this
+memory does not usually affect RAM usage.\footnote{In Linux, this
+  means that the process has a large virtual memory size, but its
+  resident set size is low.}  So for applications that take place on
+servers or that use Wikidata extensively the {\tt hdt} approach for
+{\tt xp\_rdflib} is best; for other uses {\tt xp\_wdi} may be more
+convenient.
+
+\begin{description}
+\indourmoditem{wdi\_get\_dict(+Qnode,-Dict))}{wdi\_get\_dict(+Qnode,-Dict)}{xp\_wdi}
+
+\indourmoditem{wdi\_get\_entity(+Qnode,-EDict))}{wdi\_get\_entity/2}{xp\_wdi}
+
+\indourmoditem{wdi\_sparql\_query(+Qnode,+PropertyNode,-Ret)}{wdi\_sparql\_query/3}{xp\_wdi}
+
+\end{description}
+
+\subsection{Other Interfaces, Examples and Demos}
 
 \paragraph{xp\_elastic}
 This module contains example code for using the Python {\tt
@@ -1672,36 +1817,27 @@ several keyword arguments and other options for parsing XML files and
 strings, that can be easily accessed via user-written {\tt xsbpy}
 calls.
 
-\paragraph{Wikidata queries with {\tt xp\_wdi}}
+\paragraph{xp\_spellcheck}
+This module provides a simple interface to {\tt pyspellchecker}, a
+basic but sometimes useful spell checker and corrector based on
+dictionaries and a minimum edit distance search.  Because a minimum
+edit distance search is relatively expensive, it is best to check
+whether a word is known via {\tt sp\_known/1}, and only call {\tt
+  sp\_correct/2} on unknown words.
 
-{\sc Preliminary: package is still under development}
-
-This package provides a simple interface to the Wikidata website via
-the Python library {\tt wikidataintegrator}.  It is one of two ways in
-which {\tt xsbpy} can be used to query Wikidata: the other is to query
-a compressed local snapshot of Wikidata via the {\tt hdt}
-functionality in {\tt xp\_rdflib}.  Each approach has advantages and
-disadvantages.  The use of {\tt hdt} can be much faster: in part
-because it requires no webservice calls, but also because the Wikidata
-site slows down responses to requests from a session that is using the
-site heavily.  On the other hand, to use {\tt hdt} the a Wikidata {\tt
-  hdt} file must be locally mounted; and when a process loads the hdt
-file, it must allocate a large amount of virtual memory, although this
-memory does not usually affect RAM usage.\footnote{In Linux, this
-  means that the process has a large virtual memory size, but its
-  resident set size is low.}  So for applications that take place on
-servers or that use Wikidata extensively the {\tt hdt} approach for
-{\tt xp\_rdflib} is best; for other uses {\tt xp\_wdi} may be more
-convenient.
-
+The two main predicates are:
 \begin{description}
-\indourmoditem{wdi\_get\_dict(+Qnode,-Dict))}{wdi\_get\_dict(+Qnode,-Dict)}{xp\_wdi}
+\indourmoditem{sp\_known(+Word)}{sp\_known/1}{xp\_spellcheck} Succeeds
+  if {\tt Word} is known to the {\tt pyspellchecker} dictionary, and
+  fails otherwise.
 
-\indourmoditem{wdi\_get\_entity(+Qnode,-EDict))}{wdi\_get\_entity/2}{xp\_wdi}
-
-\indourmoditem{wdi\_sparql\_query(+Qnode,+PropertyNode,-Ret)}{wdi\_sparql\_query/3}{xp\_wdi}
-
+  \indourmoditem{sp\_correct(+WordIn,-WordOut)}{sp\_correct/2}{xp\_spellcheck}
+  If {\tt Word} has a reasonable minimum-edit distance to a word {\em
+    word$_1$} in the {\tt pyspellchecker} dictionary this predicate
+  succeeds, unifying {\tt WordOut} to {\em word$_1$}; otherwise the
+  predicate fails.
 \end{description}
+
 
 \paragraph{xp\_googleTrans}
 This example provides demo code to access Google's web-services for
