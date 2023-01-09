@@ -11,7 +11,7 @@
 :- import check_nonvar/3 from error_handler.
 :- import pyfunc/3 from xsbpy.							 
 :- import lazy_writeln/1 from standard.
-
+:- import ignore_1/1 from xp_wd_ignore.
 ?- ensure_loaded(xsbpy).
 ?- ensure_loaded(xp_rdflib).
 
@@ -34,7 +34,7 @@
 % cf. ignore/1.
 
 wd_query(ArgIn1,ArgIn2,ArgIn3,Lang):-
-    qnodeurl_maybe(ArgIn1,Arg1),    % arg1 and arg3 are "normaluzed"
+    qnodeurl_maybe(ArgIn1,Arg1),    % arg1 and arg3 are "normalized"
     qnodeurl_maybe(ArgIn3,Arg3),    
 %    writeln(hdt_query1(Arg1,ArgIn2,Arg3,List)),
     hdt_query(Arg1,ArgIn2,Arg3,List),
@@ -44,6 +44,7 @@ wd_query(ArgIn1,ArgIn2,ArgIn3,Lang):-
     \+ ignore(ArgIn2),
 %    writeln(one(ArgOut1,ArgIn2,ArgOut3)),
 %    urlqnode_maybe(ArgOut1,ArgIn1),
+
     urlqnode_maybe(ArgOut1,Arg1),
 %    writeln(two(ArgOut1,ArgIn2,ArgOut3)),
     (ArgOut3 = ''(Arg3Out1,_,LangOut) ->
@@ -54,29 +55,16 @@ wd_query(ArgIn1,ArgIn2,ArgIn3,Lang):-
 %      ;  urlqnode_maybe(ArgOut3,ArgIn3) ).
 %    writeln(three1(ArgIn1,ArgIn2,ArgIn3)).
 
-ignore('http://www.wikidata.org/prop/P10').    %   video
-ignore('http://www.wikidata.org/prop/P18').    %   image
-ignore('http://www.wikidata.org/prop/P345').   %   IMDB id
-ignore('http://www.wikidata.org/prop/P1014').  % Getty art and architecture thesaurus id
-ignore('http://www.wikidata.org/prop/P1036').  % dewey decimal classification
-ignore('http://www.wikidata.org/prop/P1051').  % PSH id ('Czeck library id)
-%P1081 -- Human development index
-ignore('http://www.wikidata.org/prop/P1190').  % Universal decimal system
-ignore('http://www.wikidata.org/prop/P1245').  % Omega wiki meaning
-ignore('http://www.wikidata.org/prop/P1256').  % Iconclass notification
-ignore('http://www.wikidata.org/prop/P1282').  % Open streetmap tag
-ignore('http://www.wikidata.org/prop/P1292').  % DNP classification ('German library)p12
-ignore('http://www.wikidata.org/prop/P1296').  % Wikimedia category
-ignore('http://www.wikidata.org/prop/P1343').  % described by source (e.g., Encyclopedia Brittaniignore('http://www.wikidata.org/prop/direct/P1343').  % described by source (e.g., Encyclopedia Brittanica, Great Soviet encyclopedia)
-ignore('http://www.wikidata.org/prop/P1843').  % taxon name
-% 5869 -- model idem.
+:- dynamoc use_wd_filter/0.
 
-%This type has properties: the meta proprty is P1963
-%http://www.wikidata.org/prop/direct/P1963,P451
-
+ignore(Node):- 
+    use_wd_filter ->
+	ignore_1(Node)
+      ; fail.
+       
 %===============================================
 
-% wd_get_labels(+Qnode,-Label,?Lang) tries to get the best label --
+b% wd_get_labels(+Qnode,-Label,?Lang) tries to get the best label --
 %  name then prefLabel then label. then first lang-specific
 % label.  Other properties may be added if needed.
 %
@@ -312,6 +300,7 @@ qnode_id(IdIn,Id):-
 qnode_id(IdIn,Id):-
     urlqnode_maybe(IdIn,Id).
 
+% Need to extend to Unicode
 qnode_id_1([]).
 qnode_id_1([H|T]):-
     H >= 48,H=<57,
