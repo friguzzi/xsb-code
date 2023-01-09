@@ -494,7 +494,20 @@ current_predicate(Name, Term_Indicator) :-
 current_module(Module) :- 
 	get_first_psc_pair(PSC_Pair),
 	scan_modules(PSC_Pair, ModuleName),
-	atom_to_term(ModuleName,Module).
+	hack_so_not_var(ModuleName,ModuleName1),
+	atom_to_term(ModuleName1,Module).
+
+%% lower-case first character if necessary
+%% needed for filenames that begin with UC.
+hack_so_not_var(M0,M) :-
+    substring(M0,0,1,FU),
+    (FU @>= 'A', FU @=< 'Z'
+     -> atom_codes(FU,[CFU]),
+	CLU is CFU + 32,
+	atom_codes(FL,[CLU]),
+	string_substitute(M0,[s(0,1)],[FL],M)
+     ;  M = M0
+    ).
 
 scan_modules(PSC_Pair, _) :-
 	PSC_Pair =:= 0,		% PSC_Pair == NULL

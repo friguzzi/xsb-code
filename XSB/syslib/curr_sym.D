@@ -33,6 +33,7 @@
 :- mode get_first_psc_pair(?).
 :- mode get_float_precision(+,?,?).
 :- mode get_float_width(+,?,?).
+:- mode hack_so_not_var(+,?).
 :- mode hilog_symbol(?).
 :- mode is_operator_type(?).
 :- mode iso_flag(+).
@@ -113,6 +114,7 @@
 :- mode_on_success get_first_psc_pair(g).
 :- mode_on_success get_float_precision(g,g,g).
 :- mode_on_success get_float_width(g,g,g).
+:- mode_on_success hack_so_not_var(g,g).
 :- mode_on_success hilog_symbol(g).
 :- mode_on_success is_operator_type(g).
 :- mode_on_success iso_flag(g).
