@@ -57,8 +57,7 @@
 :- import functor/3, warning/1, abort/1, integer/1, atom/1, structure/1 from standard.
 :- import '_$multifile'/1, '_$multifile_comp'/2, fail/0 from standard.
 :- import standard_symbol/3, standard_metapredicate_template/3 from std_xsb.
-:- import atom_to_term/2,str_length/2,str_sub/2 from string.
-:- import substring/4, string_substitute/4 from string.
+:- import concat_atom/2, substring/4, atom_to_term/2,str_length/2,str_sub/2 from string.
 
 :- import get_callsto_number/2, get_answer_number/2,table_status/5,
           get_calls/3,get_call/3,get_tabling_options/2 from tables.	

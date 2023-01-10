@@ -497,15 +497,11 @@ current_module(Module) :-
 	hack_so_not_var(ModuleName,ModuleName1),
 	atom_to_term(ModuleName1,Module).
 
-%% lower-case first character if necessary
-%% needed for filenames that begin with UC.
+%% Quote in would otherwise considered a variable
 hack_so_not_var(M0,M) :-
     substring(M0,0,1,FU),
-    (FU @>= 'A', FU @=< 'Z'
-     -> atom_codes(FU,[CFU]),
-	CLU is CFU + 32,
-	atom_codes(FL,[CLU]),
-	string_substitute(M0,[s(0,1)],[FL],M)
+    ((FU @>= 'A', FU @=< 'Z' ; FU == '_')
+     -> concat_atom(['''',M0,''''],M)
      ;  M = M0
     ).
 
