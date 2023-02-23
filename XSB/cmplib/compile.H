@@ -61,7 +61,7 @@
 :- import force_tprog_loaded/0, compile_clause/5 from tprog.
 :- import force_tp_index_loaded/0, makeindex/6 from tp_index.
 :- import force_preprocess_loaded/0, preprocess/3 from preproc.
-:- import write_asmheader/5, write_asm_instructions/3 from writeasm.
+:- import write_asmheader/5, write_asm_instructions/2 from writeasm.
 :- import throw/1, cputime/1, open/3, close/1 from standard.
 :- import tell/1 from standard.
 :- import force_peephole_loaded/0, compile_peephole_opt/2 from peephole.

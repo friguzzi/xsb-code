@@ -289,7 +289,7 @@ compile0(_, _, _, _, _, _, _).
 /*	(*.A) file and/or an object file.				*/
 /*======================================================================*/
 
-compile_predicate(PredDef, Modname, GenAsm, AStr, OStr, _TIFile, IsModule, SymTab) :-
+compile_predicate(PredDef, _Modname, GenAsm, AStr, OStr, _TIFile, IsModule, SymTab) :-
 	PredDef = pred(Sym,_,_),
 	(compile_check_ok(Sym)
 	 ->	preprocess(PredDef, PredBlks, SymTab),
@@ -300,7 +300,7 @@ compile_predicate(PredDef, Modname, GenAsm, AStr, OStr, _TIFile, IsModule, SymTa
 		compile_pred_block(PredBlks, PilCode-[], 0, NC),
 		!,		% needed to cut unnecessary choice points... (bmd & kostis)
 		compile_peephole_opt(PilCode, PilCode1),
-		( GenAsm =:= 0 -> true; write_asm_instructions(AStr,PilCode1,Modname) ),
+		( GenAsm =:= 0 -> true; write_asm_instructions(AStr,PilCode1/*,Modname?*/) ),
 		asm_PIL(OStr, Sym, PilCode1, NC, IsModule),
 		!
 	 ;	true
