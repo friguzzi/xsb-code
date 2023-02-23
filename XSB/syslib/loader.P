@@ -823,7 +823,7 @@ local_lappend([],L,L).
  *      Return in the order specified through the predicate
  *	library_directory/1, followed by the default paths
  *      in this default order:
- *	  syslib/   cmplib/   lib/   ./
+ *	  syslib/   cmplib/   lib/   ~/.xsb/   ./
  */
 
 :- mode libpath(?).

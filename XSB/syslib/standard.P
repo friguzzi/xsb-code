@@ -744,6 +744,9 @@ atomic(X) :- atomic(X).
 :- mode compound(?).
 compound(X) :- compound(X).
 
+:- mode is_cons(?).
+is_cons(X) :- is_cons(X).
+
 :- mode structure(?).
 structure(X) :- compound(X).
 
@@ -2328,8 +2331,8 @@ multifile([P/A, _T1, T2]) :-	% T1 is not used
 	    assert0('_$multifile_comp'(T2,TT1),1,1,(multifile))
 	 ;  assert0('_$multifile'(TT1),1,1,(multifile)),
 	    assert0('_$multifile_comp'(T2,TT1),1,1,(multifile)),
-	    ('_$index'(TT1,Inds,HSize),Inds =\= 0 % move index to component
-	     ->	add_index(T2,Inds,HSize),
+	    ('_$index'(TT1,Inds,HSize),Inds \== 0 % move index to component
+	     -> add_index(T2,Inds,HSize),
 		add_index(TT1,0,0)
 	     ; '_$trie_asserted'(TT1)
 	     ->	add_trie_index(T2),

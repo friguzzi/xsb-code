@@ -38,7 +38,7 @@
 	check_arity_integer/3,  call_cleanup/2, cleanup_handler/2,
 	close/1, close/2, close/4,
 	compare/3,	
-	compound/1,	cputime/1,	
+        compound/1,	cputime/1,	is_cons/1,
 	directly_callable/1,
    display/1, displayln/1, now/1, datime/1, local_datime/1,
 	get_date/6,
