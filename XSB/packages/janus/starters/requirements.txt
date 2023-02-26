@@ -1,0 +1,13 @@
+elasticsearch
+fasttext
+googletrans
+numpy
+rdflib
+rdflib_hdt
+scipy
+sklearn
+spacy
+pyspellchecker
+validators
+wikidataintegrator
+xmltodict
