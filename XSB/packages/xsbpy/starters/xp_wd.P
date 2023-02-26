@@ -4,6 +4,8 @@
 :- export wd_is_instance/1,wd_is_class/1, wd_show_instances/2, wd_show_subclasses/2.
 :- export wd_ancestor/2,wd_ancestor_nt/2.
 :- export wd_geoquery/4,wd_in_admin/2.
+:- export print_bounded_tree/2.
+:- export wd_is_statement/1.
 
 :- import member/2,append/3,length/2,reverse/2 from basics.
 :- import concat_atom/2,split_atom/3 from string.
@@ -211,7 +213,6 @@ wd_parent_of_1(Node,Parent):-
 % Given a qnode prints out all ancestors as a tree.  Its kinda cool,
 % if I do say so myself.
 
-:- export print_bounded_tree/2.
 print_bounded_tree(Qnode,Bound):- 
     setof(_L,_F^bounded_pt_ancestor(Qnode,_L,_F,Bound),List),
         writeln(found(List)),
@@ -329,7 +330,6 @@ urlqnode_maybe(Url,Qnode):-
     List = ['http:','www.wikidata.org',entity,Qnode],!.
 urlqnode_maybe(Url,Url).
 
-:- export wd_is_statement/1.
 wd_is_statement(Url):- 
     atom(Url),
     split_atom(Url,'/',List),

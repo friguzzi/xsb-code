@@ -34,7 +34,7 @@ makeindex(Res):-
 
 search_via_json(Index,Json,Ret):-
     pyfunc(xsbpy_json,prolog_loads(Json),Dict),
-    pyfunc(xp_lastic,search(Index,Dict),Ret).
+    pyfunc(xp_elastic,search(Index,Dict),Ret).
 
 /* Goal 5: pyfunc(xp_elastic,drop_index(teritest),Ret). 
    Delete the test index just made. Go have fun.  */
