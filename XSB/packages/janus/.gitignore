@@ -1,0 +1,8 @@
+*.xwam
+\#*
+*~
+*dylib*
+*sav
+make_px_pkg.sh
+configvars.sh
+Installation_summary
