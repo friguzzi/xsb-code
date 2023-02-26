@@ -1,4 +1,4 @@
-/* File:  xsbpym.c
+/* File:  janusm.c
 ** Author(s): Muthukumar Suresh, Swift, Carl Andersen
 ** Contact:   xsb-users@lists.sourceforge.net
 **
@@ -347,7 +347,7 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
       PyObject* ptypeRepresentation = PyObject_Repr(ptype);
       PyObject* pvalueRepresentation = PyObject_Repr(pvalue);
       PyErr_Restore(ptype, pvalue, ptraceback);
-      xsb_abort("++Error[xsbpy]: A Python Error Occurred.  A Python Unicode object "
+      xsb_abort("++Error[janus]: A Python Error Occurred.  A Python Unicode object "
 		"could not be translated to a UTF8 string: %s/%s",
 		PyUnicode_AsUTF8(ptypeRepresentation),PyUnicode_AsUTF8(pvalueRepresentation));
     }
@@ -584,7 +584,7 @@ char *set_path_name(char *module)
 void set_python_argument(CTXTdeclc prolog_term temp, PyObject *pArgs,int i, char *funct, int arity) {
   PyObject *pValue;
   if(!convert_prObj_pyObj(CTXTc temp, &pValue))
-    xsb_abort("++Error[xsbpy]: argument %d of %s/%d could not be translated to python"
+    xsb_abort("++Error[janus]: argument %d of %s/%d could not be translated to python"
 		"(arg 2 of pyfunc/[3,4,5])\n",i,funct,arity);
   PyTuple_SetItem(pArgs, i-1, pValue);
 }
@@ -601,7 +601,7 @@ DllExport int init_python() {
 #endif
     } else {
 #ifdef WIN_NT
-      xsb_abort("++Error[xsbpy]: Python library dll not found; Is the PYTHON_LIBRARY environment variable set?\n");
+      xsb_abort("++Error[janus]: Python library dll not found; Is the PYTHON_LIBRARY environment variable set?\n");
 #else
       dlopen(PYTHON_CONFLIB_2QUOTED, RTLD_LAZY | RTLD_GLOBAL );
 #endif
@@ -651,7 +651,7 @@ PyObject *call_variadic_method(PyObject *pObjIn,PyObject *pyMeth,prolog_term prM
     Py_DECREF(pyArg1); Py_DECREF(pyArg2); Py_DECREF(pyArg3);
   }
   else {
-    xsb_abort("++Error[xsbpy]: Cannot call pydot/[3,4] with a method of arity greater than "
+    xsb_abort("++Error[janus]: Cannot call pydot/[3,4] with a method of arity greater than "
 	    "three: %s/%d\n",p2c_functor(prMethIn),args_count);
   }
   return pObjOut;
@@ -705,7 +705,7 @@ DllExport int pydot_int(CTXTdecl) {
   pModule = PyImport_ImportModule(module);
   if(pModule == NULL) {
     PyErr_Print();
-    xsb_abort("++Error[xsbpy]: no Python module named \'%s\' could be found."
+    xsb_abort("++Error[janus]: no Python module named \'%s\' could be found."
   	      "(in arg 1 of pydot/4)\n",module);
   }
   Py_DECREF(pModule); 
@@ -728,13 +728,13 @@ DllExport int pydot_int(CTXTdecl) {
     }
     else {
       sprintTerm(forest_log_buffer_1, prMethIn);
-      xsb_abort("++Error[xsbpy]: arg 3 of pydot/4 is not a Python function or attribute: %s\n",
+      xsb_abort("++Error[janus]: arg 3 of pydot/4 is not a Python function or attribute: %s\n",
 	      forest_log_buffer_1->fl_buffer);
     }
   }
   else {
     sprintTerm(forest_log_buffer_1, prObjIn);
-    xsb_abort("++Error[xsbpy]: arg 2 of pydot/4 is not a Python Object: %s\n",
+    xsb_abort("++Error[janus]: arg 2 of pydot/4 is not a Python Object: %s\n",
 	      forest_log_buffer_1->fl_buffer);
   }
   if (pObjOut == NULL) { // TES todo change to check for python error
@@ -743,7 +743,7 @@ DllExport int pydot_int(CTXTdecl) {
   ensureXSBStackSpace(CTXTc pObjOut);
   prolog_term return_pr = p2p_new(CTXT);
   if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
-    xsb_abort("++Error[xsbpy]: The return of pydot/4  could not be translated to Prolog");
+    xsb_abort("++Error[janus]: The return of pydot/4  could not be translated to Prolog");
   } 
   if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 5)))
     return FALSE;
@@ -784,7 +784,7 @@ DllExport int pyfunc_int(CTXTdecl) {
       }
     }
     else   // it isn't callable
-      xsb_abort("++Error[xsbpy]: %s/%d is not a callable function in "
+      xsb_abort("++Error[janus]: %s/%d is not a callable function in "
 		"the Python module \'%s\' (arg 2 of pyfunc/3)\n",get_name(get_str_psc(V)),
 		get_arity(get_str_psc(V)),module);
     Dict = extern_reg_term(3);
@@ -802,7 +802,7 @@ DllExport int pyfunc_int(CTXTdecl) {
     prolog_term return_pr = p2p_new(CTXT);
     // ususally returns pyobject by default.
     if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, 1)) {
-      xsb_abort("++Error[xsbpy]: The return of %s/%d could not be translated to Prolog"
+      xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
 		"(in pyfunc/[3,4,5])\n",function,args_count);
     }
     if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 5))) 
@@ -811,10 +811,10 @@ DllExport int pyfunc_int(CTXTdecl) {
   } /* if is_functor(V) */
   else	{
     if (isstring(V))
-      xsb_abort("++Error[xsbpy]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
+      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
 		cs_val(V),module);
     else
-      xsb_abort("++Error[xsbpy]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
+      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
 		V,module);
   }
   //  Py_Finalize();
@@ -1093,5 +1093,5 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
       //#elif defined(PYTHON38)      
       //     dlopen("/usr/lib/x86_64-linux-gnu/libpython3.8.so.1.0", RTLD_LAZY | RTLD_GLOBAL );
       //#else
-      //    xsb_abort("++Error[xsbpy]: Improper or unspecified Python version.  Currently only supporting 3.7 and 3.8\n");
+      //    xsb_abort("++Error[janus]: Improper or unspecified Python version.  Currently only supporting 3.7 and 3.8\n");
       //#endif     
