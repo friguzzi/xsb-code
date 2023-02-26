@@ -1,0 +1,79 @@
+:- compiler_options([xpp_on]).
+
+#include "janus/janus_defs.h"
+
+:- export pyfunc/3, add_py_lib_dir/1, py_lib_dirs/1.
+:- export pyfunc/4,pydot/4,pydot/5.
+:- export pyfunc/5.
+
+% obsolescent
+:- export pymeth/4.
+
+:- import bootstrap_package/2, xsb_running_under/1 from packaging.
+
+:-  bootstrap_package(janus, janus).
+
+:- import init_janus/1 from init_janus.
+:- import pyfunc_int/5,pydot_int/5 from janusm.
+:- import add_py_lib_dir/1 from init_janus as add_py_lib_dir/1.
+:- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
+
+%% CHANGE WHEN WINDOZE CONFIG IS INCORPORATED
+?- \+xsb_running_under(windows),
+   check_installation.
+
+?- init_janus(auto).
+
+pyfunc(Mod,Func,Def_vars,Opts,Ret):-
+    (Def_vars == [] -> Dict = 0 ; def_vars_to_dict(Def_vars,Dict)),
+    janus_opts(Opts,Sizecheck_flag),
+    pyfunc_int(Mod,Func,Dict,Sizecheck_flag,Ret).
+
+pyfunc(Mod,Func,Def_vars,Ret):-
+    def_vars_to_dict(Def_vars,Dict),
+    pyfunc_1(Mod,Func,Dict,Ret).
+
+pyfunc(Mod,Func,Ret):-
+    pyfunc_1(Mod,Func,0,Ret).
+
+pyfunc_1(Mod,Func,Dict,Ret):- 
+    pyfunc_int(Mod,Func,Dict,0,Ret).
+
+pydot(Mod,Obj,MethAttr,Ret):-
+    pydot_int(Mod,Obj,MethAttr,0,Ret).
+
+pydot(Mod,Obj,MethAttr,Opts,Ret):-
+    janus_opts(Opts,Sizecheck_flag),
+    pydot_int(Mod,Obj,MethAttr,Sizecheck_flag,Ret).
+
+janus_opts([],0).
+janus_opts([sizecheck(true)],1):- !.
+janus_opts([sizecheck(false)],0):- !.
+janus_opts(Opts,_):- abort(Opts).
+
+pymeth(Mod,Obj,Meth,Ret):- 
+    pydot(Mod,Obj,Meth,Ret).
+
+def_vars_to_dict(X,PYDICT_PROLOG(Y)):-
+    def_vars_to_dict_1(X,Y).
+
+def_vars_to_dict_1([],[]).
+def_vars_to_dict_1([A=B|T],[''(A,B)|T1]):-
+    def_vars_to_dict_1(T,T1).
+
+%cfa - this command is here because of a bug involving loading .xwams - calls to putenv/0 do not work from them
+%:- (path_sysop(rm,'./janus/ld_pymod.xwam') -> true ; true) .
+
+
+%-------------------------------------------------
+
+check_installation :-
+	catch(\+ janus_info:janus_info(support,yes),
+	      _,
+	      throw(error(existence_error(package,janus),
+                    context('Error: the XSB package Janus has not been configured - see the XSB manual, volume 2',_)))),
+	!,
+	throw(error(existence_error(package,janus),
+                    context('Error: the package Janus has not been configured - see the XSB manual, volume 2',_))).
+check_installation.
+
