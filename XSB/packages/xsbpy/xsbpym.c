@@ -1,20 +1,4 @@
-/* File:  xsbpym.c
-** Author(s): Muthukumar Suresh, Swift, Carl Andersen
-** Contact:   xsb-users@lists.sourceforge.net
-**
-** Licensed under the Apache License, Version 2.0 (the "License");
-** you may not use this file except in compliance with the License.
-** You may obtain a copy of the License at
-**
-**      http://www.apache.org/licenses/LICENSE-2.0
-**
-** Unless required by applicable law or agreed to in writing, software
-** distributed under the License is distributed on an "AS IS" BASIS,
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-** See the License for the specific language governing permissions and
-** limitations under the License.
-** 
-*/
+/* File:  xsbpym.c */
 
 #define PY_SSIZE_T_CLEAN
 
@@ -237,6 +221,13 @@ int prlist2pyList(CTXTdeclc prolog_term V, PyObject *pList, int count)
 	return TRUE;
 }
 
+// Assumes error checking is done on Prolog side
+void free_python_object_int(CTXTdeclc prolog_term prTerm) {
+  PyObject *pyObj;
+  convert_prObj_pyObj(CTXTc prTerm, &pyObj);
+  Py_CLEAR(pyObj);
+}
+
 int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
   //int type = find_prolog_term_type(CTXTc prTerm);
   //printf("type %i\n",type);
@@ -318,6 +309,7 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       char *node_pointer = p2c_string(ref); 
       PyObject *pyobj_ref = (PyObject *)strtoll(node_pointer+1,NULL, 16);
       *pyObj = pyobj_ref;
+      Py_INCREF(pyobj_ref);
       return TRUE;
     }
     return FALSE;
@@ -586,6 +578,9 @@ void set_python_argument(CTXTdeclc prolog_term temp, PyObject *pArgs,int i, char
   if(!convert_prObj_pyObj(CTXTc temp, &pValue))
     xsb_abort("++Error[xsbpy]: argument %d of %s/%d could not be translated to python"
 		"(arg 2 of pyfunc/[3,4,5])\n",i,funct,arity);
+  //  if (is_functor(temp) && strcmp(p2c_functor(temp),PYOBJ_C) == 0 ) {
+  //      Py_INCREF(pValue);
+  //    }
   PyTuple_SetItem(pArgs, i-1, pValue);
 }
 
@@ -780,8 +775,8 @@ DllExport int pyfunc_int(CTXTdecl) {
       int i;
       for(i = 1; i <= args_count; i++) {
 	temp = p2p_arg(V, i);
-	set_python_argument(CTXTc temp, pArgs, i, function, args_count); 
-      }
+	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
+		   }
     }
     else   // it isn't callable
       xsb_abort("++Error[xsbpy]: %s/%d is not a callable function in "
@@ -794,7 +789,9 @@ DllExport int pyfunc_int(CTXTdecl) {
     }
     else   // Ignoring if not a dict -- maybe should change.
       pValue = PyObject_CallObject(pFunc, pArgs);
-    Py_DECREF(pFunc);     Py_DECREF(pArgs); Py_DECREF(pDict);
+    Py_DECREF(pFunc);
+    Py_DECREF(pArgs);
+    Py_DECREF(pDict);
     if (pValue == NULL) { // TES todo change to check for python error
       xp_python_error();
     }
