@@ -83,7 +83,9 @@
 #include "token_xsb.h"
 /*-----------------------------------------------------------------------*/   
 
-/* Sizes of the Data Regions in K-byte blocks
+/* Sizes of the Data Regions in N*K*block_size, K = 1024.  Thus on the
+   2023 Mac the blocksize is 1024, so GLSTACK_DEFAULT_SIZE = 8 * 1024
+   * 1024 = 8,388,608 bytes.
    ------------------------------------------ */
 #ifdef BITS64
 #ifdef SHARED_COMPL_TABLES
