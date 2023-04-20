@@ -9,8 +9,12 @@
 #define MyAppURL "http://xsb.sourceforge.net/"
 #define MyAppUrlName "XSB Web Site.url"
 
-#define XSB_DIR "{reg:HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment,XSB_DIR|{commonpf}\XSB}"
-#define MyBaseDir "C:\XSBSYS\XSBENV\XSB"
+#define XSB_DIR "{reg:HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment,XSB_DIR|{%USERPROFILE}\XSB}"
+;; DSW's location
+;#define MyBaseDir "C:\XSBSYS\XSBENV\XSB"
+;; MK's location
+#define MyBaseDir "H:\XSB\XSB\"
+#define InstallYear 2023
 
 [Setup]
 AppName={#MyAppName}
@@ -31,12 +35,13 @@ SolidCompression=yes
 PrivilegesRequired=none
 
 VersionInfoVersion={#XSBVersion}
-VersionInfoCopyright=© The Research Foundation of SUNY, 1986 - 2022
+VersionInfoCopyright=© The Research Foundation of SUNY, 1986 - {#InstallYear}
 
 AllowRootDirectory=yes
 UninstallFilesDir="{userdocs}\XSB uninstaller"
 
 MinVersion=0,6.1sp1
+ArchitecturesInstallIn64BitMode=x64
 
 [Types]
 Name: "full"; Description: "Full XSB installation (recommended)"
@@ -58,41 +63,41 @@ Name: shortcut; Description: "&Create a desktop shortcut to run XSB"; Components
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Messages]
-BeveledLabel=XSB {#XSBVersion} © The Research Foundation of SUNY, 1986, 1993-2020
+BeveledLabel=XSB {#XSBVersion} © The Research Foundation of SUNY, 1986, 1993-{#InstallYear}
 
 [Dirs]
 Name: "{userdocs}\XSB uninstaller"
 
 [Files]
-Source: "{#MyBaseDir}\README"; Excludes: ".*,CVS"; DestDir: "{app}\"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\LICENSE"; Excludes: ".*,CVS"; DestDir: "{app}\"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\README"; Excludes: ".*,CVS,*~"; DestDir: "{app}\"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\LICENSE"; Excludes: ".*,CVS,*~"; DestDir: "{app}\"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
 
-Source: "{#MyBaseDir}\bin\*"; Excludes: ".*,CVS"; DestDir: "{app}\bin"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\build\*"; Excludes: ".*,CVS,*.cache"; DestDir: "{app}\build"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\config\x64-pc-windows\*"; Excludes: ".*,CVS"; DestDir: "{app}\config\x64-pc-windows"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-; comment Source: "{#MyBaseDir}\pthreads\Pre-built\lib\pthreadVSE1.dll"; Excludes: ".*,CVS"; DestDir: "{app}\config\i686-pc-cygwin-mt\bin"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\bin\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\bin"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\build\*"; Excludes: ".*,CVS,*~,*.cache"; DestDir: "{app}\build"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\config\x64-pc-windows\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\config\x64-pc-windows"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+; comment Source: "{#MyBaseDir}\pthreads\Pre-built\lib\pthreadVSE1.dll"; Excludes: ".*,CVS,*~"; DestDir: "{app}\config\i686-pc-cygwin-mt\bin"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
 
-Source: "{#MyBaseDir}\syslib\*.xwam"; Excludes: ".*,CVS"; DestDir: "{app}\syslib"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\cmplib\*.xwam"; Excludes: ".*,CVS"; DestDir: "{app}\cmplib"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\lib\*.xwam"; Excludes: ".*,CVS"; DestDir: "{app}\lib"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\prolog-commons\*"; Excludes: ".*,CVS"; DestDir: "{app}\prolog-commons"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\prolog_includes\*"; Excludes: ".*,CVS"; DestDir: "{app}\prolog_includes"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\emu\*.h"; Excludes: ".*,CVS"; DestDir: "{app}\emu"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\emu\debugs\*"; Excludes: ".*,CVS"; DestDir: "{app}\emu\debugs"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\emu\orastuff\*"; Excludes: ".*,CVS"; DestDir: "{app}\emu\orastuff"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\syslib\*.xwam"; Excludes: ".*,CVS,*~"; DestDir: "{app}\syslib"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\cmplib\*.xwam"; Excludes: ".*,CVS,*~"; DestDir: "{app}\cmplib"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\lib\*.xwam"; Excludes: ".*,CVS,*~"; DestDir: "{app}\lib"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\prolog-commons\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\prolog-commons"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\prolog_includes\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\prolog_includes"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\emu\*.h"; Excludes: ".*,CVS,*~"; DestDir: "{app}\emu"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\emu\debugs\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\emu\debugs"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\emu\orastuff\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\emu\orastuff"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
 
-Source: "{#MyBaseDir}\syslib\*"; Excludes: ".*,CVS"; DestDir: "{app}\syslib"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\cmplib\*"; Excludes: ".*,CVS"; DestDir: "{app}\cmplib"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\lib\*"; Excludes: ".*,CVS"; DestDir: "{app}\lib"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\prolog-commons\*"; Excludes: ".*,CVS"; DestDir: "{app}\prolog-commons"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\prolog_includes\*"; Excludes: ".*,CVS"; DestDir: "{app}\prolog_includes"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\emu\*"; Excludes: ".*,CVS"; DestDir: "{app}\emu"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\etc\*"; Excludes: ".*,CVS"; DestDir: "{app}\etc"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\gpp\*"; Excludes: ".*,CVS"; DestDir: "{app}\gpp"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\syslib\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\syslib"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\cmplib\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\cmplib"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\lib\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\lib"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\prolog-commons\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\prolog-commons"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\prolog_includes\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\prolog_includes"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\emu\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\emu"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\etc\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\etc"; Components: base; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\gpp\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\gpp"; Components: base\sources; Flags: ignoreversion recursesubdirs createallsubdirs
 
-Source: "{#MyBaseDir}\docs\*"; Excludes: ".*,CVS"; DestDir: "{app}\docs"; Components: documentation; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\examples\*"; Excludes: ".*,CVS"; DestDir: "{app}\examples"; Components: examples; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#MyBaseDir}\packages\*"; Excludes: ".*,CVS"; DestDir: "{app}\packages"; Components: packages; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\docs\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\docs"; Components: documentation; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\examples\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\examples"; Components: examples; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyBaseDir}\packages\*"; Excludes: ".*,CVS,*~"; DestDir: "{app}\packages"; Components: packages; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [INI]
 Filename: "{app}\{#MyAppUrlName}"; Section: "InternetShortcut"; Key: "URL"; String: "{#MyAppURL}"; Components: base
@@ -106,9 +111,9 @@ Name: "{group}\XSB-Win32"; Filename: "{app}\config\x86-pc-windows\bin\xsb.exe"; 
 
 Name: "{userdesktop}\XSB-Win32"; Filename: "{app}\config\x86-pc-windows\bin\xsb.exe"; Parameters: ""; Comment: "Runs XSB (MSVC-compiled) within a command shell"; WorkingDir: "{userdocs}"; Components: base; Flags: createonlyiffileexists; Tasks: shortcut; IconFilename: "{app}\etc\images\xsb-logo.ico"
 
-Name: "{group}\XSB-Win64"; Filename: "{app}\config\x86-pc-windows\bin\xsb.exe"; Parameters: ""; Comment: "Runs XSB (MSVC-compiled) within a command shell"; WorkingDir: "{userdocs}"; Components: base; Flags: createonlyiffileexists; IconFilename: "{app}\etc\images\xsb-logo.ico"
+Name: "{group}\XSB-Win64"; Filename: "{app}\config\x64-pc-windows\bin\xsb.exe"; Parameters: ""; Comment: "Runs XSB (MSVC-compiled) within a command shell"; WorkingDir: "{userdocs}"; Components: base; Flags: createonlyiffileexists; IconFilename: "{app}\etc\images\xsb-logo.ico"
 
-Name: "{userdesktop}\XSB-Win64"; Filename: "{app}\config\x86-pc-windows\bin\xsb.exe"; Parameters: ""; Comment: "Runs XSB (MSVC-compiled) within a command shell"; WorkingDir: "{userdocs}"; Components: base; Flags: createonlyiffileexists; Tasks: shortcut; IconFilename: "{app}\etc\images\xsb-logo.ico"
+Name: "{userdesktop}\XSB-Win64"; Filename: "{app}\config\x64-pc-windows\bin\xsb.exe"; Parameters: ""; Comment: "Runs XSB (MSVC-compiled) within a command shell"; WorkingDir: "{userdocs}"; Components: base; Flags: createonlyiffileexists; Tasks: shortcut; IconFilename: "{app}\etc\images\xsb-logo.ico"
 
 Name: "{group}\License"; Filename: "{app}\LICENSE"; Components: base
 Name: "{group}\Read Me"; Filename: "{app}\README"; Components: base
