@@ -989,3 +989,8 @@ xsbtests/wfs_tests/CVS
 xsbtests/wfs_tests/_*
 xsbtests/wfs_tests/core
 xsbtests/wfs_tests/temp
+*~
+#*#
+*#*.*#
+XSB_*.run
+xsb-*.exe
