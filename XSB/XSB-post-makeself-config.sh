@@ -151,7 +151,7 @@ cat "$currdir/xsb-initrun.log"
 cat "$currdir/xsb-initrun.log" >> "$currdir/xsb-install.log"
 
 echo
-echo "..... The build log is in $currdir/xsb-install.log"
+echo "..... The build log is in \"$currdir/xsb-install.log\""
 echo "..... Attach it if filing an installation problem report"
 echo
 
@@ -161,7 +161,7 @@ install_err_found=`cat "$currdir/xsb-install.log" | grep :ERRORS:FOUND: `
 
 if [ -z "$initrun_err_found" -a -z "$initrun_abort_found" -a -z "$install_err_found" ]; then
     echo "+++++ All is well: you can run XSB in a terminal via the script"
-    echo "+++++    $xsbdir/bin/xsb"
+    echo "+++++    \"$xsbdir/bin/xsb\""
 else
     echo "***** ERRORS occurred during installation of XSB"
     echo "***** ERRORS occurred during installation of XSB" >> "$currdir/xsb-install.log"
