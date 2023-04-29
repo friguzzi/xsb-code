@@ -58,7 +58,7 @@ described in the manual.
 As long as the Anaconda environment is active when you configure,
 that's all you need to do!
 
-\subsection{Configuring {\tt xsbpy} for {\tt venv} or without a virtual environmnet} \label{sec:xsbpy-linux}
+\subsection{Configuring {\tt xsbpy} for {\tt venv} or without a virtual environment} \label{sec:xsbpy-linux}
 
 If you use {\tt venv} as your environment manager or if you are
 configuring a system installation of {\tt xsbpy} for several users,
@@ -324,7 +324,7 @@ We introduce some of the core functionality of {\tt xsbpy} via a
 series of simple examples.  As background, when {\tt xsbpy} is loaded,
 Python is also loaded and initialized within the XSB process, the core
 Prolog modules of {\tt xsbpy} are loaded into XSB, and paths to {\tt
-  xsbpy} and its subdirectories are added both to Prolog and to Python
+  xsbpy} and its sub-directories are added both to Prolog and to Python
 (the latter paths are added by modifying Python's {\tt
   sys.path}). Later, XSB calls Python, Python will search for modules
 and packages in the same manner as if they were stand-alone.
@@ -344,7 +344,7 @@ Consider the following call:
 
  \begin{verbatim}
 pyfunc(xp_json,
-       loads('{"name": "Bob", "languages": ["English","French","GERMAN"]}'),
+       prolog\_loads('{"name": "Bob", "languages": ["English","French","GERMAN"]}'),
        Ret)
 \end{verbatim}
  
@@ -353,7 +353,7 @@ which loads the Python {\tt xp\_json} module in {\tt
   packages/xsbpy/starters} if needed (and by extension the Python
 system {\tt json} module), then calls the Python function
 
-{\tt xp\_json.loads()}
+{\tt xp\_json.prolog\_loads()}
 
 \noindent
 with the JSON string
@@ -385,16 +385,18 @@ term that maps to a Python dictionary either {\em a Python dictionary
 slightly abuses terminology.
 \end{example}
 
-Note that although the above example used {\tt xp\_json.loads()}, the
-Python system package call {\tt json.loads()} could also have been
-used.  Such a switch would not require writing {\em any} special
-new Prolog or Python code.  This is in part because Python's basic data
-structures -- dictionaries, lists, tuples, sets and so on -- are
-mapped to Prolog terms (cf. Section~\ref{sec:bi-translation}).  As a
-result, calling Python is often a simple matter of setting up input
-terms for a Python function, and processing the terms that Python
-returns to Prolog.\footnote{The module {\tt xp\_json} basically
-  imports and re-exports {\tt loads()}.}
+Note that although the above example used {\tt
+  xp\_json.prolog\_loads()}, the Python system package call {\tt
+  json.loads()} could also have been used.  Such a switch would not
+require writing {\em any} special new Prolog or Python code.  This is
+in part because Python's basic data structures -- dictionaries, lists,
+tuples, sets and so on -- are mapped to Prolog terms
+(cf. Section~\ref{sec:bi-translation}).  As a result, calling Python
+is often a simple matter of setting up input terms for a Python
+function, and processing the terms that Python returns to
+Prolog.
+%\footnote{The module {\tt xp\_json} basically imports and
+%  re-exports {\tt loads()}.}
 
 \begin{example} \rm {\bf Calling a Python Function (II): Glue Code} \label{xsbpy-examp:glue}
 
@@ -766,7 +768,7 @@ one of two ways:
   3 or fewer arguments.\footnote{The reason for this is that to
     execute Python n-ary methods from the C-API a variadic function
     call must be made, and variadic function {\em calls} cannot be
-    contsructed dynamically in C (or at any rate, I don't know how to
+    constructed dynamically in C (or at any rate, I don't know how to
     do this).}
 %
 \item If {\tt MethAttr} is a Prolog atom corresponding to the name of
@@ -797,6 +799,28 @@ paths is as with {\tt pyfunc/[3-5]}.
   \ei
   \ei \ei In addition, errors thrown by Python are
   caught by XSB and re-thrown as {\tt misc\_error} errors.
+
+  \indourmoditem{free\_python\_object(+ObjRef)}{free\_python\_obj/1}{xsbpy}
+  %
+  In general when {\tt xsbpy} bi-translates between Python objects and
+  Prolog terms it performs a copy: this has the advantage that each
+  system can perform its own memory management independently of the
+  other.  The exception is when a reference to a Python object is
+  passed to XSB.  In this case, Python must explicitly be told that
+  the Python object can be reclaimed, and this is done through {\tt
+    free\_python\_object/1}.
+
+  {\bf Error Cases}
+
+  \bi
+\item {\tt ObjRef} is not a Python object reference.  (Only a syntax
+  check is performed, so no determination is made that {\tt ObjRef} is
+  a {\em valid} Python object reference
+  \bi
+  \item {\tt type\_error}
+  \ei
+  \ei
+  
 
 \ourrepeatmoditem{pp\_py(+Stream,+Term)}{pp\_py/2}{xsbpy}
 \indourmoditem{pp\_py(Term)}{pp\_py/1}{xsbpy}
@@ -847,7 +871,7 @@ directories as a Prolog list.
   Python expression {\tt D[key1]} while
 
   {\tt values(D,[key1,key2,key3],V)}
-
+v
 \noindent
 is equivalent to the Python expression
 
@@ -914,7 +938,7 @@ will far outweigh any {\tt xsbpy} overhead.
 
 Apart from system resource limitations, there is virtually no upper
 limit on the size of Python structures passed back to Prolog: stress
-tests have passed lists of initegers of length 100 million from Python
+tests have passed lists of integers of length 100 million from Python
 to Prolog without problems. However, it should be noted that {\tt
   xsbpy} must ensure that XSB's heap is properly expanded before
 copying a large structure from Python to XSB, a topic to which we now
@@ -951,7 +975,7 @@ to copy the data structure.
 
 \subsection{Python Space Management}
 
-WHen using Python's C interface, every Python object that is declared
+When using Python's C interface, every Python object that is declared
 in C must be explicitly released, a requirement that supports Python's
 garbage collection.  {\tt xsbpy} memory usage has been checked using
 the {\tt guppy} package, which indicates that there are no memory
@@ -979,8 +1003,8 @@ applications.  \footnote{Testing has been done of the interfaces, but
   {\tt xsb.sorceforge.net}.}
 
 When {\tt xsbpy} is loaded, both the {\tt xsbpy} directory and its
-{\tt packages/xsbpy/starters} subdirectory is added to the Prolog and
-Python paths.  As a result, modules in these subdirectories can be
+{\tt packages/xsbpy/starters} sub-directory is added to the Prolog and
+Python paths.  As a result, modules in these sub-directories can be
 loaded into XSB and Python without changing their library paths.
 
 Note that most of these applications require the underlying Python
@@ -1596,8 +1620,8 @@ with predicates to read JSON from and write JSON to files and strings.
 The {\tt json} module transforms JSON objects into and from Python
 dictionaries, which the interface maps to and from their term forms.
 This module can be used to help understand how Python dictionaries
-relate to XSB terms, or as an alternative to XSB's Json package ({\tt
-  json} Chapter~\ref{chap:json}).  For instance, while for most
+relate to XSB terms, or as an alternative to XSB's {\tt json} package
+({\tt json} Chapter~\ref{chap:json}).  For instance, while for most
 purposes XSB's {\tt json} package should be used, {\tt xp\_json} can
 be useful if the json constructed and read comes from another {\tt
   xsbpy} application such as {\tt xp\_elastic}.  This is because the
@@ -1609,16 +1633,16 @@ The {\tt xp\_json} functions are written in Python and can be
 called directly from Prolog.
 \begin{itemize}
 \item {\tt pyfunc(xp\_json,prolog\_load(+File),+Features,-Json)}
-  opens and reads {\tt File} and returns its Json content in {\tt
+  opens and reads {\tt File} and returns its JSON content in {\tt
     Json} as a Prolog dictionary term.
 \item {\tt pyfunc(xp\_json,prolog\_dump(+Dict,+File),+Features,-Ret)}
-  converts {\tt Dict} to a Json object, write it to {\tt File} and
+  converts {\tt Dict} to a JSON object, write it to {\tt File} and
   returns the result of the operation in {\tt Ret}.
 \item {\tt pyfunc(xp\_json,prolog\_loads(+Atom),+Features,-Json)}
-  reads the atom {\tt Atom} and returns its Json content in {\tt Json}
+  reads the atom {\tt Atom} and returns its JSON content in {\tt Json}
   as a Prolog dictionary term.
 \item {\tt  pyfunc(xp\_json,prolog\_dumps(+Dict),+Features,-JsonAtom)}
-  converts {\tt Dict} to a Json string, and returns the string as the
+  converts {\tt Dict} to a JSON string, and returns the string as the
   Prolog atom {\tt JsonAtom}.
 \end{itemize}  
 
@@ -1640,7 +1664,7 @@ various attributes such as their preferred label
 (\verb|http://www.w3.org/2004/02/skos/core#prefLabel|).
 
 Due to the amount of information it contains, Wikidata is widely used
-in knowledge internsive applications such as NLP, entity resolution,
+in knowledge intensive applications such as NLP, entity resolution,
 and content extraction along with many others.  However, Wikidata can
 be difficult to use due to its size and its design.
 
@@ -1658,7 +1682,7 @@ as a backup.
 
 The design of Wikidata also makes it difficult to use.  Information
 useful to one project may simply be noise to another.  In addition
-some WIkidata statements are reified, and others are not.  And
+some Wikidata statements are reified, and others are not.  And
 finally, the need to use identifiers such as {\tt P31} means that
 aliases must be used for code readability.
 
@@ -1675,7 +1699,7 @@ repeatedly ran into.
   \indourmoditem{wd\_query(?Arg1,?Arg2,?Arg3,?Lang)}{wd\_query/4}{xp\_wd}
   This predicate queries the HDT version of Wikidata and unifies the
   various arguments with Wikidata triples that match the input, so
-  that the caller may backtrack trhough all results.  {\tt Arg1} and
+  that the caller may backtrack through all results.  {\tt Arg1} and
   {\tt Arg3} can either be concise Qnode identifiers (e.g., {\tt
     Q144}: {\em dog}) or URLs that may or may not represent
   Qnodes.\footnote{Qnode identifiers are automatically expanded to
