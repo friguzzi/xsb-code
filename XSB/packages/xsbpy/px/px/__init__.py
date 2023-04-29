@@ -23,8 +23,8 @@ DELAY_LISTS = 1
 NO_TRUTHVALS = 2
 PLAIN_TRUTHVALS = 4
 
-# TES: need to fix
-px_cmd('curr_sym','set_prolog_flag','heap_garbage_collection','none')
+# TES: do not need.
+#px_cmd('curr_sym','set_prolog_flag','heap_garbage_collection','none')
 
 px_cmd('consult','consult','xsbpy')
 px_cmd('consult','consult','px')
