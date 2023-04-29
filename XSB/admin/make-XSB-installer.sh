@@ -40,7 +40,6 @@ echo creating $OUTFILE.run
 files="./XSB/LICENSE ./XSB/INSTALL \
         ./XSB/README  \
         ./XSB/FAQ ./XSB/Makefile \
-        ./XSB/InstallXSB.jar \
         ./XSB/XSB-post-makeself-config.sh \
         ./XSB/admin/MacOS \
         ./XSB/admin/uninstall_XSB.sh ./XSB/admin/XSB-linux-desktop \
@@ -54,7 +53,12 @@ files="./XSB/LICENSE ./XSB/INSTALL \
 	./XSB/prolog_includes \
         ./XSB/etc/ \
         ./XSB/packages \
+        ./XSB/pthreads \
+	./XSB/prolog-commons \
+        ./XSB/docs/userman \
+        ./XSB/docs/JupyterNotebooks \
         ./XSB/installer \
+        ./XSB/InstallXSB.jar \
         ./XSB/examples"
 
 ## excluded doc files
