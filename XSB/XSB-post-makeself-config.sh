@@ -162,6 +162,9 @@ install_err_found=`cat "$currdir/xsb-install.log" | grep :ERRORS:FOUND: `
 if [ -z "$initrun_err_found" -a -z "$initrun_abort_found" -a -z "$install_err_found" ]; then
     echo "+++++ All is well: you can run XSB in a terminal via the script"
     echo "+++++    \"$xsbdir/bin/xsb\""
+    echo "+++++ XSB Manual:"
+    echo "+++++    vol 1: \"$xsbdir/docs/userman/manual1.pdf\""
+    echo "+++++    vol 2: \"$xsbdir/docs/userman/manual2.pdf\""
 else
     echo "***** ERRORS occurred during installation of XSB"
     echo "***** ERRORS occurred during installation of XSB" >> "$currdir/xsb-install.log"
@@ -169,12 +172,12 @@ else
 fi
 
 echo
-echo "+++++ If the desktop icon 'XSB' was installed"
-echo "+++++ successfully, one can conveniently use it to run XSB."
-if [ "`uname`" = "Darwin" -a -d $HOME/Desktop ]; then
-    echo "+++++ On the Mac, one might need to:"
-    echo "+++++   sudo /bin/rm -rf /Library/Cashes/com.apple.iconservices.store"
-    echo "+++++ and then reboot to ensure that the XSB icon is displayed."
-fi
-echo
+#echo "+++++ If the desktop icon 'XSB' was installed"
+#echo "+++++ successfully, one can conveniently use it to run XSB."
+#if [ "`uname`" = "Darwin" -a -d $HOME/Desktop ]; then
+#   echo "+++++ On the Mac, one might need to:"
+#   echo "+++++   sudo /bin/rm -rf /Library/Cashes/com.apple.iconservices.store"
+#   echo "+++++ and then reboot to ensure that the XSB icon is displayed."
+#fi
+#echo
 
