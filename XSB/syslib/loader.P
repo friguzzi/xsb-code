@@ -365,7 +365,7 @@ XSB's in-lined predicates, builtins, and functions.
 	; Type =:= XSB_STRING -> psc_insert(Term, 0, PSC, 0)
 	),
 	conset('_$load_pred_action',0),
-	load_pred(PSC),
+	load_pred_t(PSC,Term),
 	conget('_$load_pred_action',Action),
 	xsb_sys_mutex_unlock( MUTEX_LOAD_UNDEF ),
 	(Action =:= 0 -> 
@@ -374,16 +374,16 @@ XSB's in-lined predicates, builtins, and functions.
 	     handle_undefined_pred(PSC,Term)
 	).
 
-:- mode load_pred(+).
-load_pred(PSC) :- \+ (\+ (load_pred0(PSC))).
+:- mode load_pred_t(+,?).
+load_pred_t(PSC,Term) :- \+ (\+ (load_pred0(PSC,Term))).
 
-load_pred0(PSC) :- 
+load_pred0(PSC,Term) :- 
 	stat_flag(HITRACE, Hitrace), 	
 	stat_set_flag(HITRACE, 0),	  % turn off hitrace
-	load_pred1(PSC),
+	load_pred1(PSC,Term),
 	stat_set_flag(HITRACE, Hitrace).  % resume hitrace status if successful
 
-load_pred1(PSC) :-
+load_pred1(PSC,Term) :-
 	psc_env(PSC, Env), 
 	( Env =:= T_UNLOADED
 	->  % is "imported"
@@ -392,7 +392,11 @@ load_pred1(PSC) :-
 	    psc_type(ModPSC, ModType), 
 	    (ModType =:= T_MODU  % already loaded, unless usermod
             ->	(ModName == usermod, psc_data(PSC,FileName),atom(FileName)
-                ->	    load(FileName)
+                ->  (FileName \== usermod
+		    ->	  load(FileName)
+		    ;     xsb_backtrace(BT),  % no usermod file to load!
+			  throw(error(existence_error(predicate,ModName:Term),context([],BT)))
+		    )
                 ;	    true
                 )
             ;	load(ModName,ModPSC), % might abort here
@@ -516,7 +520,8 @@ local_psc_ep(PSC,Term) :- psc_ep(PSC,Term).
  *  the module is constructed using search_file/3, below.
  */
 :- mode load(+).
-load(PModName) :- load(PModName,0,0,0).
+load(PModName) :-
+    load(PModName,0,0,0).
 
 load(PModName,ModPsc) :-
     load(PModName,ModPsc,0,0).
@@ -554,7 +559,9 @@ load(PModName,ModPsc,IfCmd,ToLoc) :-
        )
      -> compile_and_load(FileName,ModFile,PModName,ModTerm)
      ;  tilde_expand_filename(ModFile,ExpandedModName), % file not found
-	existence_error(module,ExpandedModName,load,1)
+	xsb_backtrace(BT),  % no usermod file to load!
+	throw(error(existence_error(module,ExpandedModName),context([],BT)))
+%%	existence_error(module,ExpandedModName,load,1)
     ).
 
 find_ofile_and_load(ModName,ModFile,PModName,ModTerm,ModPars,IfCmd,ToLoc) :-

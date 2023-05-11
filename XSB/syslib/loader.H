@@ -32,10 +32,10 @@
 	search_file/3.
 
 :- import not_exists/1 from tables.
-   :- import catch/3,throw/1,warning/1,(=..)/2, compound/1, call_c/1, cputime/1, abort/1,
+:- import catch/3,throw/1,warning/1,(=..)/2, compound/1, call_c/1, cputime/1, abort/1,
      hilog_functor/3 from standard.
-:- import default_error_handler/1,existence_error/4 from error_handler.
-   :- import record_file_consultloaded/1, push_loaded_file/2,
+:- import default_error_handler/1 from error_handler.
+:- import record_file_consultloaded/1, push_loaded_file/2,
 	pop_loaded_file/1 from consult.
 :- import search_module/6 from consult.
 :- import reconsult/1 from consult.
