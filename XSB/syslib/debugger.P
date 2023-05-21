@@ -368,7 +368,11 @@ debugging :-
 		;   deb_enterpred(N, PSC, Call, intrace, 0)
 		)
 	    )
-	;   fail
+	;   ll_write('++Error[XSB/Runtime/P]: '), % maybe call error?
+	    ll_write(Call),
+	    ll_write(' is not callable as a goal.'),
+	    ll_nl,
+	    fail
 	).
 	
 

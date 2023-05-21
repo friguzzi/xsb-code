@@ -112,7 +112,6 @@
 :- mode_on_success make_pretty_list(A,A).
 :- mode_on_success make_pretty_list_1(A,A).
 :- mode_on_success make_trace_interactive.
-:- mode_on_success must_load(g).
 :- mode_on_success nodebug.
 :- mode_on_success nosimtrace.
 :- mode_on_success nospy A.
