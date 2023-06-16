@@ -1,7 +1,3 @@
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "manual2"
-%%% End: 
 \chapter{ PITA: Probabilistic  Inference}
 \label{package:pita} 
 
@@ -24,7 +20,7 @@
 
 {\em Probabilistic Inference with Tabling and Answer subsumption}
 (PITA) \cite{RigS13,RigS11a} is a package for reasoning under
-uncertainty. In particular, PITA supports various forms zof
+uncertainty. In particular, PITA supports various forms of
 Probabilistic Logic Programming (PLP) and Possibilistic Logic
 Programming (PossLP). It accepts the language of Logic Programs with
 Annotated Disjunctions (LPADs)\cite{VenVer03-TR,VenVer04-ICLP04-IC}
@@ -73,14 +69,16 @@ needed.
 \item {\em MacOS} When compiling on MacOS, it should be noted that
   recent versions of {\tt xcode} do not include {\tt autoconf} and
   {\tt automake}, both of which are needed for the PITA installation.
-  If your these tools are not installed on your system, they can be
-  easily installed by
+  If these tools are not installed on your system, they can be
+  easily installed via these commands:
 
 {\tt 
 \noindent
-(sudo) brew install autoconf \\
-(sudo) brew install automake
+sudo brew install autoconf \\
+sudo brew install automake
 }
+
+Note that your account must have the permission to execute \texttt{sudo}. 
 
 \noindent
 or 
@@ -104,6 +102,9 @@ is represented by
 No parentheses are necessary. The \texttt{pi} are numeric
 expressions. It is up to the user to ensure that the numeric
 expressions are legal, i.e. that they sum up to less than one.
+
+Note that only \texttt{\\+} can be used as the negation operator in PITA,
+i.e., neither \texttt{tnot}  nor \texttt{not} are allowed.
 Other points about {\tt pita} syntax are: 
 
 \begin{itemize}
@@ -366,3 +367,8 @@ query use
 \end{verbatim}
 Like {\tt pitaindexc} and {\tt pitacount}, {\tt pitaposs} does not
 require maintenance of composite choices through BDDs in CUDD.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "manual2"
+%%% End: 
