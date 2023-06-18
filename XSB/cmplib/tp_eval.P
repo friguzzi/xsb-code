@@ -118,6 +118,7 @@ eval_exp(string(Sym),_R,_Pilr,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
 eval_constant(pi,real(V)):- eval(pi,V). 
 eval_constant(e,real(V)):- eval(e,V).
 eval_constant(epsilon,real(V)) :- eval(epsilon,V).
+eval_constant(inf,real(V)) :- eval(inf,V).
 
 eval_binoptab(+,R1,R2,addreg(R2,R1)).
 eval_binoptab(-,R1,R2,subreg(R2,R1)).

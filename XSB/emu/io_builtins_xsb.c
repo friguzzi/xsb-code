@@ -1851,7 +1851,11 @@ char *cvt_float_to_str_with_fmt(CTXTdeclc Float floatval, char *format) {
   if (!strchr(wcan_buff->string,'.')) {
     char *eloc = strchr(wcan_buff->string,'e');
     if (!eloc) {
-      XSB_StrAppend(wcan_buff,".0");
+      //printf("fl: %s\n",wcan_buff->string);
+      if (strcmp(wcan_buff->string,"inf")!=0 &&
+	  strcmp(wcan_buff->string,"-inf")!=0) {
+	XSB_StrAppend(wcan_buff,".0");
+      }
     } else {	
       char exp[500],fstr[MAX_SPRINTF_STRING_SIZE];
       //	  printf("massage float %s\n", wcan_buff->string);

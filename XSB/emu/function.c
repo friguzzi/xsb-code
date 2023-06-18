@@ -754,6 +754,8 @@ int xsb_eval_con_op(char *con, FltInt *value) {
     set_flt_val(value,(const Float)2.7182818284590452354);
   } else if (strcmp(con,"epsilon")==0) {
     set_flt_val(value,(const Float)xsb_calculate_epsilon());
+  } else if (strcmp(con,"inf")==0) {
+    set_flt_val(value,(const Float)INFINITY);
   } else set_and_return_fail(value);      
   return 1;
 }
