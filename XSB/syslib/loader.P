@@ -365,7 +365,7 @@ XSB's in-lined predicates, builtins, and functions.
 	; Type =:= XSB_STRING -> psc_insert(Term, 0, PSC, 0)
 	),
 	conset('_$load_pred_action',0),
-	load_pred_t(PSC,Term),
+	load_pred(PSC,Term),
 	conget('_$load_pred_action',Action),
 	xsb_sys_mutex_unlock( MUTEX_LOAD_UNDEF ),
 	(Action =:= 0 -> 
@@ -374,8 +374,8 @@ XSB's in-lined predicates, builtins, and functions.
 	     handle_undefined_pred(PSC,Term)
 	).
 
-:- mode load_pred_t(+,?).
-load_pred_t(PSC,Term) :- \+ (\+ (load_pred0(PSC,Term))).
+:- mode load_pred(+,?).
+load_pred(PSC,Term) :- \+ (\+ (load_pred0(PSC,Term))).
 
 load_pred0(PSC,Term) :- 
 	stat_flag(HITRACE, Hitrace), 	

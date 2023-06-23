@@ -348,7 +348,7 @@ debugging :-
 	    ->	term_arg(Call,1,Ncall), '_$deb_trace'(Ncall)
 	    ;	Call = '_$load_undef'(Ncall)
 	    ->	'_$deb_trace'(Ncall)
-	    ;	must_load(PSC)
+	    ;	must_load(PSC,Call)
 	    ->	'_$deb_trace'(Call)
 	    ;	hide_this_show(P,A)
 	    ->	basic_call(0,PSC,Call) % and turn tracing back on
@@ -388,13 +388,13 @@ show_this_hide_call(P,A) :- '_$_deb_user_hidden'(P,A).
 
 /* TLS: assuming that this affects only undefined preds, so I'm not
    making a check for only one thread. */
-must_load(PSC) :-
+must_load(PSC,Call) :-
 	psc_type(PSC, T),
 	( T =:= 2 -> fail
 	; T =:= 1 -> fail
 	; T =:= 13 -> fail
 %%%	; T =:= 14 -> fail
-	; load_pred(PSC)
+	; load_pred(PSC,Call)
 	).
 
 
@@ -405,7 +405,7 @@ must_load(PSC) :-
 	%%ll_write(spy(Call)),ll_nl,
 	%% P-pred name, A- arity
 	get_psc_info(Call, PSC, _P, _A),
-	(must_load(PSC)
+	(must_load(PSC,Call)
 	->  '_$deb_spy'(Call)
 	;   stat_flag(INVOKE_NUM,N),N1 is N+1,
 	    stat_set_flag(INVOKE_NUM,N1), % invoke_num++
@@ -450,7 +450,6 @@ indeed_spy(Call) :- \+ (\+ ('_b_SPY_condition'(Call))).
 /* main tracing interpreter-------------------------------------------*/
 
 deb_enterpred(N,PSC,Call,Spy,Tr) :-
-	%%ll_write('enterpred'(Call)),ll_nl,
 	conset('_$_verbose_skip_current_callno', N),
 	(N==0 ->
 	    %% New top-level goal
@@ -470,7 +469,6 @@ deb_enterpred(N,PSC,Call,Spy,Tr) :-
 	    (	stat_set_flag(HIDE_STATE,1),      % hide_state
 		stat_set_flag(QUASI_SKIPPING, 0),  % quasi_skipping = 0
 		stat_set_flag(SKIPPING, 0),        % skipping = 0
-		%%ll_write(exit_call_hs(OV)),ll_nl,
 		(   still_displaying(Spy)
 		->  conset('_$_verbose_skip_current_callno', N),
 		    pop_goalstack(N),
@@ -536,7 +534,7 @@ still_displaying(Spy) :-
 /* retry recursive call-------------------------------------------------*/
 
 deb_retry(Call,inspy)   :- !, '_$deb_spy'(Call).
-deb_retry(Call,intrace) :- '_$deb_trace'(Call).
+deb_retry(Call,intrace) :- '_$deb_trace'(Call).
 
 %% produce a log
 deb_traceget(N,Spy,Type,Call,C) :-
@@ -880,7 +878,7 @@ basic_call(I,PSC,Call) :-
 	psc_ep(PSC, Code),
 	psc_type(PSC, Nt),
 	%%stat_flag(HIDE_STATE,V), V1 is V-1,	% calc hide_state-1
-	%%ll_write(call_hs_i(V,I)),ll_nl,
+	%%ll_write(call_hs_i(Call,V,I)),ll_nl,
 	(I =:= 0	% turn tracing back on
 	 ->	stat_set_flag(HIDE_STATE,0/*V1*/), % hide_state--
 		code_call(Code,Call,Nt)

@@ -24,7 +24,7 @@
 */
 
 
-:- export load_pred/1, libpath/1, set_inthandler/2,
+:- export load_pred/2, libpath/1, set_inthandler/2,
 	rename_private_obj_file/2, private_obj_filename/2,
 	load_object_file/3,
 	'_$load_undef'/1,

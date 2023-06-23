@@ -39,7 +39,7 @@
 	trace_goalstack/2,
 	show/1, leash/1.
 
-:- import set_inthandler/2, '_$load_undef'/1, load_pred/1 from loader.
+:- import set_inthandler/2, '_$load_undef'/1, load_pred/2 from loader.
 :- import file_write/2, file_write_quoted/2 from xsb_writ.
 
 :- import =.. /2, functor/3, atom/1, is_list/1, call/1, cputime/1,
