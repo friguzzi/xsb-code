@@ -884,10 +884,11 @@ struct ltrail {
 
 # define ltrail_base(local_trail) &(local_trail.ltrail_vals[0])-1;
 
+//struct ltrail mini_trail;
+struct ltrail templ_trail, var_trail;
 
 int is_most_general_term(Cell term)
 {
-  struct ltrail mini_trail;
 
   XSB_Deref(term);
   switch (cell_tag(term)) {
@@ -899,9 +900,9 @@ int is_most_general_term(Cell term)
       CPtr taddr;
       int i, arity;
       register Cell addr;
-      void *mini_trail_base;
+      void *var_trail_base;
 
-      mini_trail.ltrail_top = mini_trail_base = ltrail_base(mini_trail);
+      var_trail.ltrail_top = var_trail_base = ltrail_base(var_trail);
       psc = get_str_psc(term);
       taddr = clref_val(term);
       arity = (int) get_arity(psc);
@@ -910,34 +911,34 @@ int is_most_general_term(Cell term)
 	addr = cell(taddr+i);
 	XSB_Deref(addr);
 	if (isnonvar(addr)) {
-	  undo_ltrail_bindings(&mini_trail,mini_trail_base);
+	  undo_ltrail_bindings(&var_trail,var_trail_base);
 	  return FALSE;
 	} else {
-	  local_bind_var(addr,&mini_trail);
+	  local_bind_var(addr,&var_trail);
 	}
       }
-      undo_ltrail_bindings(&mini_trail,mini_trail_base);
+      undo_ltrail_bindings(&var_trail,var_trail_base);
       return TRUE;
     }
   case XSB_LIST:
     {
       register Cell addr;
-      void *mini_trail_base;
+      void *var_trail_base;
 
-      mini_trail.ltrail_top = mini_trail_base = ltrail_base(mini_trail);
+      var_trail.ltrail_top = var_trail_base = ltrail_base(var_trail);
       while (islist(term)) {
 	addr = get_list_head(term);
 	XSB_Deref(addr);
 	if (isnonvar(addr)) {
-	  undo_ltrail_bindings(&mini_trail,mini_trail_base);
+	  undo_ltrail_bindings(&var_trail,var_trail_base);
 	  return FALSE;
 	} else {
-	  local_bind_var(addr,&mini_trail);
+	  local_bind_var(addr,&var_trail);
 	  term = get_list_tail(term);
 	  XSB_Deref(term);
 	}
       }
-      undo_ltrail_bindings(&mini_trail,mini_trail_base);
+      undo_ltrail_bindings(&var_trail,var_trail_base);
       return isnil(term);
     }
   default:
@@ -2647,7 +2648,6 @@ case WRITE_OUT_PROFILE:
     Cell term, templ, startvlist, ovar, retlist;
     CPtr anslist, tanslist, tail;
     int max_num_vars;
-    struct ltrail templ_trail, var_trail;
     void *templ_trail_base, *var_trail_base;
     templ_trail.ltrail_top = templ_trail_base = ltrail_base(templ_trail);
     var_trail.ltrail_top = var_trail_base = ltrail_base(var_trail);
