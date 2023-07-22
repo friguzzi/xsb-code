@@ -658,7 +658,8 @@ void xp_python_error() {
   PyObject* ptypeRepr = PyObject_Repr(ptype);
   PyObject* pvalueRepr = PyObject_Repr(pvalue);
   PyTracebackObject *tb = (PyTracebackObject *)ptraceback;
-  if (NULL != tb && NULL != tb->tb_frame) {
+#if PY_MINOR_VERSION < 11
+  if (NULL != tb && NULL != tb->tb_frame ) {
     int buff_ctr = 0;
     buff_ctr = sprintf(forest_log_buffer_1->fl_buffer,
 			  "Python traceback (most recent call last):\n");
@@ -678,6 +679,10 @@ void xp_python_error() {
   else 
     xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
 	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+#else
+    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
+	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+#endif
   //#else
   //    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
   //	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
