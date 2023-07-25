@@ -4,7 +4,7 @@
 ## Author(s): kifer
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
-## Copyright (C) The Research Foundation of SUNY, 1998
+## Copyright (C) The Research Foundation of SUNY, 1998-2023
 ## 
 ## XSB is free software; you can redistribute it and/or modify it under the
 ## terms of the GNU Library General Public License as published by the Free
