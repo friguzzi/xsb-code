@@ -869,10 +869,11 @@ int is_xwam_filename(char *name) {
 
   /*----------------------------------------------------------------------*/
 
+static XSB_StrDefine(str);
+
 static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int count, int exp,
 			    prolog_term modformals, prolog_term modpars) // add act and form parlists
 {
-  static XSB_StrDefine(str);
   int  is_new, def_is_new;
   int import_from_usermod_file = FALSE;
   byte t_arity, t_type, t_env, t_defined, t_definedas;
@@ -920,14 +921,10 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
 	  psc_set_ep(mod,(byte *)makestring(string_find(modfile,1)));
       }
       if (t_definedas) {
-	byte t_defaslen;
-	char defasname[MAXFILENAME+1];
-	dummy = get_obj_byte(&t_defaslen);
-	dummy = get_obj_string(defasname, t_defaslen);
-	if (t_defaslen > MAXFILENAME)
-	  xsb_exit("defined as name too long in loading; corrupted!!");
-	defasname[t_defaslen] = '\0';
-	defas_pair = insert(defasname, t_arity, mod, &def_is_new);
+	static XSB_StrDefine(defasname);
+	get_obj_atom(fd, &defasname);
+
+	defas_pair = insert(defasname.string, t_arity, mod, &def_is_new);
 	if (def_is_new) {
 	  psc_set_data(defas_pair->psc_ptr, mod);
 	  psc_set_env(defas_pair->psc_ptr, T_UNLOADED);
@@ -1231,15 +1228,11 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     /*		xsb_dbgmsg(("Seg count: %d",seg_count)); */
     /* get the header of the segment */
     dummy = get_obj_byte(&arity);
-    dummy = get_obj_byte(&name_len);
+    get_obj_atom(fd,&str);
+    if (strlen(str.string) >= FOREIGN_NAMELEN)
+      fprintf(stderr,"[LOADER] WARNING (FYI): Predicate name longer than 254: %s\n",str.string);
 
-    if (name_len >= FOREIGN_NAMELEN)
-      xsb_abort("[LOADER] Module name is too long");
-
-    dummy = get_obj_string(name, name_len);
-    name[(int)name_len] = 0;
-
-    ptr = insert(name, arity, cur_mod, &is_new);
+    ptr = insert(str.string, arity, cur_mod, &is_new);
 
     get_obj_word_bb(&text_bytes);
     /*		xsb_dbgmsg(("Text Bytes %x %d",text_bytes,text_bytes));*/
@@ -1254,7 +1247,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     switch (get_type(ptr->psc_ptr)) {
     case T_ORDI:
     case T_UDEF:
-      if (strcmp(name, "_$main")!=0) {
+      if (strcmp(str.string, "_$main")!=0) {
 	psc_set_type(ptr->psc_ptr, T_PRED);
 	psc_set_ep(ptr->psc_ptr, (pb)seg_first_inst);
 	if (xsb_profiling_enabled) {
@@ -1276,7 +1269,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
       //      printf("table: %s/%d, psc_tabled: %x\n",get_name(ptr->psc_ptr),get_arity(ptr->psc_ptr),get_tabled(ptr->psc_ptr));
       break;
     case T_PRED:
-      if (strcmp(name, "_$main")!=0) {
+      if (strcmp(str.string, "_$main")!=0) {
 	if (xsb_profiling_enabled)
 	  remove_prog_seg((pb)get_ep(ptr->psc_ptr));
 	if (seg_address_in_stack(CTXTc (pseg)get_ep(ptr->psc_ptr))) {
@@ -1287,7 +1280,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 	  xsb_exit( message);
 	}
 	if (isstring(get_data(ptr->psc_ptr)) && 
-	    !has_generated_prefix(name) &&
+	    !has_generated_prefix(str.string) &&
 	    nec_different_xwam_files(filename,string_val(get_data(ptr->psc_ptr)))) {
 	  xsb_warn(CTXTc "Redefining: %s/%d from file %s; Previously defined from file %s",
 		   get_name(ptr->psc_ptr),get_arity(ptr->psc_ptr),
@@ -1319,7 +1312,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 
       unload_seg(seg_first_inst);
 
-      snprintf(culprit,279,"dynamic predicate %s/%d",name,arity);
+      snprintf(culprit,279,"dynamic predicate %s/%d",str.string,arity);
       xsb_permission_error(CTXTc "redefine as static",culprit,0,"consult",1);
 	//      xsb_abort("[LOADER] Trying to compile a dynamic predicate, %s/%d",
 	//		name, arity);
@@ -1327,7 +1320,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     }
     default:
       unload_seg(seg_first_inst);
-      xsb_abort("[LOADER] The predicate %s/%d cannot be loaded", name, arity);
+      xsb_abort("[LOADER] The predicate %s/%d cannot be loaded", str.string, arity);
       return NULL;
     }
   } while (1==1);
