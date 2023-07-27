@@ -88,6 +88,13 @@ else
    echo ""
 fi
 
+if [ "`echo \"$makeargs\" | sed -e \"s/^.*clean *$/exit/\"`" = "exit" ]; then
+    echo "Skipping Janus configuration..."
+    rm -f  buildxsb.lock
+    rm -f  Makefile
+    exit 0
+fi
+
 # Finalization: packages may need to run some scripts when XSB is fully compiled
 rm -f ../packages/xsbpy/px-install.log
 ../packages/xsbpy/make_px_pkg.sh
