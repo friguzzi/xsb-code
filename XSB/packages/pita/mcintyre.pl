@@ -1,4 +1,4 @@
-:- op(600,xfy,'::').
+:-  op(600,xfy,'::').
 :-  op(600,xfy,'~').
 :-  op(500,xfx,'~=').
 :-  op(1200,xfy,':=').
@@ -19,9 +19,16 @@ details.
 @license Artistic License 2.0 https://opensource.org/licenses/Artistic-2.0
 @copyright Fabrizio Riguzzi
 */
-  :- compiler_options([spec_off,verbo]).
-
+  :- compiler_options([spec_off,verbo]).	
 %:- consult(bddem, [cc_opts('-Icudd-3.0.0 -Icudd-3.0.0/cudd -Icudd-3.0.0/util -fPIC -DBP_FREE -O3 -fomit-frame-pointer -Wall -g -O2')]).
+
+:- if(current_prolog_flag(dialect,swi)).
+tab(A/B,A/B1):-
+  B1 is B + 2.
+:- elseif(current_prolog_flag(dialect,xsb)).
+erase(Term):- retract(Term).
+
+:- endif.
 
 
 :- import append/3, member/2, length/2, ith/3, delete_ith/4, reverse/2,
@@ -3278,10 +3285,6 @@ msw_weight(Values,Dist,V,W):-
 
 act(M,A/B):-
   M:(dynamic A/B).
-
-tab(A/B,A/B1):-
-  B1 is B + 2.
-
 
 load_cpl(File):-
 	atom_concat(File,'.cpl',FileCpl),
