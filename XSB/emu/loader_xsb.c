@@ -1229,9 +1229,6 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     /* get the header of the segment */
     dummy = get_obj_byte(&arity);
     get_obj_atom(fd,&str);
-    if (strlen(str.string) >= FOREIGN_NAMELEN)
-      fprintf(stderr,"[LOADER] WARNING (FYI): Predicate name longer than 254: %s\n",str.string);
-
     ptr = insert(str.string, arity, cur_mod, &is_new);
 
     get_obj_word_bb(&text_bytes);
