@@ -1,3 +1,4 @@
+/* test */
 :- compiler_options([xpp_on]).
 
 #include "janus_defs.h"
