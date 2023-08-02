@@ -1014,6 +1014,23 @@ if test -d "$topdir/packages/xsbpy"; then
     cd "$build_dir"
 fi
 
+# janus  package
+if test -d "$topdir/packages/janus"; then
+    AC_OUTPUT([
+    '"${topdir}/packages/janus/configvars.sh"':'"${topdir}/packages/janus/configvars.in"'
+    ])
+
+    cd "$topdir/packages/janus"
+    echo "***Configuring Janus-Pro (XSB to Python connector)"
+    chmod 700 ./configure
+    if test -n "${with_preferred_python}" ; then
+        ./configure --with-preferred-python=${with_preferred_python} || janus_config_failed=1
+    else
+        ./configure || janus_config_failed=1
+    fi
+    cd "$build_dir"
+fi
+
 
 
 dnl check for Make feature
@@ -2075,6 +2092,10 @@ if test -f "$topdir/packages/xsbpy/Installation_summary" ; then
     cat "$topdir/packages/xsbpy/Installation_summary"
 fi
 
+if test -f "$topdir/packages/janus/Installation_summary" ; then
+    cat "$topdir/packages/janus/Installation_summary"
+fi
+
 
 echo ""
 echo ""
@@ -2150,7 +2171,14 @@ echo "Configuration report is saved in ./Installation_summary"
 
 if test -n "$xsbpy_config_failed" ; then
    echo
-   echo "***** Python integration failed: probably because pip is not installed"
+   echo "***** xsbpy: Python integration failed: probably because pip is not installed"
+   echo "***** To use this integration, install pip and reconfigure XSB"
+   echo
+fi
+
+if test -n "$xsbpy_config_failed" ; then
+   echo
+   echo "***** Janus: Python integration failed: probably because pip is not installed"
    echo "***** To use this integration, install pip and reconfigure XSB"
    echo
 fi
