@@ -64,7 +64,8 @@ compile0(Path, Options, ToLoc, ExpDyn) :-
 	atom(Path),
 	search_module(Path, Dir, Mod0, SExt, Base, _Obj),
 	!,
-	(member(module(Mod),Options) % allow module name to differ from filename
+	(member(module(Mod),Options), % allow module name to differ from filename
+	 Mod \== usermod
 	 -> true
 	 ;  Mod = Mod0
 	),

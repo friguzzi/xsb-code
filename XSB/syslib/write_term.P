@@ -34,7 +34,7 @@
 :- export write_term/2, write_term/3, write_option/1,code_class/2.
 
 :- import xsb_stream_lock/1, xsb_stream_unlock/1 from file_io.
-:- import file_function/7 from machine.
+:- import file_function/7, file_writequoted/2 from machine.
 :- import write/1,float/1, (=..)/2 from standard.
 :- import xsb_sys_mutex_lock/1, xsb_sys_mutex_unlock/1 from thread.
 :- import current_infixop/4, current_postfixop/3, current_prefixop/3
@@ -370,7 +370,7 @@ write_out_(1, F, Term, Quote, Options, Prio, _, Depth, Lpar, Ci, Co) :-
 	maybe_open_paren(O1, Prio, Lpar, Lpar1, Ci, C1),
 	arg(1, Term, A),
 	write_out(A, Options, P, 1200, Depth, Lpar1, C1, C2),
-	write_atom(Quote, F, C2, C3),
+	write_oper(Quote, F, C2, C3),  %% operator
 	maybe_close_paren(O1, Prio, C3, Co).
 write_out_(1, F, Term, Quote, Options, Prio, PrePrio, Depth, Lpar, Ci, Co) :-
         current_prefixop(F, O, P),
@@ -378,7 +378,7 @@ write_out_(1, F, Term, Quote, Options, Prio, PrePrio, Depth, Lpar, Ci, Co) :-
         (number(A) -> F \== (-) ; true), !,
 	(PrePrio=1200 -> O1 is P+1; O1=O),	% for "fy X yf" etc. cases
 	maybe_open_paren(O1, Prio, Lpar, _, Ci, C1),
-	write_atom(Quote, F, C1, C2),
+	write_oper(Quote, F, C1, C2),  %% operator
 	write_out(A, Options, P, P, Depth, ' (', C2, C3),
 	maybe_close_paren(O1, Prio, C3, Co).
 write_out_(2, F, Term, Quote, Options, Prio, PrePrio, Depth, Lpar, Ci, Co) :-
@@ -387,7 +387,7 @@ write_out_(2, F, Term, Quote, Options, Prio, PrePrio, Depth, Lpar, Ci, Co) :-
 	maybe_open_paren(O1, Prio, Lpar, Lpar1, Ci, C1),
 	arg(1, Term, A),
 	write_out(A, Options, P, 1200, Depth, Lpar1, C1, C2),
-	write_atom(Quote, F, C2, C3),
+	write_oper(Quote, F, C2, C3),  %% operator
 	arg(2, Term, B),
 	write_out(B, Options, Q, Q, Depth, '(', C3, C4),
 	maybe_close_paren(O1, Prio, C4, Co).
@@ -434,6 +434,19 @@ write_atom(true, Atom, Ci, Co) :-
 	maybe_space(Ci, Co),
         displayq(Atom).
 
+%% write_atom, but don't put parens around operator.
+write_oper(false, Atom, Ci, Co) :-
+	'$atom_mode'(Atom, Co),
+	maybe_space(Ci, Co),
+        display(Atom).
+write_oper(true, Atom, Ci, Co) :-
+	'$atom_mode'(Atom, Co),
+	maybe_space(Ci, Co),
+	(Atom == ';'
+	 -> display(Atom) % punctuation..
+	 ;  current_output(CurrOut),
+	    file_writequoted(CurrOut,Atom)
+	 ).
 
 %   write_args(DoneSoFar, Arity, Term, Options, Depth)
 %   writes the remaining arguments of a Term with Arity arguments
