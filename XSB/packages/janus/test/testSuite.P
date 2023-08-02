@@ -1,6 +1,6 @@
 
 :- compiler_options([xpp_on]).
-#include "../janus_defs.h"
+#include "../xsbpy_defs.h"
 
 :-  set_prolog_flag(character_set, utf_8) . 
 
@@ -229,8 +229,7 @@ pyc_tests:-
 
 json_tests:-
     Jstring = '{"name": "Bob", "languages": ["English", "Fench","GERMAN"]}',
-%     pyfunc('test/jintf',prolog_loads(Jstring),F),
-     pyfunc('jintf',prolog_loads(Jstring),F),
+     pyfunc('test/jintf',prolog_loads(Jstring),F),
      (F = PYDICT_PROLOG([PYTUP_PROLOG(name,'Bob'),PYTUP_PROLOG(languages,['English','Fench','GERMAN'])]) ->
 	  writeln('json_loads_test successful')
         ; writeln('!!!json_loads_test_failed') ),
@@ -250,7 +249,7 @@ json_tests:-
 %    fail.
 json_tests:- 
     xsb_configuration(packagesdir, PackDir),
-    concat_atom([PackDir,'/janus/test/sample.json'],JsonFile),
+    concat_atom([PackDir,'/xsbpy/test/sample.json'],JsonFile),
     pyfunc('test/jintf',prolog_load(JsonFile),F),
     (F = PYDICT_PROLOG([PYTUP_PROLOG(glossary,PYDICT_PROLOG([PYTUP_PROLOG(title,'example glossary'),PYTUP_PROLOG('GlossDiv',PYDICT_PROLOG([PYTUP_PROLOG(title,'S'),PYTUP_PROLOG('GlossList',PYDICT_PROLOG([PYTUP_PROLOG('GlossEntry',PYDICT_PROLOG([PYTUP_PROLOG('ID','SGML'),PYTUP_PROLOG('SortAs','SGML'),PYTUP_PROLOG('GlossTerm','Standard Generalized Markup Language'),PYTUP_PROLOG('Acronym','SGML'),PYTUP_PROLOG('Abbrev','ISO 8879:1986'),PYTUP_PROLOG('GlossDef',PYDICT_PROLOG([PYTUP_PROLOG(para,'A meta-markup language, used to create markup languages such as DocBook.'),PYTUP_PROLOG('GlossSeeAlso',['GML','XML'])])),PYTUP_PROLOG('GlossSee',markup)]))]))]))]))]) -> 
 	 writeln('json_load_test successful')
@@ -272,10 +271,10 @@ error_tests:-
 error_tests:-
 %    catch(pyfunc(kwargs,foo(1),_X),E,(xsb_error_get_message(E,M),writeln(M))),
     error_tests_1(kwargs,foo(1),
-		  [' ++Error[janus]: foo/1 is not a callable function in the Python module \'kwargs\' (arg 2 of pyfunc/3)']),
+		  [' ++Error[xsbpy]: foo/1 is not a callable function in the Python module \'kwargs\' (arg 2 of pyfunc/3)']),
     fail.
 error_tests:-
-    error_tests_1(kwargs,7,[' ++Error[janus]: ',_,' is not a callable function (in arg 2 of pyfunc/3)']),
+    error_tests_1(kwargs,7,[' ++Error[xsbpy]: ',_,' is not a callable function (in arg 2 of pyfunc/3)']),
     fail.
 % returns obj
 %error_tests:-
@@ -311,8 +310,8 @@ meth_tests:-
     Ret3 = chocolate,
     Ret4 = 'Hello my name is john and I''m a real doofus',
     Ret5 = 'Hello my name is john and I''m a real big doofus',
-    M1 = ' ++Error[janus]: arg 2 of pydot/4 is not a Python Object: 1',
-    M2 = ' ++Error[janus]: arg 3 of pydot/4 is not a Python function or attribute: 1',
+    M1 = ' ++Error[xsbpy]: arg 2 of pydot/4 is not a Python Object: 1',
+    M2 = ' ++Error[xsbpy]: arg 3 of pydot/4 is not a Python function or attribute: 1',
     writeln('Person test succeeded'),!.
 meth_tests:- 
     writeln('!!!Person test failed').

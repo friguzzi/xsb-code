@@ -6,3 +6,8 @@
 make_px_pkg.sh
 configvars.sh
 Installation_summary
+*.log
+*.so
+*.dll
+*_old
+__pycache__

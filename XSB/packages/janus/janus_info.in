@@ -1,6 +1,6 @@
-%% janus_info.P.  Generated from janus_info.in by configure.
+%% @configure_input@
 
-/* File:      janus_info.in -- configuration info for janus and px
+/* File:      xsbpy_info.in -- configuration info for xsbpy and px
 ** Author(s): kifer
 ** Contact:   xsb-users@lists.sourceforge.net
 ** 
@@ -22,9 +22,9 @@
 */
 
 
-:- export janus_info/2.
+:- export xsbpy_info/2.
 
-janus_info(support, 'yes').
-janus_info(ccflags, '').
-janus_info(ldflags, '').
-janus_info(libdir,  '/usr/local/opt/python@3.9/Frameworks/Python.framework/Versions/3.9/lib').
+xsbpy_info(support, '@support@').
+xsbpy_info(ccflags, '@CFLAGS@').
+xsbpy_info(ldflags, '@LDFLAGS@').
+xsbpy_info(libdir,  '@PYTHON_LIBDIR@').
