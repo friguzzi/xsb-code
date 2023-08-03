@@ -996,6 +996,7 @@ int make_ground(Cell term, struct ltrail *templ_trail) {
   case XSB_STRUCT: {
     int i, arity;
     arity = (int) get_arity(get_str_psc(term));
+    if (arity == 0) return TRUE;
     for (i = 1; i < arity; i++) {
       make_ground(get_str_arg(term,i), templ_trail);
     }
