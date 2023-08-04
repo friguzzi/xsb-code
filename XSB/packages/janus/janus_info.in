@@ -1,6 +1,6 @@
 %% @configure_input@
 
-/* File:      xsbpy_info.in -- configuration info for xsbpy and px
+/* File:      janus_info.in -- configuration info for Janusand px
 ** Author(s): kifer
 ** Contact:   xsb-users@lists.sourceforge.net
 ** 
@@ -22,9 +22,9 @@
 */
 
 
-:- export xsbpy_info/2.
+:- export janus_info/2.
 
-xsbpy_info(support, '@support@').
-xsbpy_info(ccflags, '@CFLAGS@').
-xsbpy_info(ldflags, '@LDFLAGS@').
-xsbpy_info(libdir,  '@PYTHON_LIBDIR@').
+janus_info(support, '@support@').
+janus_info(ccflags, '@CFLAGS@').
+janus_info(ldflags, '@LDFLAGS@').
+janus_info(libdir,  '@PYTHON_LIBDIR@').

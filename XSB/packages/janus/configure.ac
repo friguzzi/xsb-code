@@ -7,7 +7,7 @@ dnl  here.
 
 
 AC_PREREQ(2.12)
-AC_INIT([xsbpy],[1.0])
+AC_INIT([janus],[1.0])
 
 AC_CONFIG_MACRO_DIR([./m4])
 
@@ -50,15 +50,15 @@ rm -f *.xwam *.so *.dylib
 
 support1=no
 if test -z "$PYTHON_BIN" ; then
-   message1="  XSBPY:       Python not found"
+   message1="  Janus:       Python not found"
 elif test -z "$PYTHON_LIB" ; then
-   message1="  XSBPY:       Python shared library (libpython3.so) not found"
+   message1="  Janus:       Python shared library (libpython3.so) not found"
 elif test -z "$PYTHON_INCLUDE_DIR" ; then
-   message1="  XSBPY:       Python include directory not found"
+   message1="  Janus:       Python include directory not found"
 elif test -z "$PYTHON_CONFLIB" ; then
-   message1="  XSBPY:       Python development libraries are likely missing (eg. the package python3.XX-dev not installed)"
+   message1="  Janus:       Python development libraries are likely missing (eg. the package python3.XX-dev not installed)"
 elif test "$pip_not_installed" = "1" ; then
-   message1="  XSBPY:       pip is not installed"
+   message1="  Janus:       pip is not installed"
 else
    support1=yes
 fi
@@ -69,7 +69,7 @@ if test -n "$PYTHON_INCLUDE_DIR" ; then
    CFLAGS="-I$PYTHON_INCLUDE_DIR ${CFLAGS}"
    CPPFLAGS="-I$PYTHON_INCLUDE_DIR ${CPPFLAGS}"
 fi
-AC_CHECK_HEADERS([Python.h] , [support0=yes], [message0="       XSBPY: Python.h not found"], [])
+AC_CHECK_HEADERS([Python.h] , [support0=yes], [message0="       Janus: Python.h not found"], [])
 CFLAGS="${CFLAGS_backup}"
 
 # these are likely useless
@@ -103,9 +103,9 @@ AC_SUBST(XSB_ROOTDIR)
 #echo ldflags=$LDFLAGS
 #
 #support2=no
-#AC_SEARCH_LIBS([Py_Initialize], [], [support2=yes], [message2="       XSBPY: Py_Initialize not found"], [])
+#AC_SEARCH_LIBS([Py_Initialize], [], [support2=yes], [message2="       JANUS: Py_Initialize not found"], [])
 
-AC_OUTPUT([ xsb2py_connect_defs.h:xsb2py_connect_defs.in ])
+AC_OUTPUT([ janus_connect_defs.h:janus_connect_defs.in ])
 
 if test "$support0" = "yes" -a "$support1" = "yes" ; then
    support=yes
@@ -114,12 +114,12 @@ else
 fi
 
 (
-echo "  XSBPY support (XSB to Python connector):        $support"
+echo "  JANUS support (XSB to Python connector):        $support"
 if test "$support" = "yes"; then
    cat <<EOT
   Python:             $PYTHON_BIN
-  XSBPY C flags:      $ccflags
-  XSBPY loader flags: $ldflags
+  Janus C flags:      $ccflags
+  Janus loader flags: $ldflags
 
 EOT
 else
@@ -136,7 +136,7 @@ py_includedir="'$PYTHON_INCLUDE_DIR'"
 
 if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "1" -o -z "$PYTHON_LIB" -o -z "$PYTHON_CONFLIB" ; then
     echo 'echo "+++ Python does not seem to be configured properly."' > make_px_pkg.sh
-    echo 'echo "+++ Are the Python developer's libraries installed?"' >> make_px_pkg.sh
+    echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_px_pkg.sh
     echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_px_pkg.sh
     echo 'echo ""' >> make_px_pkg.sh
 else
@@ -144,6 +144,6 @@ else
 fi
 
 AC_SUBST(support)
-AC_OUTPUT([xsbpy_info.P:xsbpy_info.in])
+AC_OUTPUT([janus_info.P:janus_info.in])
 
 chmod 700 make_px_pkg.sh

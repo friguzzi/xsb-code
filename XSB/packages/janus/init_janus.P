@@ -1,7 +1,7 @@
 :- compiler_options([xpp_on]).
 
 #include "xsbpy_defs.h"
-#include "xsb2py_connect_defs.h"
+#include "janus_connect_defs.h"
 
 /* 
 init_xsbpy/0 initializes xsbpy, compiling the necessary C files and
