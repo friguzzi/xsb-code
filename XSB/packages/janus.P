@@ -67,7 +67,7 @@ def_vars_to_dict_1([A=B|T],[''(A,B)|T1]):-
 %-------------------------------------------------
 
 check_installation :-
-	catch(\+ xsbpy_info:xsbpy_info(support,yes),
+	catch(\+ janus_info:janus_info(support,yes),
 	      _,
 	      throw(error(existence_error(package,janus),
                     context('Error: the XSB package Janus has not been configured - see the XSB manual, volume 2',_)))),
