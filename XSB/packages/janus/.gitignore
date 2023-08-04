@@ -11,3 +11,4 @@ Installation_summary
 *.dll
 *_old
 __pycache__
+janus_connect_defs.h
