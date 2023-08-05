@@ -1,6 +1,6 @@
 :- compiler_options([xpp_on]).
 
-#include "janus/xsbpy_defs.h"
+#include "janus/janus_defs.h"
 
 :- export pyfunc/3, add_py_lib_dir/1, py_lib_dirs/1.
 :- export pyfunc/4,pydot/4,pydot/5.
@@ -12,8 +12,8 @@
 :- import bootstrap_package/2, xsb_running_under/1 from packaging.
 :-  bootstrap_package(janus, janus).
 
-:- import init_xsbpy/1 from init_janus.
-:- import pyfunc_int/5,pydot_int/5 from xsbpym.
+:- import init_janus/1 from init_janus.
+:- import pyfunc_int/5,pydot_int/5 from janusm.
 :- import add_py_lib_dir/1 from init_janus as add_py_lib_dir/1.
 :- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
 
@@ -21,7 +21,7 @@
 ?- \+xsb_running_under(windows),
    check_installation.
 
-?- init_xsbpy(auto).
+?- init_janus(auto).
 
 pyfunc(Mod,Func,Def_vars,Opts,Ret):-
     (Def_vars == [] -> Dict = 0 ; def_vars_to_dict(Def_vars,Dict)),
