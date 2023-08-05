@@ -140,7 +140,7 @@ if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "
     echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_px_pkg.sh
     echo 'echo ""' >> make_px_pkg.sh
 else
-    AC_OUTPUT([make_px_pkg.sh:make_px_pkg.sh.in])
+    AC_OUTPUT([make_px_pkg.sh:make_janus_pkg.sh.in])
 fi
 
 AC_SUBST(support)

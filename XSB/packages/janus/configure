@@ -4643,7 +4643,7 @@ if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "
     echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_px_pkg.sh
     echo 'echo ""' >> make_px_pkg.sh
 else
-    ac_config_files="$ac_config_files make_px_pkg.sh:make_px_pkg.sh.in"
+    ac_config_files="$ac_config_files make_px_pkg.sh:make_janus_pkg.sh.in"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5346,7 +5346,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "janus_connect_defs.h") CONFIG_FILES="$CONFIG_FILES janus_connect_defs.h:janus_connect_defs.in" ;;
-    "make_px_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_px_pkg.sh:make_px_pkg.sh.in" ;;
+    "make_px_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_px_pkg.sh:make_janus_pkg.sh.in" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -6502,7 +6502,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "janus_connect_defs.h") CONFIG_FILES="$CONFIG_FILES janus_connect_defs.h:janus_connect_defs.in" ;;
-    "make_px_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_px_pkg.sh:make_px_pkg.sh.in" ;;
+    "make_px_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_px_pkg.sh:make_janus_pkg.sh.in" ;;
     "janus_info.P") CONFIG_FILES="$CONFIG_FILES janus_info.P:janus_info.in" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
