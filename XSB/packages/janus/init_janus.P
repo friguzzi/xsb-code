@@ -1,20 +1,20 @@
 :- compiler_options([xpp_on]).
 
-#include "xsbpy_defs.h"
+#include "janus_defs.h"
 #include "janus_connect_defs.h"
 
 /* 
-init_xsbpy/0 initializes xsbpy, compiling the necessary C files and
+init_janus/0 initializes janus, compiling the necessary C files and
 loading the appropriate version of libpython.so.
 
-test_xsbpy/0 runs a very simple test to ensure that Python has been
+test_janus/0 runs a very simple test to ensure that Python has been
 linked.
 
 If these are successful the console output should looks fairly similar
 to that included at the end of this file.
  */
 
-:- export init_xsbpy/1, test_xsbpy/0, add_py_lib_dir/1,py_lib_dirs/1.
+:- export init_janus/1, test_janus/0, add_py_lib_dir/1,py_lib_dirs/1.
 :- export objref/2.
 
 :- import xsb_configuration/2 from xsb_configuration.
@@ -23,70 +23,70 @@ to that included at the end of this file.
 :- import misc_error/1 from error_handler.
 :- import xsb_error_get_message/2 from error_handler.
 :- import shell/1 from shell.
-:- import pyfunc/3 from xsbpy.
-:- import init_python/0 from xsbpym.
+:- import pyfunc/3 from janus.
+:- import init_python/0 from janusm.
 :- import add_lib_dir/1 from consult.
 :- import messageln/1 from standard.
 :- import getenv/2 from machine.
 
-init_xsbpy(Pyversion):-
+init_janus(Pyversion):-
 %    findall(Dir,usermod:library_directory(Dir),Dirs),
 %    writeln(dirs(Dirs)),
     xsb_configuration(configuration,Configuration),
     (str_sub('windows',Configuration)
-    -> compile_xsbpym_for_windows
+    -> compile_janusm_for_windows
     ;  get_compiler_opts(Pyversion,CompilerOpts,Version),
-       compile([xsbpym],[cc_opts(CompilerOpts),if_needed])
+       compile([janusm],[cc_opts(CompilerOpts),if_needed])
     ),
     xsb_configuration(packagesdir, PackDir),
-    concat_atom([PackDir,'/xsbpy'],XSBpyDir),
+    concat_atom([PackDir,'/janus'],JanusDir),
     concat_atom([PackDir,'/../lib'],XSBLibDir),
-    concat_atom([PackDir,'/xsbpy/starters'],StarterDir),
-    concat_atom([PackDir,'/xsbpy/px'],PxDir),
-    concat_atom([PackDir,'/xsbpy/test'],TestDir),
+    concat_atom([PackDir,'/janus/starters'],StarterDir),
+    concat_atom([PackDir,'/janus/px'],PxDir),
+    concat_atom([PackDir,'/janus/test'],TestDir),
     init_python(),
-    pyfunc('xsbpy/add_python_path',add_python_path(XSBpyDir),_),
+    pyfunc('janus/add_python_path',add_python_path(JanusDir),_),
     pyfunc(add_python_path,add_python_path(XSBLibDir),_),
     pyfunc(add_python_path,add_python_path(StarterDir),_),
     add_lib_dir(StarterDir),  % starters
     add_lib_dir(PxDir),       % in case XSB is being called from Python
     pyfunc(add_python_path,add_python_path(TestDir),_),
     set_heap_margin(512),   % 4x the amount in v. 4.0
-    messageln(xsbpy_initted_with_python(Version)),
+    messageln(janus_initted_with_python(Version)),
     !.
-init_xsbpy(Pyversion):-
-    misc_error(['xsbpy did not initialize properly for ',Pyversion]).
+init_janus(Pyversion):-
+    misc_error(['janus did not initialize properly for ',Pyversion]).
 
-compile_xsbpym_for_windows :-
+compile_janusm_for_windows :-
     getenv('PYTHON_LIBRARY',PyLib),
 %%  e.g. PyLib=  'c:\Users\warren\AppData\Local\Programs\Python\Python39\libs\python3.lib'
     concat_atom([PythonDir,'\\libs\\',_,'.lib'],PyLib),
     concat_atom(['/I"',PythonDir,'\\include"'],PyInclude),
     concat_atom(['/libpath:"',PythonDir,'\\libs"'],PyLibs),
-    compile(xsbpym,[if_needed,cc_opts(PyInclude),ld_opts(PyLibs)]).
+    compile(janusm,[if_needed,cc_opts(PyInclude),ld_opts(PyLibs)]).
 
-test_xsbpy:-
-    catch(test_xsbpy_1,E,(xsb_error_get_message(E,Mess),writeln(Mess))).
+test_janus:-
+    catch(test_janus_1,E,(xsb_error_get_message(E,Mess),writeln(Mess))).
     
-test_xsbpy_1:-
+test_janus_1:-
     xsb_configuration(packagesdir, PackDir),
-%    concat_atom([PackDir,'/xsbpy'],XSBpyDir),
+%    concat_atom([PackDir,'/janus'],JanusDir),
     concat_atom([PackDir,'/janus/test'],TestDir),
     pyfunc(add_python_path,add_python_path(TestDir),_),
     add_lib_dir(TestDir),
     ensure_loaded(testSuite),
-    concat_atom([TestDir,'/','test_xsbpy_out_new'],TestOut),
+    concat_atom([TestDir,'/','test_janus_out_new'],TestOut),
     shell(['rm -f ',TestOut]),
     tell(TestOut),
     usermod:testSuite,
     told,!.
-test_xsbpy_1:- told.
+test_janus_1:- told.
 
-%test_xsbpy_1:-
+%test_janus_1:-
 %    ensure_loaded(testSuite),
 %    usermod:testSuite.
 
-%    shell(['cp ',XSBpyDir,'/xsbpym.so',' ',TestDir,'xsbpym.so']),
+%    shell(['cp ',JanusDir,'/janusm.so',' ',TestDir,'janusm.so']),
 
 add_py_lib_dir(Dir):- 
     pyfunc(add_python_path,add_python_path(Dir),_).
@@ -189,22 +189,22 @@ end_of_file.
 %    writeq(Y2),nl,writeln('-------------'),
 %    write(Y2).
 
-%init_xsbpy_old:-
+%init_janus_old:-
 %    aida_getenv('REPO_ROOT',RepoRoot),
-%    concat_atom([RepoRoot,'/XSB_packages/xsbpy'],PackagePath),
+%    concat_atom([RepoRoot,'/XSB_packages/janus'],PackagePath),
 %    add_lib_dir(PackagePath),
 %    aida_getenv('XSB_EXEC',XSB),
-%%    bootstrap_userpackage(PackagePath, xsbpy, xsbpy),
+%%    bootstrap_userpackage(PackagePath, janus, janus),
 %    concat_atom(['-I',XSB,'../../emu',' -I/usr/include/python3.7m  -I/usr/include/python3.7',
 %		 ' -lpython3.7m -L/usr/lib/python3.7 -Wl,',
 %		 '-rpath=/usr/lib/python3.7 -lpython3.7m -L/usr/lib/python3.7 -Wl,',
 %		 '-rpath=/usr/lib/python3.7'],CompilerOpts),
 %%    writeln(CompilerOpts),
-%%    consult(xsbpym,[cc_opts(CompilerOpts)]).
+%%    consult(janusm,[cc_opts(CompilerOpts)]).
 %
-%test_xsbpy_old:- 
+%test_janus_old:- 
 %    aida_getenv('REPO_ROOT',RepoRoot),
-%    concat_atom([RepoRoot,'/XSB_packages/xsbpy'],PackagePath),
+%    concat_atom([RepoRoot,'/XSB_packages/janus'],PackagePath),
 %    shell_to_list(pwd,[[Pwd]],_Err),
 %    cd(PackagePath),
 %    ensure_loaded('test/testSuite'),

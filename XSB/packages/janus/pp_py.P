@@ -2,7 +2,7 @@
 :- export pp_py/1,pp_py/2.
 
 :- compiler_options([spec_off,xpp_on]).
-#include "xsbpy_defs.h"
+#include "janus_defs.h"
 
 :- import syntax_error/1 from error_handler.
 
