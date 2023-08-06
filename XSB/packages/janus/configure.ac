@@ -137,7 +137,7 @@ py_includedir="'$PYTHON_INCLUDE_DIR'"
 if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "1" -o -z "$PYTHON_LIB" -o -z "$PYTHON_CONFLIB" ; then
     echo 'echo "+++ Python does not seem to be configured properly."' > make_janus_pkg.sh
     echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_janus_pkg.sh
-    echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_janus_vpkg.sh
+    echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_janus_pkg.sh
     echo 'echo ""' >> make_janus_pkg.sh
 else
     AC_OUTPUT([make_janus_pkg.sh:make_janus``_pkg.sh.in])

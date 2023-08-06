@@ -4631,7 +4631,7 @@ else
 fi
 ) | tee Installation_summary
 
-# set up pyxsb Python package
+# set up janus Python package
 setupfile_name=".tmp_pxsetup.py"
 setupfile_path="'janus-py/$setupfile_name'"
 py_includedir="'$PYTHON_INCLUDE_DIR'"
