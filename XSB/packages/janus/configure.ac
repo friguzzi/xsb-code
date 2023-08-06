@@ -128,22 +128,22 @@ else
 fi
 ) | tee Installation_summary
 
-# set up pyxsb Python package
+# set up janus Python package
 setupfile_name=".tmp_pxsetup.py"
-setupfile_path="'px/$setupfile_name'"
+setupfile_path="'janus-py/$setupfile_name'"
 py_includedir="'$PYTHON_INCLUDE_DIR'"
 
 
 if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "1" -o -z "$PYTHON_LIB" -o -z "$PYTHON_CONFLIB" ; then
-    echo 'echo "+++ Python does not seem to be configured properly."' > make_px_pkg.sh
-    echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_px_pkg.sh
-    echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_px_pkg.sh
-    echo 'echo ""' >> make_px_pkg.sh
+    echo 'echo "+++ Python does not seem to be configured properly."' > make_janus_pkg.sh
+    echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_janus_pkg.sh
+    echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_janus_vpkg.sh
+    echo 'echo ""' >> make_janus_pkg.sh
 else
-    AC_OUTPUT([make_px_pkg.sh:make_janus_pkg.sh.in])
+    AC_OUTPUT([make_janus_pkg.sh:make_janus``_pkg.sh.in])
 fi
 
 AC_SUBST(support)
 AC_OUTPUT([janus_info.P:janus_info.in])
 
-chmod 700 make_px_pkg.sh
+chmod 700 make_janus_pkg.sh

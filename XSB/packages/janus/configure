@@ -4633,17 +4633,17 @@ fi
 
 # set up pyxsb Python package
 setupfile_name=".tmp_pxsetup.py"
-setupfile_path="'px/$setupfile_name'"
+setupfile_path="'janus-py/$setupfile_name'"
 py_includedir="'$PYTHON_INCLUDE_DIR'"
 
 
 if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "1" -o -z "$PYTHON_LIB" -o -z "$PYTHON_CONFLIB" ; then
-    echo 'echo "+++ Python does not seem to be configured properly."' > make_px_pkg.sh
-    echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_px_pkg.sh
-    echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_px_pkg.sh
-    echo 'echo ""' >> make_px_pkg.sh
+    echo 'echo "+++ Python does not seem to be configured properly."' > make_janus_pkg.sh
+    echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_janus_pkg.sh
+    echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_janus_pkg.sh
+    echo 'echo ""' >> make_janus_pkg.sh
 else
-    ac_config_files="$ac_config_files make_px_pkg.sh:make_janus_pkg.sh.in"
+    ac_config_files="$ac_config_files make_janus_pkg.sh:make_janus``_pkg.sh.in"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5346,7 +5346,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "janus_connect_defs.h") CONFIG_FILES="$CONFIG_FILES janus_connect_defs.h:janus_connect_defs.in" ;;
-    "make_px_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_px_pkg.sh:make_janus_pkg.sh.in" ;;
+    "make_janus_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_janus_pkg.sh:make_janus``_pkg.sh.in" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -6502,7 +6502,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "janus_connect_defs.h") CONFIG_FILES="$CONFIG_FILES janus_connect_defs.h:janus_connect_defs.in" ;;
-    "make_px_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_px_pkg.sh:make_janus_pkg.sh.in" ;;
+    "make_janus_pkg.sh") CONFIG_FILES="$CONFIG_FILES make_janus_pkg.sh:make_janus``_pkg.sh.in" ;;
     "janus_info.P") CONFIG_FILES="$CONFIG_FILES janus_info.P:janus_info.in" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
@@ -6954,5 +6954,5 @@ printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2
 fi
 
 
-chmod 700 make_px_pkg.sh
+chmod 700 make_janus_pkg.sh
 
