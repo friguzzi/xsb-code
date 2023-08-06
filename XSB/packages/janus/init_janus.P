@@ -42,7 +42,7 @@ init_janus(Pyversion):-
     concat_atom([PackDir,'/janus'],JanusDir),
     concat_atom([PackDir,'/../lib'],XSBLibDir),
     concat_atom([PackDir,'/janus/starters'],StarterDir),
-    concat_atom([PackDir,'/janus/px'],PxDir),
+    concat_atom([PackDir,'/janus/janus-py'],PxDir),
     concat_atom([PackDir,'/janus/test'],TestDir),
     init_python(),
     pyfunc('janus/add_python_path',add_python_path(JanusDir),_),

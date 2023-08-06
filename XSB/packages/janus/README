@@ -25,11 +25,11 @@ Sequence of building the py<->xsb connector by the XSB configurator:
 
 2.  ./configure builds many of the necessary connector files. Namely:
 
-        - xsb2py_connect_defs.in --> xsb2py_connect_defs.h 
+        - janus_connect_defs.in --> janus_connect_defs.h 
            #define variables for Python lib dirs/names/includes
            plus #defines for XSB libdirs, emudir, etc.
            #included by janusm.c
-        - make_px_pkg.sh from make_px_pkg.sh.in
+        - make_janus_pkg.sh from make_janus_pkg.sh.in
            o creates the setup file for
              the py->xsb connector (called px/.tmp_pxsetup.py)
            o uses px/.tmp_pxsetup.py to make the px package & install

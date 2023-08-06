@@ -9,7 +9,6 @@ Installation_summary
 *.log
 *.so
 *.dll
-*_old
 __pycache__
 janus_connect_defs.h
 janus_info.P
