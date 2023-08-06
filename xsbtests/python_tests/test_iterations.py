@@ -1,8 +1,8 @@
 import sys
-sys.path.insert(0,'../../XSB/packages/xsbpy/px')
-from px import *
+sys.path.insert(0,'../../XSB/packages/janus/janus-py')
+from janus import *
 
-px_cmd('consult','ensure_loaded','px_test')
+jns_cmd('consult','ensure_loaded','jns_test')
 
 def test_iterations():
     pp_iteration(test_iteration_cmd,200000)
@@ -14,16 +14,16 @@ def test_iterations():
 # ============= Iteration Code  =============
 def test_iteration_cmd(N):
     for i in range(1,N):
-        px_cmd('px_test','simple_cmd',N)
+        jns_cmd('jns_test','simple_cmd',N)
 
 # deterministic query        
 def test_iteration_query(N):
     for i in range(1,N):
-        px_qdet('px_test','simple_call',N)
+        jns_qdet('jns_test','simple_call',N)
     
 def test_iteration_nondet(N):
     for i in range(1,N):
-        px_qdet('px_test','nondet_query')
+        jns_qdet('jns_test','nondet_query')
 
 
 def pp_iteration(test_func,argument):
@@ -38,7 +38,7 @@ def py_to_xsb_list_xfer(N):
     mylist = makelist(N)
 #    print('getting the length of List = makelist(100000)')
     start = time.time()
-    px_qdet('basics','length',mylist)
+    jns_qdet('basics','length',mylist)
     end = time.time()
     print('py_to_xsb_list_xfer succeded: '+str(N))
     print('# Time: '+str(end-start))
@@ -47,7 +47,7 @@ def py_to_xsb_list_xfer(N):
 def xsb_to_py_list_xfer(N):
 #    print('calling prolog_makelist(1000000)')
     start = time.time()
-    px_qdet('px_test','prolog_makelist',N)    
+    jns_qdet('jns_test','prolog_makelist',N)    
     end = time.time()
     print('xsb_to_py_list_xfer succeded: '+str(N))
     print('# Time: '+str(end-start))
