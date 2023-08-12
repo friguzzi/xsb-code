@@ -1,10 +1,12 @@
 :- compiler_options([xpp_on]).
 
 #include "janus/janus_defs.h"
+#include "janus/janus_connect_defs.h"
 
 :- export pyfunc/3, add_py_lib_dir/1, py_lib_dirs/1.
 :- export pyfunc/4,pydot/4,pydot/5.
 :- export pyfunc/5.
+:- export janus_python_version/1.
 
 % obsolescent
 :- export pymeth/4.
@@ -76,3 +78,9 @@ check_installation :-
                     context('Error: the package Janus has not been configured - see the XSB manual, volume 2',_))).
 check_installation.
 
+py_free(Obj):-
+    (Obj = pyObj(_) ->
+	 free_python_object_int(Obj)
+      ;  abort(['Argument for free_python_object/1 is not a Python object: ',Obj]) ).
+
+janus_python_version(PYTHON_BIN_QUOTED).
