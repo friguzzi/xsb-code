@@ -250,8 +250,8 @@ json_tests:-
 %    fail.
 json_tests:- 
     xsb_configuration(packagesdir, PackDir),
-    concat_atom([PackDir,'/janus/test/sample.json'],JsonFile),
-    pyfunc('test/jintf',prolog_load(JsonFile),F),
+%    concat_atom([PackDir,'sample.json'],JsonFile),
+    pyfunc('jintf',prolog_load('sample.json'),F),
     (F = PYDICT_PROLOG([PYTUP_PROLOG(glossary,PYDICT_PROLOG([PYTUP_PROLOG(title,'example glossary'),PYTUP_PROLOG('GlossDiv',PYDICT_PROLOG([PYTUP_PROLOG(title,'S'),PYTUP_PROLOG('GlossList',PYDICT_PROLOG([PYTUP_PROLOG('GlossEntry',PYDICT_PROLOG([PYTUP_PROLOG('ID','SGML'),PYTUP_PROLOG('SortAs','SGML'),PYTUP_PROLOG('GlossTerm','Standard Generalized Markup Language'),PYTUP_PROLOG('Acronym','SGML'),PYTUP_PROLOG('Abbrev','ISO 8879:1986'),PYTUP_PROLOG('GlossDef',PYDICT_PROLOG([PYTUP_PROLOG(para,'A meta-markup language, used to create markup languages such as DocBook.'),PYTUP_PROLOG('GlossSeeAlso',['GML','XML'])])),PYTUP_PROLOG('GlossSee',markup)]))]))]))]))]) -> 
 	 writeln('json_load_test successful')
         ; writeln('!!!json_load_test_failed') ),
