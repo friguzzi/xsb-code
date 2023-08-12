@@ -26,9 +26,10 @@ if test -f ${FILEBASE}_new; then
 	rm -f ${FILEBASE}_new
 fi
     
-sort temp > ${FILEBASE}_new
-sort ${FILEBASE}_old > temp
-
+#sort temp > ${FILEBASE}_new
+#sort ${FILEBASE}_old > temp
+cp temp ${FILEBASE}_new
+cp ${FILEBASE}_old temp
 #-----------------------
 # print out differences.
 #-----------------------
