@@ -1,0 +1,25 @@
+Person test succeeded
+collect(0)
+dict conversion tests successful
+dict conversion_sizecheck tests successful
+float conversion tests successful
+float conversion_sizecheck tests successful
+int conversion tests successful
+int conversion_sizecheck tests successful
+json_load_test successful
+json_loads_test successful
+kwargs_test1 successful
+list conversion tests successful
+list conversion_sizecheck tests successful
+pyc_tests successful
+pyfunc tests successful
+return_False_succeeded
+return_None_succeeded
+return_True_succeeded
+set conversion tests successful
+set conversion_sizecheck tests successful
+string conversion tests successful
+string conversion_sizecheck tests successful
+tuple conversion tests successful
+tuple conversion_sizecheck tests successful
+variadic tests succeeded
