@@ -21,8 +21,8 @@ to that included at the end of this file.
 :- import concat_atom/2 from string.
 
 :- import misc_error/1 from error_handler.
-:- import xsb_error_get_message/2 from error_handler.
-:- import shell/1 from shell.
+%%:- import xsb_error_get_message/2 from error_handler.
+%:- import shell/1 from shell.
 :- import pyfunc/3 from janus.
 :- import init_python/0 from janusm.
 :- import add_lib_dir/1 from consult.
@@ -43,14 +43,14 @@ init_janus(Pyversion):-
     concat_atom([PackDir,'/../lib'],XSBLibDir),
     concat_atom([PackDir,'/janus/starters'],StarterDir),
     concat_atom([PackDir,'/janus/janus-py'],PxDir),
-    concat_atom([PackDir,'/janus/test'],TestDir),
+%    concat_atom([PackDir,'/janus/test'],TestDir),
     init_python(),
     pyfunc('janus/add_python_path',add_python_path(JanusDir),_),
     pyfunc(add_python_path,add_python_path(XSBLibDir),_),
     pyfunc(add_python_path,add_python_path(StarterDir),_),
     add_lib_dir(StarterDir),  % starters
     add_lib_dir(PxDir),       % in case XSB is being called from Python
-    pyfunc(add_python_path,add_python_path(TestDir),_),
+%    pyfunc(add_python_path,add_python_path(TestDir),_),
     set_heap_margin(512),   % 4x the amount in v. 4.0
     messageln(janus_initted_with_python(Version)),
     !.
@@ -64,29 +64,6 @@ compile_janusm_for_windows :-
     concat_atom(['/I"',PythonDir,'\\include"'],PyInclude),
     concat_atom(['/libpath:"',PythonDir,'\\libs"'],PyLibs),
     compile(janusm,[if_needed,cc_opts(PyInclude),ld_opts(PyLibs)]).
-
-test_janus:-
-    catch(test_janus_1,E,(xsb_error_get_message(E,Mess),writeln(Mess))).
-    
-test_janus_1:-
-    xsb_configuration(packagesdir, PackDir),
-%    concat_atom([PackDir,'/janus'],JanusDir),
-    concat_atom([PackDir,'/janus/test'],TestDir),
-    pyfunc(add_python_path,add_python_path(TestDir),_),
-    add_lib_dir(TestDir),
-    ensure_loaded(testSuite),
-    concat_atom([TestDir,'/','test_janus_out_new'],TestOut),
-    shell(['rm -f ',TestOut]),
-    tell(TestOut),
-    usermod:testSuite,
-    told,!.
-test_janus_1:- told.
-
-%test_janus_1:-
-%    ensure_loaded(testSuite),
-%    usermod:testSuite.
-
-%    shell(['cp ',JanusDir,'/janusm.so',' ',TestDir,'janusm.so']),
 
 add_py_lib_dir(Dir):- 
     pyfunc(add_python_path,add_python_path(Dir),_).
@@ -170,6 +147,31 @@ set_heap_margin(Kbs):-
     set_prolog_flag(heap_margin,Amount).
 
 end_of_file.
+
+%test_janus:-
+%    catch(test_janus_1,E,(xsb_error_get_message(E,Mess),writeln(Mess))).
+    
+%test_janus_1:-
+%    xsb_configuration(packagesdir, PackDir),
+%%    concat_atom([PackDir,'/janus'],JanusDir),
+%    concat_atom([PackDir,'/janus/test'],TestDir),
+%    pyfunc(add_python_path,add_python_path(TestDir),_),
+%    add_lib_dir(TestDir),
+%    ensure_loaded(testSuite),
+%    concat_atom([TestDir,'/','test_janus_out_new'],TestOut),
+%    shell(['rm -f ',TestOut]),
+%    tell(TestOut),
+%    usermod:testSuite,
+%    told,!.
+%test_janus_1:- told.
+%
+%test_janus_1:-
+%    ensure_loaded(testSuite),
+%    usermod:testSuite.
+
+%    shell(['cp ',JanusDir,'/janusm.so',' ',TestDir,'janusm.so']),
+
+
 
 
 
