@@ -97,7 +97,7 @@ default_testlist="basic_tests prolog_tests retract_tests \
           sub_tests io_tests regmatch_tests incremental_tests nonmt_tests \
           minizinc \
           json_tests \
-	  foreign_tests"
+	  foreign_tests janus_tests"
 
 if test -z "$only_tests"; then
     testlist="$default_testlist $added_tests"
