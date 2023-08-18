@@ -13,8 +13,7 @@ jns_comp(Goal,Set,Flag):-
     (tables:is_tabled(Goal) ->
         jns_comp_tabled(Goal,Set,Flag)
        ; 
-       jns_comp_nontabled(Goal,Set,Flag)).
-%    writeln(set(Set)).
+     jns_comp_nontabled(Goal,Set,Flag)).
 
 jns_comp_nontabled(Goal,AnsList,Flag):- 
 %    writeln(jns_comp_nontabled(Goal,AnsList,Flag)),
@@ -22,7 +21,7 @@ jns_comp_nontabled(Goal,AnsList,Flag):-
     (jns_table(Goal),fail ; true),
     (NO_TRUTHVALS =:= NO_TRUTHVALS/\Flag -> 
        findall(NewGoal1,jns_get_residual(jns_table(Goal),NewGoal1,_Resid,Flag),AnsList1)
-    ;  findall(''(NewGoal,Resid),jns_get_residual(jns_table(Goal),NewGoal,Resid,Flag),AnsList1)),
+    ;  findall('-'(NewGoal,Resid),jns_get_residual(jns_table(Goal),NewGoal,Resid,Flag),AnsList1)),
     (SET_COLLECTION =:= SET_COLLECTION/\Flag ->
 	 sort(AnsList1,AnsList2),
 	 AnsList = PYSET_PROLOG(AnsList2)
@@ -36,7 +35,7 @@ jns_comp_tabled(Goal,AnsList,Flag):-
        ; (Goal,fail ; true) ),
     (NO_TRUTHVALS =:= NO_TRUTHVALS/\Flag ->
 	 findall(NewGoal1,jns_get_residual(Goal,NewGoal1,_Resid,Flag),AnsList1)
-      ;  findall(''(NewGoal,Resid),jns_get_residual(Goal,NewGoal,Resid,Flag),AnsList1) ),
+      ;  findall(-(NewGoal,Resid),jns_get_residual(Goal,NewGoal,Resid,Flag),AnsList1) ),
     (SET_COLLECTION =:= SET_COLLECTION/\Flag ->
 	 sort(AnsList1,AnsList2),
 	 AnsList = PYSET_PROLOG(AnsList2)
@@ -50,12 +49,12 @@ jns_get_residual(Goal,NewGoal,Resid,Flag):-
          variant_get_residual(Goal,R1),
 	 TrueGoal =.. [_|Args],
 	 strip_first_n(StripNum,Args,NewArgs),
-	 NewGoal =.. [''|NewArgs],Resid=R1
+	 NewGoal =.. [-|NewArgs],Resid=R1
 %	 (R1 = [] -> Resid = 1 ; Resid = R1)
     ;    variant_get_residual(Goal,R1),
 	 TrueGoal =.. [_|Args],
 	 strip_first_n(StripNum,Args,NewArgs),
-	 NewGoal =.. [''|NewArgs],
+	 NewGoal =.. [-|NewArgs],
          (R1 = [] -> Resid = 1 ; Resid = 2) ).
 
 strip_first_n(0,L,L):- !.

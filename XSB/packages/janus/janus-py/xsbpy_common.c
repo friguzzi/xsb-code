@@ -15,6 +15,7 @@
 #include <memory_xsb.h>
 #include <flags_xsb.h>
 
+
 int convert_pyObj_prObj(PyObject *, prolog_term *);
 int convert_prObj_pyObj(prolog_term , PyObject **);
 
@@ -98,15 +99,15 @@ int prlist2pyList(CTXTdeclc prolog_term V, PyObject *pList, int count)
 }
 
 int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
-  if(PyLong_Check(pyObj)) {
+  if(PyLong_CheckExact(pyObj)) {
     prolog_int result = PyLong_AsSsize_t(pyObj);
     c2p_int(CTXTc result, *prTerm);
-    return 1;
+    return TRUE;
   }
   else if(PyFloat_Check(pyObj)) {
     double result = PyFloat_AS_DOUBLE(pyObj);
     c2p_float(CTXTc result, *prTerm);
-    return 1;
+    return TRUE;
   }
   else if(PyUnicode_Check(pyObj)) {
     const  char *result = PyUnicode_AsUTF8(pyObj);		
@@ -122,11 +123,6 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
     }
     else 
       c2p_string(CTXTc (char *) result, *prTerm);
-    return 1;
-  }
-  else if(pyObj == Py_None){
-    char* result = PYNONE_C;
-    c2p_string(CTXTc result,*prTerm);
     return 1;
   }
   else if(PyTuple_Check(pyObj))  {
@@ -181,27 +177,32 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
     return TRUE;
   }
   else if(PyDict_Check(pyObj)) {
-    prolog_term head, tail;
+    prolog_term head, tail, pkey, pval;
     prolog_term P = p2p_new(CTXT);
     c2p_functor(PYDICT_C,1,P);
     tail = p2p_arg(P, 1);
     
-    PyObject *key, *value, *tup;
+    PyObject *key, *value;
     Py_ssize_t pos = 0;
 
-    while (PyDict_Next(pyObj, &pos, &key, &value)) {
-      //      printf("key: ");printPyObj(CTXTc key);
-      //      printf("val: ");printPyObj(CTXTc value);
-      c2p_list(CTXTc tail);
-      head = p2p_car(tail);
-      tup = PyTuple_New(2);
-      PyTuple_SET_ITEM(tup,0,key);
-      PyTuple_SET_ITEM(tup,1,value);		
-      //      printPyObj(CTXTc tup);
-      convert_pyObj_prObj(CTXTc tup, &head);	
-      tail = p2p_cdr(tail);
+    int num_pairs = (int) PyDict_Size(pyObj);
+    for (int iterator = 1 ; iterator < num_pairs ; iterator++) {
+      PyDict_Next(pyObj, &pos, &key, &value);
+      c2p_functor(",",2,tail);
+      head = p2p_arg(tail, 1);
+      c2p_functor(":",2,head);
+      pkey = p2p_arg(head, 1);
+      pval = p2p_arg(head, 2);
+      convert_pyObj_prObj(CTXTc  key, &pkey);	
+      convert_pyObj_prObj(CTXTc  value, &pval);	
+      tail = p2p_arg(tail,2);
     }
-    c2p_nil(CTXTc tail);
+      PyDict_Next(pyObj, &pos, &key, &value);
+      c2p_functor(":",2,tail);
+      pkey = p2p_arg(tail, 1);
+      pval = p2p_arg(tail, 2);
+      convert_pyObj_prObj(CTXTc  key, &pkey);	
+      convert_pyObj_prObj(CTXTc  value, &pval);
     if(!p2p_unify(CTXTc P, *prTerm))
       return FALSE;
     return TRUE;
@@ -232,6 +233,32 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
       return FALSE;
     return TRUE;
   } 
+  else if(PyLong_Check(pyObj)) {
+    if(pyObj == Py_True){
+      c2p_functor("@",1,*prTerm);
+      prolog_term arg = p2p_arg(*prTerm,1);
+      c2p_string("True",arg);
+      return TRUE;
+    }
+    if(pyObj == Py_False){
+      c2p_functor("@",1,*prTerm);
+      prolog_term arg = p2p_arg(*prTerm,1);
+      c2p_string("False",arg);
+      return TRUE;
+    }
+    /* Check subtypes of long that *aren't* boolean */
+    else {
+      prolog_int result = PyLong_AsSsize_t(pyObj);
+      c2p_int(CTXTc result, *prTerm);
+      return TRUE;
+    }
+  }
+  else if(pyObj == Py_None){
+    c2p_functor("@",1,*prTerm);
+    prolog_term arg = p2p_arg(*prTerm,1);
+    c2p_string(PYNONE_C,arg);
+    return TRUE;
+  }
   else if (PyIter_Check(pyObj)) {
       printf("found an iterator\n");
     }
@@ -285,7 +312,7 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
     return TRUE;
   }
   else if (is_functor(CTXTc prTerm)) {
-    if(strcmp(p2c_functor(prTerm),PYTUP_C) == 0 ) {
+    if(strcmp(p2c_functor(prTerm),PYTUP_C) == 0 || strcmp(p2c_functor(prTerm),":") == 0 ) {
       PyObject *tup, *arg;
       prolog_term temp;
       int arity = p2c_arity(prTerm);
@@ -303,6 +330,10 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       prolog_term list, elt;
       list = p2p_arg(prTerm, 1);
       pyset = PySet_New(NULL);
+      if (!is_list(list)) {
+	xsb_abort("++Error[janus]: pySet/1 contains an improper argument. "
+		  "(The argument must be a list.)");
+      }
       while (is_list(list)) {   
 	elt = p2p_car(list);
 	convert_prObj_pyObj(CTXTc elt, &pyelt);
@@ -314,19 +345,38 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
     }
     else if (strcmp(p2c_functor(prTerm),PYDICT_C) == 0 ) {
       PyObject *pydict, *pykey, *pyval;
-      prolog_term list, elt;
-      list = p2p_arg(prTerm, 1);
+      prolog_term elt, comma_list;
+      comma_list = p2p_arg(prTerm, 1);
       pydict = PyDict_New();
-      while (is_list(list)) {   
-	elt = p2p_car(list);
-	//	if (!PyTuple_Check(elt) || !(PyTuple_Size(elt) == 2)) return FALSE;
+      while (strcmp(p2c_functor(comma_list),",") == 0 ) {
+	elt = p2p_arg(comma_list,1);
 	convert_prObj_pyObj(p2p_arg(elt,1),&pykey);
 	convert_prObj_pyObj(p2p_arg(elt,2),&pyval);
 	PyDict_SetItem(pydict,pykey,pyval);
-	list = p2p_cdr(list);
+	comma_list = p2p_arg(comma_list,2);
       }
+      convert_prObj_pyObj(p2p_arg(comma_list,1),&pykey);
+      convert_prObj_pyObj(p2p_arg(comma_list,2),&pyval);
+      PyDict_SetItem(pydict,pykey,pyval);
       *pyObj = pydict;
       return TRUE;
+    }
+    else if (strcmp(p2c_functor(prTerm),"@") == 0 ) {
+      prolog_term arg = p2p_arg(prTerm,1);
+      if (strcmp(p2c_string(arg),PYNONE_C) == 0) {
+	*pyObj = Py_None;
+	return TRUE;
+      }
+      else if (strcmp(p2c_string(arg),"True") == 0) {
+	*pyObj = Py_True;
+	return TRUE;
+      }
+      else if (strcmp(p2c_string(arg),"False") == 0) {
+	*pyObj = Py_False;
+	return TRUE;
+      }
+      else
+	return FALSE;
     }
     else if (strcmp(p2c_functor(prTerm),PYOBJ_C) == 0 ) {
       //  else if (find_prolog_term_type(CTXTc prTerm) == PYREF) {

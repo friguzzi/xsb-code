@@ -126,7 +126,7 @@ test_empty_set([]).
 return_term(p([1,a,f(a)],g(b))).
 
 :- export return_tuple/1.
-return_tuple(''([1,a,''(a)],''(b,c,d),''())).
+return_tuple('-'([1,a,'-'(a)],'-'(b,c,d),'-'())).
 
 :- export return_null/1.
 return_null([]).

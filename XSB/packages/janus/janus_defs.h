@@ -1,14 +1,14 @@
 
 #define PYSET_C "pySet"
 #define PYOBJ_C "pyObj"
-#define PYDICT_C "pyDict"
+#define PYDICT_C "{}"
 #define PYNONE_C "None"
 #define PROLOG_TERM_C "plgTerm"
 #define PYTUP_C  "-"
 
 #define PYSET_PROLOG  pySet
 #define PYOBJ_PROLOG  pyObj 
-#define PYDICT_PROLOG pyDict
+#define PYDICT_PROLOG {}
 #define PYNONE_PROLOG 'None'
 #define PYTUP_PROLOG  '-'
 
