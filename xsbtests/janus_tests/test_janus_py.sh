@@ -32,6 +32,7 @@ u=`uname`;
 ../pygentest.sh $python test_interrupts.py
 #echo "Expect slight diffs in test_comps between (...) and (...), due to set creation in Python"
 ../pygentest.sh $python test_comps.py
+#../pygentest.sh $python test_returnval_py.py
 
 #========== the following are non-regression tests ==========
 echo '--------------------------------------------------------------------'

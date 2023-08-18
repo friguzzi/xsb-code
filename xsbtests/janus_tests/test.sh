@@ -34,6 +34,7 @@ rm -f varcond.xwam
 #------------------------------------
     # XEMU and options must be together in quotes
 ../gentest.sh "$XEMU $options" test_janus_plg "test."
+echo "-------------------------------------------------------"
 
 $XEMU << EOF
 [test_janus_py].

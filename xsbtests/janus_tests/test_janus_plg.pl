@@ -196,11 +196,11 @@ tupleConvTest_sizecheck:-
 
 dictConvTest_sizecheck:-
     pyfunc(returnVal,return_dictionary(),[],[sizecheck(true)],Ret),
-    Ret = pyDict([PYTUP_PROLOG('Name','Geeks'),PYTUP_PROLOG(1,[1,2,3,4])]),!.
+    Ret =  {('Name' : 'Geeks',1 : [1,2,3,4])}.
 
 dictConvTest:-
     pyfunc(returnVal,return_dictionary(),Ret),
-    Ret = pyDict([PYTUP_PROLOG('Name','Geeks'),PYTUP_PROLOG(1,[1,2,3,4])]),!.
+    Ret =  {('Name' : 'Geeks',1 : [1,2,3,4])}.
 
 %--------------------------------
 
@@ -231,7 +231,7 @@ pyc_tests:-
 json_tests:-
     Jstring = '{"name": "Bob", "languages": ["English", "Fench","GERMAN"]}',
      pyfunc('test/jintf',prolog_loads(Jstring),F),
-     (F = PYDICT_PROLOG([PYTUP_PROLOG(name,'Bob'),PYTUP_PROLOG(languages,['English','Fench','GERMAN'])]) ->
+     (F = {(name : 'Bob',languages : ['English','Fench','GERMAN'])} -> 
 	  writeln('json_loads_test successful')
         ; writeln('!!!json_loads_test_failed') ),
      fail.
@@ -249,20 +249,14 @@ json_tests:-
 %      atom_chars(Jindent,Jich),writeq(Jich),nl ),
 %    fail.
 json_tests:- 
-    xsb_configuration(packagesdir, PackDir),
-%    concat_atom([PackDir,'sample.json'],JsonFile),
-    pyfunc('jintf',prolog_load('sample.json'),F),
-    (F = PYDICT_PROLOG([PYTUP_PROLOG(glossary,PYDICT_PROLOG([PYTUP_PROLOG(title,'example glossary'),PYTUP_PROLOG('GlossDiv',PYDICT_PROLOG([PYTUP_PROLOG(title,'S'),PYTUP_PROLOG('GlossList',PYDICT_PROLOG([PYTUP_PROLOG('GlossEntry',PYDICT_PROLOG([PYTUP_PROLOG('ID','SGML'),PYTUP_PROLOG('SortAs','SGML'),PYTUP_PROLOG('GlossTerm','Standard Generalized Markup Language'),PYTUP_PROLOG('Acronym','SGML'),PYTUP_PROLOG('Abbrev','ISO 8879:1986'),PYTUP_PROLOG('GlossDef',PYDICT_PROLOG([PYTUP_PROLOG(para,'A meta-markup language, used to create markup languages such as DocBook.'),PYTUP_PROLOG('GlossSeeAlso',['GML','XML'])])),PYTUP_PROLOG('GlossSee',markup)]))]))]))]))]) -> 
-	 writeln('json_load_test successful')
-        ; writeln('!!!json_load_test_failed') ),
-     fail.
+    pyfunc('jintf',prolog_load('sample.json'),Json),
+    writeln(json_2(Json)),
+    fail.
 json_tests.    
 
-kwargs_tests:-
+  kwargs_tests:-
     pyfunc(kwargs,kwargs_append(foo),[bar=1,baz=2],Ret),
-    (Ret = [foo,PYTUP_PROLOG(bar,1),PYTUP_PROLOG(baz,2)] -> 
-       writeln('kwargs_test1 successful')
-     ; writeln('!!!kwargs_test1_failed') ).
+    writeln(kwargs(Ret)).
 
 error_tests:-
     error_tests_1(no_module,foo(1),

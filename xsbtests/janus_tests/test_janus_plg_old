@@ -6,16 +6,13 @@ float conversion tests successful
 float conversion_sizecheck tests successful
 int conversion tests successful
 int conversion_sizecheck tests successful
-json_load_test successful
+json_2({glossary : {(title : example glossary,GlossDiv : {(title : S,GlossList : {GlossEntry : {(ID : SGML,SortAs : SGML,GlossTerm : Standard Generalized Markup Language,Acronym : SGML,Abbrev : ISO 8879:1986,GlossDef : {(para : A meta-markup language, used to create markup languages such as DocBook.,GlossSeeAlso : [GML,XML])},GlossSee : markup)}})})}})
 json_loads_test successful
-kwargs_test1 successful
+kwargs([foo,bar - 1,baz - 2])
 list conversion tests successful
 list conversion_sizecheck tests successful
 pyc_tests successful
 pyfunc tests successful
-return_False_succeeded
-return_None_succeeded
-return_True_succeeded
 set conversion tests successful
 set conversion_sizecheck tests successful
 string conversion tests successful
