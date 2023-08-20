@@ -367,9 +367,9 @@ abstract_form([Arg|Args],[FArg|FArgs],[AArg|AArgs]) :-
     (Arg = varocc(_)
      -> AArg = Arg
      ; Arg = structure(sym(N,_,_,_),SArgs)
-       -> (FArg = structure(sym(N,_,_,_),FSArgs)
+       -> (FArg = structure(sym(N,Ari,_,_),FSArgs)
 	  -> abstract_form(SArgs,FSArgs,ASArgs),
-	     AArg = structure(sym(N,_,_,_),ASArgs)
+	     AArg = structure(sym(N,Ari,_,_),ASArgs)  %% bind arity! DSW 8/20/23
 	  ;  AArg = varocc(_)
 	  )
      ; Arg = constant(sym(N,_,_,_))
@@ -398,13 +398,16 @@ extract_arg_string(varocc(_),NMod0,NMod) :- !,
     atom_codes(NMod0,NMod0Codes),
     append(NMod0Codes,[0',,0'_],NModCodes),
     atom_codes(NMod,NModCodes).
-extract_arg_string(structure(sym(N,_,_,_),Args),NMod0,NMod) :- !,
-    add_name_segment(NMod0,N,NMod1),
-    extract_modifier_string(Args,'',NMod2),
-    atom_codes(NMod1,NMod1Codes),
-    atom_codes(NMod2,NMod2Codes),
-    append(NMod1Codes,NMod2Codes,NModCodes),
-    atom_codes(NMod,NModCodes).
+extract_arg_string(structure(sym(N,A,_,_),Args),NMod0,NMod) :- !,
+    (A =:= 0  % to handle 0-ary functors (DSW 8/20/23)
+     -> add_name_segment(NMod0,N,NMod)
+     ;  add_name_segment(NMod0,N,NMod1),
+	extract_modifier_string(Args,'',NMod2),
+	atom_codes(NMod1,NMod1Codes),
+	atom_codes(NMod2,NMod2Codes),
+	append(NMod1Codes,NMod2Codes,NModCodes),
+	atom_codes(NMod,NModCodes)
+    ).
 extract_arg_string(constant(sym(N,_,_,_)),NMod0,NMod) :- !,
     add_name_segment(NMod0,N,NMod).
 extract_arg_string(integer(N),NMod0,NMod) :- !,
