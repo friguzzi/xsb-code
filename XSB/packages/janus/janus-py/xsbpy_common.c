@@ -53,7 +53,7 @@ int find_prolog_term_type(CTXTdeclc prolog_term term) {
     }
     //    else if(strcmp(p2c_functor(term),"pyList") == 0)
     //      return PPYLIST;
-    else if(strcmp(p2c_functor(term),"pyIterator") == 0)
+    else if(strcmp(p2c_functor(term),"pyIter") == 0)
       return PYITER;
     else if(strcmp(p2c_functor(term), PYTUP_C) == 0)
       return PYTUP;
@@ -273,7 +273,6 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
     return FALSE;	
   return TRUE;
 }
-
 
 int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
   //int type = find_prolog_term_type(CTXTc prTerm);

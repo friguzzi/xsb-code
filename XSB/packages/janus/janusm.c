@@ -109,7 +109,7 @@ int find_prolog_term_type(CTXTdeclc prolog_term term) {
     }
     //    else if(strcmp(p2c_functor(term),"pyList") == 0)
     //      return PPYLIST;
-    else if(strcmp(p2c_functor(term),"pyIterator") == 0)
+    else if(strcmp(p2c_functor(term),"pyIter") == 0)
       return PYITER;
     else if(strcmp(p2c_functor(term), PYTUP_C) == 0)
       return PYTUP;
@@ -452,7 +452,7 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
       //    while (PyDict_Next(pyObj, &pos, &key, &value)) {
       //      printf("key: ");printPyObj(CTXTc key);
       //      printf("val: ");printPyObj(CTXTc value);
-      //@@      c2p_list(CTXTc tail);
+      //      c2p_list(CTXTc tail);
       //      head = p2p_car(tail);
       //      tup = PyTuple_New(2);
 
@@ -465,25 +465,17 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
       return FALSE;
     return TRUE;
   }
-  //  else if(PyAnySet_Check(pyObj)) {           // maybe PyAnySet_Check
   else if(PySet_Check(pyObj)) {           // maybe PyAnySet_Check
-    size_t size = PySet_GET_SIZE(pyObj);  // macro version since obj is a set
-    size_t i = 0;
     prolog_term head, tail;
     prolog_term P = p2p_new(CTXT);
     PyObject *pyObjInner;
-
     c2p_functor(PYSET_C,1,P);
     tail = p2p_arg(P, 1);
-    
-    for(i = 0; i < size; i++) {
+    PyObject *iterator = PyObject_GetIter(pyObj);
+    while ((pyObjInner = PyIter_Next(iterator))) {
       c2p_list(CTXTc tail);
       head = p2p_car(tail);
-      pyObjInner = PySet_Pop(pyObj);
       convert_pyObj_prObj(CTXTc pyObjInner, &head, 1);	
-      //printPyObj(CTXTc pyObjInner);
-      //printPyObjType(CTXTc pyObjInner);
-      //printPlgTerm(CTXTc head);
       tail = p2p_cdr(tail);
     }
     c2p_nil(CTXTc tail);
@@ -676,7 +668,7 @@ PyObject *call_variadic_method(PyObject *pObjIn,PyObject *pyMeth,prolog_term prM
 			       int args_count) {
   PyObject *pObjOut = NULL;
   if (args_count == 0) {
-    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,NULL);
+    pObjOut = PyObject_CallMethodNoArgs(pObjIn,pyMeth);
   }
   else if (args_count == 1) {
     PyObject *pyArg1 = NULL;
@@ -758,56 +750,58 @@ void xp_python_error() {
 // Tried to decref pObjIn but this didn't work. Not collecting pObjOut
 DllExport int pydot_int(CTXTdecl) {
   PyObject *pModule = NULL, *pObjIn = NULL, *pObjOut = NULL;
-  prolog_term prObjIn, prMethIn, mod;
+  prolog_term prObjIn, prMethIn; 
   char *function, *module;
   PyErr_Clear();
-  mod = extern_reg_term(1);
-  module = p2c_string(mod);
-  module = set_path_name(module);
-  pModule = PyImport_ImportModule(module);
-  if(pModule == NULL) {
-    PyErr_Print();
-    xsb_abort("++Error[janus]: no Python module named \'%s\' could be found."
-  	      "(in arg 1 of pydot/4)\n",module);
-  }
-  Py_DECREF(pModule); 
-  prObjIn = extern_reg_term(2);
+  prObjIn = extern_reg_term(1);
   //  Skipping several typechecks, as Python does them.
   if(is_functor(prObjIn) && strcmp(p2c_functor(prObjIn),PYOBJ_C) == 0) {
     convert_prObj_pyObj(CTXTc prObjIn, &pObjIn);
-    prMethIn = (Cell) extern_reg_term(3);
-    XSB_Deref(prMethIn);
-    if (isconstr(prMethIn)) {
-      PyObject *pyMeth = NULL;
-      function = p2c_functor(prMethIn);
-      pyMeth = PyUnicode_FromString(function);  
-      int args_count = p2c_arity(prMethIn);
-      pObjOut = call_variadic_method(pObjIn,pyMeth,prMethIn,args_count);
-      Py_DECREF(pyMeth);
+  }
+  else if (isstring(prObjIn)) {
+    module = p2c_string(prObjIn);
+    module = set_path_name(module);
+    pModule = PyImport_ImportModule(module);
+    if(pModule == NULL) {
+      PyErr_Print();
+      xsb_abort("++Error[janus]: no Python module named \'%s\' could be found."
+		"(in arg 1 of pydot/4)\n",module);
     }
-    else if (isstring(prMethIn)) {
-      pObjOut = PyObject_GetAttrString(pObjIn,string_val(prMethIn));
-    }
-    else {
-      sprintTerm(forest_log_buffer_1, prMethIn);
-      xsb_abort("++Error[janus]: arg 3 of pydot/4 is not a Python function or attribute: %s\n",
-	      forest_log_buffer_1->fl_buffer);
-    }
+    pObjIn = pModule;
   }
   else {
     sprintTerm(forest_log_buffer_1, prObjIn);
-    xsb_abort("++Error[janus]: arg 2 of pydot/4 is not a Python Object: %s\n",
+    xsb_abort("++Error[janus]: arg 1 of pydot/4 is not a Python module or object: %s\n",
+	      forest_log_buffer_1->fl_buffer);
+  }
+  prMethIn = (Cell) extern_reg_term(2);
+  XSB_Deref(prMethIn);
+  if (isconstr(prMethIn)) {
+    PyObject *pyMeth = NULL;
+    function = p2c_functor(prMethIn);
+    pyMeth = PyUnicode_FromString(function);  
+    int args_count = p2c_arity(prMethIn);
+    //    printPyObj(pyMeth);
+    pObjOut = call_variadic_method(pObjIn,pyMeth,prMethIn,args_count);
+  }
+  else if (isstring(prMethIn)) {
+    pObjOut = PyObject_GetAttrString(pObjIn,string_val(prMethIn));
+  }
+  else {
+    sprintTerm(forest_log_buffer_1, prMethIn);
+    xsb_abort("++Error[janus]: arg 2 of pydot/4 is not a Python function or attribute: %s\n",
 	      forest_log_buffer_1->fl_buffer);
   }
   if (pObjOut == NULL) { // TES todo change to check for python error
     xp_python_error();
   }
+  //  Py_DECREF(pyMeth);
   ensureXSBStackSpace(CTXTc pObjOut);
   prolog_term return_pr = p2p_new(CTXT);
   if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
     xsb_abort("++Error[janus]: The return of pydot/4  could not be translated to Prolog");
   } 
-  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 5)))
+  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 4)))
     return FALSE;
   return TRUE;
 }
@@ -816,20 +810,25 @@ void xp_pyerr_print() {
     PyErr_Print();
 }
 
-DllExport int pyfunc_int(CTXTdecl) {
+PyObject *get_module(char *module) {
+  PyObject *pModule = NULL;
+  pModule = PyImport_ImportModule(module);
+  if(pModule == NULL) {
+    xp_python_error();
+  }
+  return pModule;
+}
+	   
   //  PyObject *pName = NULL, *pModule = NULL, *pFunc = NULL;
+DllExport int pyfunc_int(CTXTdecl) {
   PyObject *pModule = NULL, *pFunc = NULL;
   PyObject *pArgs = NULL, *pValue = NULL, *pDict = NULL;
   prolog_term V, temp,Dict;
   PyErr_Clear();
   prolog_term mod = extern_reg_term(1);
-  char *module = p2c_string(mod);
-  module = set_path_name(module);
-  //  pName = PyUnicode_FromString(module);
-  pModule = PyImport_ImportModule(module);
-  if(pModule == NULL) {
-    xp_python_error();
-  }
+  char *mod_string = p2c_string(mod);
+  mod_string = set_path_name(mod_string);
+  pModule = get_module(mod_string);
   //  Py_DECREF(pName);
   V = extern_reg_term(2);
   if(is_functor(V)) {
@@ -843,12 +842,12 @@ DllExport int pyfunc_int(CTXTdecl) {
       for(i = 1; i <= args_count; i++) {
 	temp = p2p_arg(V, i);
 	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
-		   }
+      }
     }
     else   // it isn't callable
       xsb_abort("++Error[janus]: %s/%d is not a callable function in "
 		"the Python module \'%s\' (arg 2 of pyfunc/3)\n",get_name(get_str_psc(V)),
-		get_arity(get_str_psc(V)),module);
+		get_arity(get_str_psc(V)),mod_string);
     Dict = extern_reg_term(3);
     convert_prObj_pyObj(CTXTc Dict,&pDict);
     if(PyDict_Check(pDict)) {
@@ -876,10 +875,10 @@ DllExport int pyfunc_int(CTXTdecl) {
   else	{
     if (isstring(V))
       xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
-		cs_val(V),module);
+		cs_val(V),mod_string);
     else
       xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
-		V,module);
+		V,mod_string);
   }
   //  Py_Finalize();
   return TRUE;
@@ -903,6 +902,64 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
 	PyTypeObject* type = obj1->ob_type;
 	const char* ptype = type->tp_name;
 	printf("python type: %s\n",ptype);
+}
+
+DllExport int jns_GetIter(CTXTdecl) {
+	prolog_term prTerm = extern_reg_term(1);
+	if(find_prolog_term_type(CTXTc prTerm) == PYREF 
+		|| find_prolog_term_type(CTXTc prTerm) == PYTUP 
+		|| find_prolog_term_type(CTXTc prTerm) == PPYLIST)
+	{
+	  //	  int temp = find_prolog_term_type(CTXTc prTerm);
+	  prolog_term ref_pyobj = p2p_arg(prTerm, 1);
+	  char *node_pointer = p2c_string(ref_pyobj); 
+	  //long long temp2 = strtoll(node_pointer+1,NULL, 16);
+	  PyObject *pValue = (PyObject *)strtoll(node_pointer+1,NULL, 16);
+	  PyObject *iterator; 
+	  iterator = PyObject_GetIter(pValue);
+	  if(iterator == NULL)
+	    return FALSE;
+	  char str[30];
+	  sprintf(str, "p%p", iterator);
+	  prolog_term ref = p2p_new(CTXT);
+	  c2p_functor(CTXTc "pyIter", 1, ref);
+	  prolog_term ref_inner = p2p_arg(ref, 1);
+	  c2p_string(CTXTc str, ref_inner);		
+	  if(!p2p_unify(CTXTc ref, reg_term(CTXTc 2)))
+	    return FALSE;
+	  return TRUE;
+	}
+	return FALSE;
+}
+
+DllExport void  pyObj_next_int(CTXTdecl) {
+  prolog_term prTerm = extern_reg_term(1);
+  prolog_term indicator = extern_reg_term(3);
+  if(find_prolog_term_type(CTXTc prTerm) == PYITER)
+    {
+      prolog_term ref_pyobj = p2p_arg(prTerm, 1);
+      char *node_pointer = p2c_string(ref_pyobj); 
+      PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
+      PyObject *obj = PyIter_Next(iterator);
+      if(obj == NULL) {
+	c2p_int(CTXTc FALSE, indicator);
+	return;
+      }
+      prolog_term return_pr = p2p_new(CTXT);
+      if(!convert_pyObj_prObj(CTXTc obj, &return_pr, 0)) {
+	c2p_int(CTXTc FALSE, indicator);
+	return;
+      }
+      prolog_term prRet = extern_reg_term(2);
+      if(!p2p_unify(CTXTc return_pr, prRet)) {
+	c2p_int(CTXTc FALSE, indicator);
+	return;
+      }
+      c2p_int(CTXTc TRUE, indicator);
+      return;
+    }
+  c2p_int(CTXTc FALSE, indicator);
+  return;
 }
 
 //----------------------------------------------------------------------------------------
@@ -958,57 +1015,6 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
 //{
 //	pyObj_GetIter();
 //	return pyObj_Next();
-//}
-
-//DllExport int pyObj_GetIter(CTXTdecl)
-//{
-//	prolog_term prTerm = extern_reg_term(1);
-//	if(find_prolog_term_type(CTXTc prTerm) == PYREF 
-//		|| find_prolog_term_type(CTXTc prTerm) == PYTUP 
-//		|| find_prolog_term_type(CTXTc prTerm) == PPYLIST)
-//	{
-//	  //		int temp = find_prolog_term_type(CTXTc prTerm);
-//		prolog_term ref_pyobj = p2p_arg(prTerm, 1);
-//		char *node_pointer = p2c_string(ref_pyobj); 
-//		//		long long temp2 = strtoll(node_pointer+1,NULL, 16);
-//		PyObject *pValue = (PyObject *)strtoll(node_pointer+1,NULL, 16);
-//		PyObject *iterator; 
-//		iterator = PyObject_GetIter(pValue);
-//		if(iterator == NULL)
-//			return FALSE;
-//		char str[30];
-//		sprintf(str, "p%p", iterator);
-//	  	prolog_term ref = p2p_new(CTXT);
-//		c2p_functor(CTXTc "pyIterator", 1, ref);
-//		prolog_term ref_inner = p2p_arg(ref, 1);
-//    	c2p_string(CTXTc str, ref_inner);		
-//		if(!p2p_unify(CTXTc ref, reg_term(CTXTc 2)))
-//			return FALSE;
-//		return TRUE;
-//	}
-//	return FALSE;
-//}
-//
-//DllExport int pyObj_Next(CTXTdecl)
-//{
-//	prolog_term prTerm = extern_reg_term(1);
-//	if(find_prolog_term_type(CTXTc prTerm) == PYITER)
-//	{
-//		prolog_term ref_pyobj = p2p_arg(prTerm, 1);
-//		char *node_pointer = p2c_string(ref_pyobj); 
-//		PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
-//		PyObject *obj = PyIter_Next(iterator);
-//		if(obj == NULL)
-//			return FALSE;
-//		prolog_term return_pr = p2p_new(CTXT);
-//		if(!convert_pyObj_prObj(CTXTc obj, &return_pr, 0))
-//			return FALSE;
-//		prolog_term prTerm = extern_reg_term(2);
-//		if(!p2p_unify(CTXTc return_pr, prTerm))
-//			return FALSE;
-//		return TRUE;
-//	} 
-//	return FALSE;
 //}
 
 //DllExport int pyList2prList(CTXTdecl)
@@ -1141,6 +1147,78 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
 //	}
 //	return FALSE;
 //}
+
+DllExport int py_get_iter_int(CTXTdecl) {
+  PyObject *pModule = NULL, *pFunc = NULL;
+  PyObject *pArgs = NULL, *pValue = NULL, *pDict = NULL;
+  prolog_term V, temp,Dict;
+  PyErr_Clear();
+  prolog_term mod = extern_reg_term(1);
+  char *module = p2c_string(mod);
+  module = set_path_name(module);
+  //  pName = PyUnicode_FromString(module);
+  pModule = PyImport_ImportModule(module);
+  if(pModule == NULL) {
+    xp_python_error();
+  }
+  V = extern_reg_term(2);
+  if(is_functor(V)) {
+    char *function = p2c_functor(V);
+    int args_count = p2c_arity(V);
+    pFunc = PyObject_GetAttrString(pModule, function);
+    Py_DECREF(pModule);  // TES move
+    if(pFunc && PyCallable_Check(pFunc)) {
+      pArgs = PyTuple_New(args_count);
+      int i;
+      for(i = 1; i <= args_count; i++) {
+	temp = p2p_arg(V, i);
+	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
+      }
+    }
+    else   // it isn't callable
+      xsb_abort("++Error[janus]: %s/%d is not a callable function in "
+		"the Python module \'%s\' (arg 2 of py_iter/3)\n",get_name(get_str_psc(V)),
+		get_arity(get_str_psc(V)),module);
+    Dict = extern_reg_term(3);
+    convert_prObj_pyObj(CTXTc Dict,&pDict);
+    if(PyDict_Check(pDict)) {
+      pValue = PyObject_Call(pFunc, pArgs,pDict);
+    }
+    else   // Ignoring if not a dict -- maybe should change.
+      pValue = PyObject_CallObject(pFunc, pArgs);
+    Py_DECREF(pFunc);
+    Py_DECREF(pArgs);
+    Py_DECREF(pDict);
+    //    printPyObj(CTXTc pValue);
+    if (pValue == NULL) { // TES todo change to check for python error
+      xp_python_error();
+    }
+    //    printf("pvalue %p\n",pValue);
+    PyObject *iterator = PyObject_GetIter(pValue); // TES: need to check for iterator type
+    //    printf("iterator %p\n",iterator);
+    if(iterator == NULL)  // TES: Change to return first value
+      return FALSE;
+    char str[30];
+    sprintf(str, "p%p", iterator);
+    prolog_term ref = p2p_new(CTXT);
+    c2p_functor(CTXTc "pyIter", 1, ref);
+    prolog_term ref_inner = p2p_arg(ref, 1);
+    c2p_string(CTXTc str, ref_inner);		
+    if(!p2p_unify(CTXTc ref, reg_term(CTXTc 4)))
+      return FALSE;
+    return TRUE;
+  }
+  else	{
+    if (isstring(V))
+      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
+		cs_val(V),module);
+    else
+      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
+		V,module);
+  }
+  //  Py_Finalize();
+  return TRUE;
+}
 
 
 //CFA put this in to override xsb_config_aux.h's incorrect value of 8
