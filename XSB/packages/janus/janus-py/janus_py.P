@@ -3,7 +3,7 @@
 #include "table_status_defs.h"
 #include "../janus_defs.h"
 
-:- export jns_comp/3.
+:- export jns_comp/3, eval_atom/2.
 :- export test_pred/2.
 :- import table_status/5 from tables.
 %:- import functor/4 from standard.
@@ -68,6 +68,20 @@ strip_first_n(N,[_|Lin],Lout):-
 
 :- table jns_table/1 as variant, opaque.
 jns_table(X) :- call(X).
+
+eval_atom(-(Atom),Bindings):-
+    string:concat_atom([Atom,'.'],Term),
+    open(atom(Term),read,S),
+%    writeln(stream(S)),
+    read_term(S,T,[variable_names(Bindings)]),
+%    writeln(to_call(T)),
+    call(T).
+%    pythonify(V,Bindings),
+%    writeln(bindings(Bindings)).
+
+%pythonify([],[]).
+%pythonify([A=B|R],[-(A,B)|R1]):- 
+%    pythonify(R,R1).
 
 end_of_file.
 

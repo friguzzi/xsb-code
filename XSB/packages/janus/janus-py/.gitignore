@@ -1,0 +1,11 @@
+*.xwam
+\#*
+*~
+*dylib*
+*sav
+*.log
+*.so
+*.dll
+build
+attic
+dist

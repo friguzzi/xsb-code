@@ -29,6 +29,64 @@ jns_cmd('consult','consult','janus')    # was xsbpy
 jns_cmd('consult','consult','janus_py') # was px
 jns_cmd('consult','consult','jns_test')
 
+################################################################
+# Modified from SWI
+
+class Query:
+
+    first_time = True
+    query_args = None
+
+    def __init__(self, *args):
+        """Create from query and inputs as janus.once()"""
+        self.query_args = args
+#        print(self.query_args)
+    def __iter__(self):
+        """Implement iter protocol"""
+        return self
+    def __next__(self):
+        """Implement iter protocol. Returns a dict as janus.once()"""
+        return jns_next(*self.query_args)
+    def __del__(self):
+        """Close the Prolog query"""
+    def next(self):
+        if (self.first_time):
+            self.first_time = False
+            return jns_first(*self.query_args)
+        else:
+            return jns_next()
+    def close(self):
+        """Explicitly close the query."""
+#        swipl.close_query(self.state)
+
+# ================ QueryString  ================
+class QueryString:
+
+    first_time = True
+    query_args = None
+
+    def __init__(self, *args):
+        """Create from query and inputs as janus.once()"""
+        self.query_args = args
+#        print(self.query_args)
+    def __iter__(self):
+        """Implement iter protocol"""
+        return self
+    def __next__(self):
+        """Implement iter protocol. Returns a dict as janus.once()"""
+        return jns_string_next(*self.query_args)
+    def __del__(self):
+        """Close the Prolog query"""
+    def next(self):
+        if (self.first_time):
+            self.first_time = False
+            return jns_string_first(*self.query_args)
+        else:
+            return jns_string_next()
+    def close(self):
+        """Explicitly close the query."""
+#        swipl.close_query(self.state)
+
 # Notice the blank line above. Code should continue on this line.
 # ================ Utils  ================
 

@@ -27,14 +27,20 @@ extern int convert_prObj_pyObj(prolog_term , PyObject **);
 void printPlgTerm(prolog_term term2);
 void pPO(PyObject *obj1);
 
+static int query_arity = 0;
 static PyObject *px_init();
 static PyObject *px_close();
+static PyObject *px_cmd(PyObject *self,PyObject *args);
 static PyObject *px_qdet(PyObject *self,PyObject *args);
 static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs);
-static PyObject *px_cmd(PyObject *self,PyObject *args);
+static PyObject *px_first(PyObject *self,PyObject *args);
+static PyObject *px_next(PyObject *self);
+static PyObject *px_once(PyObject *self,PyObject *args);
+static PyObject *px_string_first(PyObject *self,PyObject *args);
+static PyObject *px_string_next(PyObject *self);
 static PyObject *px_get_error_message();
 
-//void printPyObj(PyObject *self,PyObject *obj1);
+PyObject *printPyObj(PyObject *self,PyObject *obj1);
 
 /* The reason for the following hack variable is as follows.  For XSB
    to be called from C, which is what this module is doing, XSB's
@@ -74,9 +80,14 @@ static PyMethodDef XsbMethods[] = {
   //    {"printPyObj", printPyObj, METH_VARARGS, "Print Python Obj from C"},
     {"jns_init", px_init, METH_VARARGS, "Init XSB"},
     {"jns_close", px_close, METH_VARARGS, "Close XSB"},
-    {"jns_qdet", px_qdet, METH_VARARGS, "XSB query execution from Python"},
-    {"jns_comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set comprehehsion using XSB from Python"},
-    {"jns_cmd", px_cmd, METH_VARARGS, "XSB command execution from Python"},
+    {"jns_cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
+    {"jns_qdet", px_qdet, METH_VARARGS, "Determiate XSB query execution using data structures"},
+    {"jns_comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
+    {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
+    {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
+    {"jns_once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
+    {"jns_string_first", px_string_first, METH_VARARGS, "XSB execution via string and iterator"},
+    {"jns_string_next", px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
     {"jns_get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
@@ -215,8 +226,6 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
   ensurePyXSBStackSpace(CTXTc args);
   prolog_term return_pr = p2p_new();
   convert_pyObj_prObj(args, &return_pr);
-  //  printPlgTerm(p2p_arg(return_pr, 1));
-  //  printf("new prolog obj: ");printPlgTerm(return_pr);
   CPtr gl_bot = (CPtr)glstack.low;
   get_reg_offsets;
 
@@ -235,7 +244,8 @@ if (gl_bot != (CPtr)glstack.low) {
   //    printf("q4 heap bot old %p new %p\n",gl_bot, glstack.low);
     reset_local_heap_ptrs;
   }
-  p2p_unify(reg_term(CTXTc 1),new_call);
+// printf("qd unify %d\n",p2p_unify(reg_term(CTXTc 1),new_call));
+ p2p_unify(reg_term(CTXTc 1),new_call);
   //  printf("about to call: ");printPlgTerm(reg_term(1));
   //  if (gl_bot != (CPtr)glstack.low) printf("5 heap bot old %p new %p\n",gl_bot, glstack.low);
   c2p_int(CTXTc 0,reg_term(CTXTc 3));  /* set command for calling a goal */
@@ -272,6 +282,278 @@ if (gl_bot != (CPtr)glstack.low) {
       return tup;
     }
   }
+}
+
+static PyObject *var_bindings_to_dict(prolog_term pBind) {
+  prolog_term temp = pBind;
+  PyObject *pydict, *pykey, *pyval;
+  pydict = PyDict_New();
+  while(!(is_nil(temp))) {
+    //    printPlgTerm(p2p_car(temp));
+    convert_prObj_pyObj(p2p_arg(p2p_car(temp),1),&pykey);
+    convert_prObj_pyObj(p2p_arg(p2p_car(temp),2),&pyval);
+    PyDict_SetItem(pydict,pykey,pyval);
+    temp = p2p_cdr(temp);
+  }
+  return pydict;
+}
+
+static PyObject *px_string_first(PyObject *self,PyObject *args) {
+  size_t tuplesize = PyTuple_Size(args);
+  size_t heap_offset;
+  reset_ccall_error(CTXT);
+  ensurePyXSBStackSpace(CTXTc args);
+  prolog_term return_pr = p2p_new();
+  convert_pyObj_prObj(args, &return_pr);
+  CPtr gl_bot = (CPtr)glstack.low;
+  get_reg_offsets;
+
+  prolog_term new_call = p2p_new();
+  c2p_functor_in_mod("janus_py","eval_atom",2,new_call);
+  p2p_unify(p2p_arg(new_call,1),return_pr);
+  xsb_query_save(2);
+  p2p_unify(reg_term(CTXTc 1),new_call);
+  int rcode = xsb_query(CTXT);
+  if (ccall_error_thrown(CTXT))  {
+    PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    return Py_None;
+  } else {
+    if (is_var(reg_term(CTXTc 1))) {
+      PyObject *tup = PyTuple_New(2);
+      PyTuple_SET_ITEM(tup,0,Py_None);
+      PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
+      return tup;
+    }
+    else {
+      PyObject *tup = PyTuple_New(2);
+      if (gl_bot != (CPtr)glstack.low) {
+	reset_local_heap_ptrs;
+      }
+      //      printPlgTerm(new_call);
+      PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,2));
+      //      printPyObj(self,bindDict);
+      PyTuple_SET_ITEM(tup,0,bindDict);
+#ifdef DARWIN
+      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#else
+      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#endif
+      return tup;
+    }
+  }
+}
+
+static PyObject *px_string_next(PyObject *self) {
+  size_t heap_offset;
+  int rcode;
+  reset_ccall_error(CTXT);
+  //  ensurePyXSBStackSpace(CTXTc args);
+  //  prolog_term return_pr = p2p_new();
+  CPtr gl_bot = (CPtr)glstack.low;
+  get_reg_offsets;
+  //  prolog_term new_call = p2p_new();
+  //  p2p_unify(reg_term(CTXTc 1),new_call);
+
+  rcode = xsb_next(CTXT);
+  //  printf("px-n rcode %d\n",rcode);
+  if (!rcode) {
+    if (ccall_error_thrown(CTXT))  {
+      PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+      return Py_None;
+    } else {
+      if (is_var(reg_term(CTXTc 1))) {
+	query_arity = 0;
+	PyObject *tup = PyTuple_New(2);
+	PyTuple_SET_ITEM(tup,0,Py_None);
+	PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
+	return tup;
+    }
+    else {
+      PyObject *tup = PyTuple_New(2);
+      PyObject *bindDict = var_bindings_to_dict(p2p_arg(reg_term(1),2));
+      //      printPyObj(self,bindDict);
+      PyTuple_SET_ITEM(tup,0,bindDict);
+#ifdef DARWIN
+      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#else
+      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#endif
+      //      if (gl_bot != (CPtr)glstack.low) {
+      //	reset_local_heap_ptrs;
+      //      }
+      reset_regs;
+      return tup;
+    }
+    }
+  }
+  else
+    return Py_None;
+}
+
+static PyObject *px_once(PyObject *self,PyObject *args) {
+  // args is a python string
+  size_t tuplesize = PyTuple_Size(args);
+  size_t heap_offset;
+  reset_ccall_error(CTXT);
+  ensurePyXSBStackSpace(CTXTc args);
+  prolog_term return_pr = p2p_new();
+  convert_pyObj_prObj(args, &return_pr);
+  //  printPlgTerm(return_pr);
+  CPtr gl_bot = (CPtr)glstack.low;
+  get_reg_offsets;
+
+  prolog_term new_call = p2p_new();
+  c2p_functor_in_mod("janus_py","eval_atom",2,new_call);
+  p2p_unify(p2p_arg(new_call,1),return_pr);
+  xsb_query_save(2);
+  p2p_unify(reg_term(CTXTc 1),new_call);
+  int rcode = xsb_query(CTXT);
+  if (ccall_error_thrown(CTXT))  {
+    PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    return Py_None;
+  } else {
+    if (is_var(reg_term(CTXTc 1))) {
+      PyObject *tup = PyTuple_New(2);
+      PyTuple_SET_ITEM(tup,0,Py_None);
+      PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
+      return tup;
+    }
+    else {
+      PyObject *tup = PyTuple_New(2);
+      if (gl_bot != (CPtr)glstack.low) {
+	reset_local_heap_ptrs;
+      }
+      PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,2));
+      //      printPyObj(self,bindDict);
+      PyTuple_SET_ITEM(tup,0,bindDict);
+#ifdef DARWIN
+      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#else
+      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#endif
+      xsb_close_query();
+      return tup;
+    }
+  }
+}
+
+static PyObject *px_first(PyObject *self,PyObject *args) {
+  //  printPyObj(self, self);
+
+  size_t tuplesize = PyTuple_Size(args);
+  //  printf("tuplesize %d\n",tuplesize);
+  size_t heap_offset;
+  int rcode;
+  reset_ccall_error(CTXT);
+  ensurePyXSBStackSpace(CTXTc args);
+  prolog_term return_pr = p2p_new();
+  convert_pyObj_prObj(args, &return_pr);
+  CPtr gl_bot = (CPtr)glstack.low;
+  get_reg_offsets;
+
+  prolog_term new_call = p2p_new();
+  c2p_functor_in_mod(p2c_string(p2p_arg(return_pr, 1)),p2c_string(p2p_arg(return_pr, 2)),
+		     tuplesize-1,new_call);
+  //  if (gl_bot != (CPtr)glstack.low) printf("2 heap bot old %p new %p\n",gl_bot, glstack.low);
+  for (int i = 1; i < (int) tuplesize-1; i++) {
+    prolog_term call_arg = p2p_arg(new_call,i); 
+    p2p_unify(call_arg,p2p_arg(return_pr,i+2));
+  }
+  //  if (gl_bot != (CPtr)glstack.low) printf("3 heap bot old %p new %p\n",gl_bot, glstack.low);
+
+  //  xsb_query_save(tuplesize-1);
+if (gl_bot != (CPtr)glstack.low) {
+  //    printf("q4 heap bot old %p new %p\n",gl_bot, glstack.low);
+    reset_local_heap_ptrs;
+  }
+ xsb_query_save(tuplesize-1);
+ // printf("rt 1-1 %p %p\n",reg_term(1),&new_call);
+ // printf("unify %d\n",p2p_unify(reg_term(CTXTc 1),new_call));
+ p2p_unify(reg_term(CTXTc 1),new_call);
+ //printf("rt 1-2 %p\n",reg_term(1));
+ //  printPlgTerm(new_call);
+ //  printPlgTerm(reg_term(1));
+  rcode = xsb_query(CTXT);
+  //  printf("rcode %d\n",rcode);
+  //  c2p_int(CTXTc 0,reg_term(CTXTc 3));  /* set command for calling a goal */
+  //  xsb(CTXTc XSB_EXECUTE,0,0);
+  if (ccall_error_thrown(CTXT))  {
+    //    printf("Error: %s\n",xsb_get_error_message(CTXT));
+    PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    return Py_None;
+  } else {
+    if (is_var(reg_term(CTXTc 1))) {
+      PyObject *tup = PyTuple_New(2);
+      PyTuple_SET_ITEM(tup,0,Py_None);
+      PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
+      return tup;
+    }
+    else {
+      query_arity = tuplesize-1;
+      PyObject *tup = PyTuple_New(2);
+      if (gl_bot != (CPtr)glstack.low) {
+	//	printf("#6 heap bot old %p new %p\n",gl_bot, glstack.low);
+	reset_local_heap_ptrs;
+      }
+      convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
+      PyTuple_SET_ITEM(tup,0,newPyObj);
+#ifdef DARWIN
+      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#else
+      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#endif
+      //      reset_regs;
+      return tup;
+    }
+  }
+}
+
+static PyObject *px_next(PyObject *self) {
+  size_t heap_offset;
+  int rcode;
+  reset_ccall_error(CTXT);
+  //  ensurePyXSBStackSpace(CTXTc args);
+  //  prolog_term return_pr = p2p_new();
+  CPtr gl_bot = (CPtr)glstack.low;
+  get_reg_offsets;
+  //  prolog_term new_call = p2p_new();
+  //  p2p_unify(reg_term(CTXTc 1),new_call);
+
+  rcode = xsb_next(CTXT);
+  //  printf("px-n rcode %d\n",rcode);
+  if (!rcode) {
+    if (ccall_error_thrown(CTXT))  {
+      //    printf("Error: %s\n",xsb_get_error_message(CTXT));
+      PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+      return Py_None;
+    } else {
+      if (is_var(reg_term(CTXTc 1))) {
+	query_arity = 0;
+	PyObject *tup = PyTuple_New(2);
+	PyTuple_SET_ITEM(tup,0,Py_None);
+	PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
+	return tup;
+    }
+    else {
+      PyObject *tup = PyTuple_New(2);
+      //      if (gl_bot != (CPtr)glstack.low) {
+      //	reset_local_heap_ptrs;
+      //      }
+      //      convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
+      convert_prObj_pyObj(p2p_arg(reg_term(1),query_arity),&newPyObj);
+      PyTuple_SET_ITEM(tup,0,newPyObj);
+#ifdef DARWIN
+      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#else
+      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
+#endif
+      reset_regs;
+      return tup;
+    }
+    }
+  }
+  else
+    return Py_None;
 }
 
 static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
