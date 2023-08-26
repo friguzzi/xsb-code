@@ -47,7 +47,7 @@
 
 ?- jns_test:return_term(Answer).
 
-   Answer  = ('plgTerm', 'p', [1, 'a', ('plgTerm', 'f', 'a')], ('plgTerm', 'g', 'b'))
+   Answer  = ('plgTerm', 'p', [1], 'a', ('plgTerm', 'f', 'a'), ('plgTerm', 'g', 'b'))
    TV = True
 
 ------------ query: arity 2 -------------

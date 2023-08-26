@@ -26,11 +26,6 @@ echo "uname for this system is $u";
 #    echo "-------------------------------------------------------"
 #fi
 
-# Doing this here to support valgrind testing.
-rm -f unsafe1.xwam
-rm -f unsafe2.xwam
-rm -f varcond.xwam
-
 #------------------------------------
     # XEMU and options must be together in quotes
 ../gentest.sh "$XEMU $options" test_janus_plg "test."
