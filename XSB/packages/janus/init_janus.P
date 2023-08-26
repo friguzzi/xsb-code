@@ -23,7 +23,7 @@ to that included at the end of this file.
 :- import misc_error/1 from error_handler.
 %%:- import xsb_error_get_message/2 from error_handler.
 %:- import shell/1 from shell.
-:- import pyfunc/3 from janus.
+:- import pyfunc/3,pydot/3 from janus.
 :- import init_python/0 from janusm.
 :- import add_lib_dir/1 from consult.
 :- import messageln/1 from standard.
@@ -45,9 +45,12 @@ init_janus(Pyversion):-
     concat_atom([PackDir,'/janus/janus-py'],PxDir),
 %    concat_atom([PackDir,'/janus/test'],TestDir),
     init_python(),
-    pyfunc('janus/add_python_path',add_python_path(JanusDir),_),
-    pyfunc(add_python_path,add_python_path(XSBLibDir),_),
-    pyfunc(add_python_path,add_python_path(StarterDir),_),
+%    pyfunc('janus/add_python_path',add_python_path(JanusDir),_),
+    pyfunc('janus/jns_utils',add_python_path(JanusDir),_),
+    pyfunc(jns_utils,add_python_path(XSBLibDir),_),
+    pyfunc(jns_utils,add_python_path(StarterDir),_),
+%    pyfunc(add_python_path,add_python_path(XSBLibDir),_),
+%    pyfunc(add_python_path,add_python_path(StarterDir),_),
     add_lib_dir(StarterDir),  % starters
     add_lib_dir(PxDir),       % in case XSB is being called from Python
 %    pyfunc(add_python_path,add_python_path(TestDir),_),
@@ -69,7 +72,7 @@ add_py_lib_dir(Dir):-
     pyfunc(add_python_path,add_python_path(Dir),_).
 
 py_lib_dirs(List):-
-    pyfunc(xp_utils,python_paths(),List).
+    pydot(sys,path,List).
 
 % Below:
 % -Wl, Opt passes the option from gcc to the compiler.
