@@ -312,6 +312,11 @@ meth_tests:-
 	       -(0,0,0,0,0,0,0,0,0,0,0,1,0,@('False'),0,0,@('False'),-1)),
     check_call(pydot(sys,exc_info(),_Res1),-(@('None'),@('None'),@('None'))),
     fail.
+meth_tests:-
+    pyfunc('Person','Person'(mary,34),Obj),
+    obj_dict(Obj,Dict),writeln(dict(Dict)),
+    obj_dir(Obj,Dir),writeln(dir(Dir)),
+    fail.
 meth_tests:- 
     catch(pydot(1,favorite_ice_cream,_Ret4),E2,xsb_error_get_message(E2,Msg2)),
     writeln(personErr1(Msg2)),
