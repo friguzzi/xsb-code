@@ -1,3 +1,4 @@
+.\#*
 *.xwam
 \#*
 *~
@@ -13,3 +14,4 @@ __pycache__
 janus_connect_defs.h
 janus_info.P
 test/test_janus_out_new
+attic
