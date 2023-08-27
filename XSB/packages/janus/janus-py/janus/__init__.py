@@ -40,13 +40,22 @@ class Query:
     def __init__(self, *args):
         """Create from query and inputs as janus.once()"""
         self.query_args = args
+        self.first_time = True
 #        print(self.query_args)
     def __iter__(self):
         """Implement iter protocol"""
         return self
     def __next__(self):
         """Implement iter protocol. Returns a dict as janus.once()"""
-        return jns_next(*self.query_args)
+        if (self.first_time):
+            self.first_time = False
+            return jns_first(*self.query_args)
+        else:
+            rc = jns_next()
+            if rc == None:
+                raise StopIteration()
+            else:
+                return rc      
     def __del__(self):
         """Close the Prolog query"""
     def next(self):
@@ -61,20 +70,29 @@ class Query:
 
 # ================ QueryString  ================
 class QueryString:
-
+    
     first_time = True
     query_args = None
 
     def __init__(self, *args):
         """Create from query and inputs as janus.once()"""
         self.query_args = args
+        self.first_time = True
 #        print(self.query_args)
     def __iter__(self):
         """Implement iter protocol"""
         return self
     def __next__(self):
         """Implement iter protocol. Returns a dict as janus.once()"""
-        return jns_string_next(*self.query_args)
+        if (self.first_time):
+            self.first_time = False
+            return jns_string_first(*self.query_args)
+        else:
+            rc = jns_string_next(*self.query_args)
+            if rc == None:
+                raise StopIteration()
+            else:
+                return rc      
     def __del__(self):
         """Close the Prolog query"""
     def next(self):
