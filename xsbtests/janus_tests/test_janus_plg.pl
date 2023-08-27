@@ -322,7 +322,16 @@ meth_tests:-
     writeln(personErr1(Msg2)),
     pyfunc('Person','Person'(john,35),Obj),
     catch(pydot(Obj,1,_Ret5),E3,xsb_error_get_message(E3,Msg3)),
-    writeln(personErr2(Msg3)).
+    writeln(personErr2(Msg3)),fail.
+meth_tests:-
+    catch(pydot(   sys,'path.append'(_Dir1),_F1),_,true),
+    writeln('caught error for path.append(Dir)'),
+    catch(pydot(   sys,'path.append'(_Dir2,_Dor2),_F2),_,true),
+    writeln('caught error for path.append(Dir,Dor)'),
+    catch(pydot(   sys,'path.append'(_Dir3,_Dor3,_Dur3),_F3),_,true),
+    writeln('caught error for path.append(Dir,Dor,Dur)'),
+    fail.
+meth_tests.
 
 variadic_tests:-
     testit(pyfunc(variadic,variadic_print('a','b','c'),A),A,'a|b|c|'),

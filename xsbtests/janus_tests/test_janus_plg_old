@@ -1,3 +1,6 @@
+caught error for path.append(Dir)
+caught error for path.append(Dir,Dor)
+caught error for path.append(Dir,Dor,Dur)
 collect(0)
 dict conversion tests successful
 dict conversion_sizecheck tests successful

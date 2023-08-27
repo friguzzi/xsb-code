@@ -8,6 +8,9 @@ sys.stdout = open('./temp', 'w')
 jns_cmd('consult','consult','jns_test')
 
 def test_qs():
+    for i in QueryString('jns_test:anti_member([1,2,3],FX)'):
+        print('for anti_member: ' + str(i))
+    print('--------------------------')
     C1 = QueryString('jns_test:anti_member([1,2,3],X)')
     print('anti_member 1: ' + str(C1.next()))
     print('anti_member 2: ' + str(C1.next()))

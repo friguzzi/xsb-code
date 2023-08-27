@@ -1,3 +1,7 @@
+for anti_member: ({'FX': 1}, 1)
+for anti_member: ({'FX': 2}, 1)
+for anti_member: ({'FX': 3}, 1)
+--------------------------
 anti_member 1: ({'X': 1}, 1)
 anti_member 2: ({'X': 2}, 1)
 anti_member 3: ({'X': 3}, 1)
