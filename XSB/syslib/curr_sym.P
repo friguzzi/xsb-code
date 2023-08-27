@@ -1865,5 +1865,50 @@ psc_properties_20180213(PSC, Property) :-
 	).
 	% Unfortunately this doesn''t take the Module into account.
 
+:- export function_property/2.
+function_property(Funct,Prop):-
+    (nonvar(Funct) ->
+	 check_callable(Funct,function_property/2,1)
+    ; true),
+    (nonvar(Prop) ->
+	 (\+ atom(Prop) ->
+	      type_error(variable_or_atom,Prop,function_property/2,2)
+	 ;  (member(Prop,[built_in,static,foreign,dynamic]) ->
+		 true
+  	    ; domain_error([built_in,static,foreign,dynamic],Prop,function_property/2,2)
+	    )
+	 )
+    ;  true),
+    function_property_1(Funct,Prop).
+
+function_property_1(abs(_),built_in).
+function_property_1(+(_,_),built_in).
+function_property_1(-(_,_),built_in).
+function_property_1(*(_,_),built_in).
+function_property_1(/(_,_),built_in).
+function_property_1(/\(_,_),built_in).
+function_property_1(\/(_,_),built_in).
+function_property_1(cos(_,_),built_in).
+function_property_1(sin(_,_),built_in).
+function_property_1(tan(_,_),built_in).
+function_property_1(float(_),built_in).
+function_property_1(floor(_),built_in).
+function_property_1(exp(_),built_in).
+function_property_1(log(_),built_in).
+function_property_1(log10(_),built_in).
+function_property_1(sqrt(_),built_in).
+function_property_1(asin(_),built_in).
+function_property_1(acos(_),built_in).
+function_property_1(atan(_),built_in).
+function_property_1(abs(_),built_in).
+function_property_1(truncate(_),built_in).
+function_property_1(round(_),built_in).
+function_property_1(ceiling(_),built_in).
+function_property_1(sign(_),built_in).
+function_property_1(min(_,_),built_in).
+function_property_1(pi,built_in).
+function_property_1(lgamma(_),built_in):- \+ xsb_configuration(host_os,windows).
+    function_property_1(erf(_),built_in):- \+ xsb_configuration(host_os,windows).
+
 /* ----------------- end of file current_symbols.P -------------------- */
 
