@@ -169,7 +169,8 @@ AC_ARG_WITH(stdcall,
                                 Affects Win32 only. Ignored in Win64.])
 
 AC_ARG_WITH(preferred-python,
-[  --with-preferred-python=X      indicate the preferred version of python to build with] )
+[  --with-preferred-python=X      indicate the preferred version of python to build with
+                                  e.g. python3.11])
 
 
 AC_ARG_ENABLE(no-cygwin,
