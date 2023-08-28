@@ -363,6 +363,8 @@ FltInt *eval_stk;
 Integer eval_stk_toprec;
 #endif
 
+DllExport void call_conv xsb_type_error_vargs(CTXTdeclc char *valid_type,Cell culprit, char * goalstring, char *description, ...);
+
 #define INIT_EVAL_STK_SIZE 24
 
 void expand_eval_stk(CTXTdecl) {
@@ -562,7 +564,7 @@ int xsb_eval_bin_op(char *op, Cell expr, FltInt fiop1, FltInt fiop2, FltInt *val
       break;
     } else set_and_return_fail(value);
   default:
-    set_and_return_fail(value);
+    xsb_type_error_vargs(CTXTc "evaluable",expr,op, "Non-evaluable function in is/2");
   } /* end switch */
   return 1;
 }
