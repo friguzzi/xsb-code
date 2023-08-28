@@ -231,7 +231,7 @@ void free_python_object_int(CTXTdeclc prolog_term prTerm) {
 int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
   //int type = find_prolog_term_type(CTXTc prTerm);
   //printf("type %i\n",type);
-  //printPlgTerm(prTerm);
+  //  printPlgTerm(prTerm);
   if(is_int(CTXTc prTerm)) {
     prolog_term argument = prTerm;
     prolog_int argument_int = p2c_int(argument);
@@ -295,9 +295,13 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       PyObject *pydict, *pykey, *pyval;
       prolog_term elt, comma_list;
       comma_list = p2p_arg(prTerm, 1);
+      //      printPlgTerm(comma_list);
       pydict = PyDict_New();
-      while (strcmp(p2c_functor(comma_list),",") == 0 ) {   
+      while (strcmp(p2c_functor(comma_list),",") == 0 ) {
 	elt = p2p_arg(comma_list,1);
+	if (!isconstr(elt)) {
+	  xsb_abort("++Error[janus]: Improper Prolog term inside Janus dictionary");
+	}
 	convert_prObj_pyObj(p2p_arg(elt,1),&pykey);
 	convert_prObj_pyObj(p2p_arg(elt,2),&pyval);
 	PyDict_SetItem(pydict,pykey,pyval);
@@ -887,7 +891,7 @@ DllExport int pyfunc_int(CTXTdecl) {
 //------------------------------- Utilities
 
 void printPlgTerm(CTXTdeclc prolog_term term) {
-	XSB_StrDefine(StrArgBuf);
+  XSB_StrDefine(StrArgBuf);
   XSB_StrSet(&StrArgBuf,"");
   print_pterm(CTXTc term,1, &StrArgBuf);
   printf("printPlgTerm: %s\n", StrArgBuf.string);
