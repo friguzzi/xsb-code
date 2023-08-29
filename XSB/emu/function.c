@@ -329,7 +329,7 @@ DllExport int  unifunc_call(CTXTdeclc int funcnum, CPtr regaddr)
   case FUN_erf:
     set_fvalue_from_value;
 #if defined(WIN_NT)
-    xsb_warn(CTXTc "lgamma function NOT defined");
+    xsb_warn(CTXTc "erf function NOT defined");
     fvalue = 0.0;
 #else
     fvalue = (Float)erf(fvalue);
