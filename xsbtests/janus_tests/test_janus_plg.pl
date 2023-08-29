@@ -27,9 +27,20 @@ test:-
 
 func_tests :- 
     check_call(pyfunc(test_janus_plg, sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
-    check_call(pyfunc(builtins,float('+1E6'),_Res2),1000000.0).
+    fail.
+func_tests :- 
+    check_call(pyfunc(builtins,float('+1E6'),_Res2),1000000.0),
+    fail.
+func_tests :- 
+    check_call(pyfunc(builtins,set([a,b,c,d]),[],[pyObject(true)],_F),pyObj(_)),
+    fail.
+func_tests :- 
+    catch(pyfunc(builtins,set({a,b,c,d}),_),_E,(xsb_error_get_message(_E,M),
+						lazy_writeln(['pyfunc set: ',M]))),
+						fail.
+func_tests.
 
-%--------------------------------
+%-------------------------------
 
 py_iter_tests:-
     check_call(setof(Ret,py_iter(test_janus_plg,makelist(),Ret),_List),[1,2,3,4]),
@@ -362,12 +373,19 @@ check_call(pyfunc(Mod,MA,Res),Atom):-
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
       lazy_writeln([pyfunc(Mod,MA,ResOut),' succeeded.'])
     ; lazy_writeln(['!!! ',pyfunc(Mod,MA,Res),' failed.  Did not match ',Atom])).
+check_call(pyfunc(Mod,Func,DefVars,Opts,Res),Atom):-
+    pyfunc(Mod,Func,DefVars,Opts,Res),
+    (Res = Atom ->
+      (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
+      lazy_writeln([pyfunc(Mod,Func,DefVars,Opts,ResOut),' succeeded.'])
+    ; lazy_writeln(['!!! ',pyfunc(Mod,Func,DefVars,Opts,Res),' failed.  Did not match ',Atom])).
 % specific to a single test...
 check_call(setof(Res,py_iter(Mod,MA,Res),List),GoodList):- 
     setof(Res,py_iter(Mod,MA,Res),List),
     (List = GoodList ->
       lazy_writeln([py_iter(Mod,MA,List),' succeeded.'])
     ; lazy_writeln(['!!! ',py_iter(Mod,MA,List),' failed.  Did not match ',GoodList])).
+
 check_sort_call(pyfunc(Mod,MA,Res),Atom):-
     pyfunc(Mod,MA,Res),
     (Res = ['"foo"','''bar''',pySet(Set)] ->
