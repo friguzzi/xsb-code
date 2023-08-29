@@ -184,9 +184,9 @@ Integer get_safe_python_size(PyObject *pyObj) {
 
 // On ubuntu sizeof(size_t) is 8.
 // check_glstack overflow expands by Overflow margin + input
-void ensureXSBStackSpace(CTXTdeclc PyObject *pyObj) {
-  int sizecheck_flag = p2c_int(extern_reg_term(4));
-  if (sizecheck_flag == 1) {
+void ensureXSBStackSpace(CTXTdeclc PyObject *pyObj,int flag) {
+  //  int sizecheck_flag = p2c_int(extern_reg_term(4));
+  if (flag & SIZECHECK) {
     Integer size = get_safe_python_size(pyObj);
     //    printf("safe size %ld\n",size);
     check_glstack_overflow(5,pcreg,2*size*sizeof(size_t));
@@ -226,6 +226,16 @@ void free_python_object_int(CTXTdeclc prolog_term prTerm) {
   PyObject *pyObj;
   convert_prObj_pyObj(CTXTc prTerm, &pyObj);
   Py_CLEAR(pyObj);
+}
+
+prolog_term make_prolog_pyObj(PyObject *pyObj) {
+  char str[30];
+  sprintf(str, "p%p", pyObj);
+  prolog_term ref = p2p_new(CTXT);
+  c2p_functor(CTXTc PYOBJ_C, 1, ref);
+  prolog_term ref_inner = p2p_arg(ref, 1);
+  c2p_string(CTXTc str, ref_inner);
+  return ref;
 }
 
 int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
@@ -800,7 +810,8 @@ DllExport int pydot_int(CTXTdecl) {
     xp_python_error();
   }
   //  Py_DECREF(pyMeth);
-  ensureXSBStackSpace(CTXTc pObjOut);
+  int flag = p2c_int(extern_reg_term(4));
+  ensureXSBStackSpace(CTXTc pObjOut,flag);
   prolog_term return_pr = p2p_new(CTXT);
   if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
     xsb_abort("++Error[janus]: The return of pydot/4  could not be translated to Prolog");
@@ -823,66 +834,72 @@ PyObject *get_module(char *module) {
   return pModule;
 }
 	   
-  //  PyObject *pName = NULL, *pModule = NULL, *pFunc = NULL;
 DllExport int pyfunc_int(CTXTdecl) {
   PyObject *pModule = NULL, *pFunc = NULL;
-  PyObject *pArgs = NULL, *pValue = NULL, *pDict = NULL;
-  prolog_term V, temp,Dict;
+  PyObject *pArgs = NULL, *pValue = NULL, *pyDefVarsDict = NULL;
+  prolog_term CallTerm, temp,Dict;
   PyErr_Clear();
   prolog_term mod = extern_reg_term(1);
   char *mod_string = p2c_string(mod);
   mod_string = set_path_name(mod_string);
   pModule = get_module(mod_string);
   //  Py_DECREF(pName);
-  V = extern_reg_term(2);
-  if(is_functor(V)) {
-    char *function = p2c_functor(V);
-    int args_count = p2c_arity(V);
+  CallTerm = extern_reg_term(2);
+  if(is_functor(CallTerm)) {
+    char *function = p2c_functor(CallTerm);
+    int args_count = p2c_arity(CallTerm);
     pFunc = PyObject_GetAttrString(pModule, function);
     Py_DECREF(pModule);  // TES move
     if(pFunc && PyCallable_Check(pFunc)) {
       pArgs = PyTuple_New(args_count);
       int i;
       for(i = 1; i <= args_count; i++) {
-	temp = p2p_arg(V, i);
+	temp = p2p_arg(CallTerm, i);
 	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
       }
     }
     else   // it isn't callable
       xsb_abort("++Error[janus]: %s/%d is not a callable function in "
-		"the Python module \'%s\' (arg 2 of pyfunc/3)\n",get_name(get_str_psc(V)),
-		get_arity(get_str_psc(V)),mod_string);
+		"the Python module \'%s\' (arg 2 of pyfunc/3)\n",get_name(get_str_psc(CallTerm)),
+		get_arity(get_str_psc(CallTerm)),mod_string);
     Dict = extern_reg_term(3);
-    convert_prObj_pyObj(CTXTc Dict,&pDict);
-    if(PyDict_Check(pDict)) {
-      pValue = PyObject_Call(pFunc, pArgs,pDict);
+    convert_prObj_pyObj(CTXTc Dict,&pyDefVarsDict);
+    if(PyDict_Check(pyDefVarsDict)) {
+      pValue = PyObject_Call(pFunc, pArgs,pyDefVarsDict);
     }
     else   // Ignoring if not a dict -- maybe should change.
       pValue = PyObject_CallObject(pFunc, pArgs);
     Py_DECREF(pFunc);
     Py_DECREF(pArgs);
-    Py_DECREF(pDict);
+    Py_DECREF(pyDefVarsDict);
     if (pValue == NULL) { // TES todo change to check for python error
       xp_python_error();
     }
-    ensureXSBStackSpace(CTXTc pValue);
-    prolog_term return_pr = p2p_new(CTXT);
-    // ususally returns pyobject by default.
-    if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, 1)) {
-      xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
-		"(in pyfunc/[3,4,5])\n",function,args_count);
+    int flag = p2c_int(extern_reg_term(4));
+    prolog_term return_pr;
+    if (!(flag & RETURN_PYOBJ)) {
+      ensureXSBStackSpace(CTXTc pValue,flag);
+     return_pr = p2p_new(CTXT);
+      // ususally returns pyobject by default.
+      if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, 1)) {
+	xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
+		  "(in pyfunc/[3,4,5])\n",function,args_count);
+      }
     }
-    if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 5))) 
+    else {
+     return_pr = make_prolog_pyObj(pValue);
+    }
+  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 5))) 
       return FALSE;
     return TRUE;
-  } /* if is_functor(V) */
+  } /* if is_functor(CallTerm) */
   else	{
-    if (isstring(V))
+    if (isstring(CallTerm))
       xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
-		cs_val(V),mod_string);
+		cs_val(CallTerm),mod_string);
     else
       xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
-		V,mod_string);
+		CallTerm,mod_string);
   }
   //  Py_Finalize();
   return TRUE;

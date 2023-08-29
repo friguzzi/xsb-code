@@ -17,3 +17,5 @@
 #define PLAIN_TRUTHVALS 4
 #define SET_COLLECTION 8
 
+#define SIZECHECK 1
+#define RETURN_PYOBJ 2
