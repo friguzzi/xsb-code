@@ -38,4 +38,4 @@ u=`uname`;
 
 #========== the following are non-regression tests ==========
 echo '--------------------------------------------------------------------'
-$python test_iterations.py
+$python jns_py_benches.py

@@ -1,5 +1,5 @@
 
-def sumlist3(X,Y):
+def sumlist3(X:str,Y:list):
 #	print('First element to combine with is '+str(X))
 	Z = []
 	for element in Y:
@@ -100,6 +100,7 @@ def returnSet():
 def kwargs_append(X,**Features):
     List = [X]
     for (key,value) in Features.items():
+        print((key,value))
         List.append((key,value))
     return(List)
     
@@ -132,3 +133,19 @@ def return_error():
 def tupletest_func():
 	l = (5, (), 'hello', (5, 6, 7))
 	return l
+
+import inspect
+
+def inspect_function1(module,func):
+        print(type(func))
+        mbrlist = inspect.getmembers(module)
+        mbrdict = dict(mbrlist)
+#        print(mbrdict)
+        callable_func = mbrdict[func]
+        return inspect.signature(callable_func)
+        
+def inspect_function2(module,function):
+        func = locals()[function]
+        print(func)
+        return inspect.signature(module.func)
+
