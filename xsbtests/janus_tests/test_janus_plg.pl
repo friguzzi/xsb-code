@@ -6,7 +6,7 @@
 :- import pyfunc/3, pydot/3, pyfunc/4,pyfunc/5,janus_python_version/1 from janus.
 :- import concat_atom/2 from string.
 :- import length/2 from basics.
-:- import xsb_error_get_message/2 from error_handler.
+:- import xsb_error_get_message/2,xsb_error_get_tag/2 from error_handler.
 :- import lazy_writeln/1 from standard.
 
 test:-
@@ -32,11 +32,11 @@ func_tests :-
     check_call(pyfunc(builtins,float('+1E6'),_Res2),1000000.0),
     fail.
 func_tests :- 
-    check_call(pyfunc(builtins,set([a,b,c,d]),[],[pyObject(true)],_F),pyObj(_)),
+    check_call(pyfunc(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
     fail.
 func_tests :- 
     catch(pyfunc(builtins,set({a,b,c,d}),_),_E,(xsb_error_get_message(_E,M),
-						lazy_writeln(['pyfunc set: ',M]))),
+						lazy_writeln(['(should error) pyfunc set: ',M]))),
 						fail.
 func_tests.
 
@@ -79,6 +79,8 @@ dataConversionTests :-
     (setConvTest->
 	 write('set conversion tests successful\n')
      ;   write('!!!set conversion tests failed\n')),
+    fail.
+dataConversionTests :- 
     (tupleConvTest->
 	 write('tuple conversion tests successful\n')
     ;    write('!!!tuple conversion tests failed\n')),
@@ -88,17 +90,14 @@ dataConversionTests :-
 	 write('dict conversion tests successful\n')
     ;    write('!!!dict conversion tests failed\n')),
     fail.
-dataConversionTests :- 
-    pyfunc(test_janus_plg,return_None(),PYNONE_PROLOG),
-    writeln('return_None_succeeded'),
+dataConversionTests :-
+    check_call(pyfunc(test_janus_plg,return_None(),_None),@('None')),
     fail.
 dataConversionTests :- 
-    pyfunc(test_janus_plg,return_True(),1),
-    writeln('return_True_succeeded'),
+    check_call(pyfunc(test_janus_plg,return_True(),_True),@('True')),
     fail.
 dataConversionTests :- 
-    pyfunc(test_janus_plg,return_False(),0),
-    writeln('return_False_succeeded'),
+    check_call(pyfunc(test_janus_plg,return_False(),_False),@('False')),
     fail.
 dataConversionTests :- 
     (intConvTest_sizecheck->
@@ -128,7 +127,7 @@ dataConversionTests:-
 dataConversionTests.
 
 pyfunc_sc(Mod,Func,Reg):-
-    pyfunc(Mod,Func,[],[sizecheck(true)],Reg).
+    pyfunc(Mod,Func,Reg,[sizecheck(true)]).
 
 intConvTest :-
     current_prolog_flag(min_integer, MinValue), 
@@ -202,7 +201,7 @@ tupleConvTest_sizecheck:-
     !.
 
 dictConvTest_sizecheck:-
-    pyfunc(returnVal,return_dictionary(),[],[sizecheck(true)],Ret),
+    pyfunc(returnVal,return_dictionary(),Ret,[sizecheck(true)]),
     Ret =  {('Name' : 'Geeks',1 : [1,2,3,4])}.
 
 dictConvTest:-
@@ -262,13 +261,13 @@ json_tests:-
     fail.
 json_tests.    
 
-  kwargs_tests:-
-    pyfunc(test_janus_plg,kwargs_append(foo),[bar=1,baz=2],Ret),
-    writeln(kwargs(Ret)).
+kwargs_tests:-
+    check_call(pyfunc(test_janus_plg,kwargs_append(foo,bar=1,baz=2),_),[foo,-(baz,2),-(bar,1)]),
+    fail.
+kwargs_tests.
 
 error_tests:-
     error_tests_1(no_module,foo(1),
-		 
 		  [' Python Error;',_,'Type: <class ''ModuleNotFoundError''>',_,
 		   'Value: ModuleNotFoundError("No module named ''no_module''")',_]),
     fail.
@@ -278,7 +277,9 @@ error_tests:-
 		  [' ++Error[janus]: foo/1 is not a callable function in the Python module \'test_janus_plg\' (arg 2 of pyfunc/3)']),
     fail.
 error_tests:-
-    error_tests_1(test_janus_plg,7,[' ++Error[janus]: ',_,' is not a callable function (in arg 2 of pyfunc/3)']),
+    catch(pyfunc(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
+    (T = type_error(callable_term,7) ->
+	 true ; writeln('catch(pyfunc(test_janus_plg,7)) failed')),
     fail.
 % returns obj
 %error_tests:-
@@ -373,12 +374,13 @@ check_call(pyfunc(Mod,MA,Res),Atom):-
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
       lazy_writeln([pyfunc(Mod,MA,ResOut),' succeeded.'])
     ; lazy_writeln(['!!! ',pyfunc(Mod,MA,Res),' failed.  Did not match ',Atom])).
-check_call(pyfunc(Mod,Func,DefVars,Opts,Res),Atom):-
-    pyfunc(Mod,Func,DefVars,Opts,Res),
+check_call(pyfunc(Mod,Func,Res,Opts),Atom):-
+    pyfunc(Mod,Func,Res,Opts)
+    ,
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
-      lazy_writeln([pyfunc(Mod,Func,DefVars,Opts,ResOut),' succeeded.'])
-    ; lazy_writeln(['!!! ',pyfunc(Mod,Func,DefVars,Opts,Res),' failed.  Did not match ',Atom])).
+      lazy_writeln([pyfunc(Mod,Func,ResOut,Opts),' succeeded.'])
+    ; lazy_writeln(['!!! ',pyfunc(Mod,Func,Res,Opts),' failed.  Did not match ',Atom])).
 % specific to a single test...
 check_call(setof(Res,py_iter(Mod,MA,Res),List),GoodList):- 
     setof(Res,py_iter(Mod,MA,Res),List),

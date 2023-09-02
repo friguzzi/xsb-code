@@ -2,6 +2,9 @@
 def incr(X):
     return X + 1
 
+def kw_incr(X,**kwargs):
+    return X + 1
+
 def makelist_noret(N):
     list = []
     for i in range(1,N):

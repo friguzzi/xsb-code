@@ -1,4 +1,4 @@
-
+ 
 def sumlist3(X:str,Y:list):
 #	print('First element to combine with is '+str(X))
 	Z = []
@@ -100,7 +100,7 @@ def returnSet():
 def kwargs_append(X,**Features):
     List = [X]
     for (key,value) in Features.items():
-        print((key,value))
+#        print((key,value))
         List.append((key,value))
     return(List)
     
