@@ -847,7 +847,8 @@ DllExport int pyfunc_int(CTXTdecl) {
   CallTerm = extern_reg_term(2);
   if(is_functor(CallTerm)) {
     char *function = p2c_functor(CallTerm);
-    int args_count = p2c_arity(CallTerm);
+    //    int args_count = p2c_arity(CallTerm);
+    int args_count = p2c_int(reg_term(4));
     pFunc = PyObject_GetAttrString(pModule, function);
     Py_DECREF(pModule);  // TES move
     if(pFunc && PyCallable_Check(pFunc)) {
@@ -867,15 +868,16 @@ DllExport int pyfunc_int(CTXTdecl) {
     if(PyDict_Check(pyDefVarsDict)) {
       pValue = PyObject_Call(pFunc, pArgs,pyDefVarsDict);
     }
-    else   // Ignoring if not a dict -- maybe should change.
+    else {  // Ignoring if not a dict -- maybe should change.
       pValue = PyObject_CallObject(pFunc, pArgs);
+    }
     Py_DECREF(pFunc);
     Py_DECREF(pArgs);
     Py_DECREF(pyDefVarsDict);
     if (pValue == NULL) { // TES todo change to check for python error
       xp_python_error();
     }
-    int flag = p2c_int(extern_reg_term(4));
+    int flag = p2c_int(extern_reg_term(5));
     prolog_term return_pr;
     if (!(flag & RETURN_PYOBJ)) {
       ensureXSBStackSpace(CTXTc pValue,flag);
@@ -889,7 +891,7 @@ DllExport int pyfunc_int(CTXTdecl) {
     else {
      return_pr = make_prolog_pyObj(pValue);
     }
-  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 5))) 
+  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 6))) 
       return FALSE;
     return TRUE;
   } /* if is_functor(CallTerm) */
