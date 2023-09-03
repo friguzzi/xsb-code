@@ -96,8 +96,8 @@ if [ "`echo \"$makeargs\" | sed -e \"s/^.*clean *$/exit/\"`" = "exit" ]; then
 fi
 
 # Finalization: packages may need to run some scripts when XSB is fully compiled
-rm -f ../packages/xsbpy/px-install.log
-../packages/xsbpy/make_px_pkg.sh
+rm -f ../packages/janus/janus-py-install.log
+../packages/janus/make_janus_pkg.sh
 
 rm -f  buildxsb.lock
 rm -f  Makefile

@@ -2177,7 +2177,7 @@ if test -n "$xsbpy_config_failed" ; then
    echo
 fi
 
-if test -n "$xsbpy_config_failed" ; then
+if test -n "$janus_config_failed" ; then
    echo
    echo "***** Janus: Python integration failed: probably because pip is not installed"
    echo "***** To use this integration, install pip and reconfigure XSB"
