@@ -7,9 +7,9 @@
 :- export key/2, value/3.
 
 :- export add_py_lib_dir/1, py_lib_dirs/1.
-:- export pyfunc/3, pyfunc/4.
-:- export pyfunc/5.
-:- export pydot/3,pydot/4,py_iter/3,py_iter/4.
+%:- export pyfunc/3, pyfunc/4, py_func/3, py_func/4.
+:- export py_func/3, py_func/4.
+:- export py_dot/3,py_dot/4,py_iter/3,py_iter/4.
 :- export janus_python_version/1, py_free/1.
 
 :- import bootstrap_package/2, xsb_running_under/1 from packaging.
@@ -17,10 +17,10 @@
 :- bootstrap_package(janus, janus).
 
 :- import init_janus/1 from init_janus.
-:- import pyfunc_int/6,pydot_int/4 from janusm.
+:- import py_func_int/6,py_dot_int/4 from janusm.
 :- import add_py_lib_dir/1 from init_janus as add_py_lib_dir/1.
 :- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
-:- import free_python_object_int/1, py_get_iter_int/4, pyObj_next_int/3  from janusm.
+:- import free_python_object_int/1, py_get_iter_int/5, pyObj_next_int/3  from janusm.
 :- import member/2,memberchk/2 from basics.
 :- import check_callable/3 from error_handler.
 
@@ -32,17 +32,20 @@
 
 %---------
 
-py_iter(Mod,Func,Def_vars,Return):-
-    py_get_iter(Mod,Func,Def_vars,Iter),
+%py_iter(Mod,Func,Return):-
+%    get_def_vars(Call,PosArgNbr,Dict),
+%    py_get_iter(Mod,Func,Def_vars,Iter),
+%    py_iter_1(Iter,Return).
+
+% no options for py_iter.
+py_iter(Mod,Call,Return):-
+    get_def_vars(Call,PosArgNbr,Dict),
+    py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
     py_iter_1(Iter,Return).
 
-py_iter(Mod,Func,Return):-
-    py_get_iter(Mod,Func,[],Iter),
-    py_iter_1(Iter,Return).
-
-py_get_iter(Mod,Func,Def_vars,Ret):-
-    (Def_vars == [] -> Dict = 0 ; def_vars_to_dict(Def_vars,Dict)),
-    py_get_iter_int(Mod,Func,Dict,Ret).
+%py_get_iter(Mod,Func,Def_vars,Ret):-
+%    (Def_vars == [] -> Dict = 0 ; def_vars_to_dict(Def_vars,Dict)),
+%    py_get_iter_int(Mod,Func,Dict,Ret).
 
 py_iter_1(Iter,Return):-
     pyObj_next_int(Iter,Ret,Indicator),
@@ -54,17 +57,17 @@ py_iter_1(Iter,Return):-
 
 %---------
 
-pyfunc(Mod,Call,Ret,Opts):-
+py_func(Mod,Call,Ret,Opts):-
     get_def_vars(Call,PosArgNbr,Dict),
 %    (Dict1 == {}()-> Dict = 0 ; Dict = Dict1),
     janus_opts(Opts,0,Flags),
-    pyfunc_int(Mod,Call,Dict,PosArgNbr,Flags,Ret).
+    py_func_int(Mod,Call,Dict,PosArgNbr,Flags,Ret).
 
-pyfunc(Mod,Call,Ret):-
+py_func(Mod,Call,Ret):-
 %    writeln(pyfunc(Mod,Call,Ret)),
     get_def_vars(Call,PosArgNbr,Dict),
 %    writeln(pf_int(Mod,Call,Dict,PosArgNbr,0,Ret)),
-    pyfunc_int(Mod,Call,Dict,PosArgNbr,0,Ret).
+    py_func_int(Mod,Call,Dict,PosArgNbr,0,Ret).
 
 %pyfunc(Mod,Func,Def_vars,Ret):-
 %    get_def_vars(Call,PosArgNbr,Dict1),
@@ -76,13 +79,12 @@ pyfunc(Mod,Call,Ret):-
 
 %---------
 
-pydot(Obj,MethAttr,Ret):-
-%    writeln(pydot_int(Obj,MethAttr,0,Ret)),
-    pydot_int(Obj,MethAttr,0,Ret).
+py_dot(Obj,MethAttr,Ret):-
+    py_dot_int(Obj,MethAttr,0,Ret).
 
-pydot(Obj,MethAttr,Opts,Ret):-
+py_dot(Obj,MethAttr,Ret,Opts):-
     janus_opts(Opts,Sizecheck_flag),
-    pydot_int(Obj,MethAttr,Sizecheck_flag,Ret).
+    py_dot_int(Obj,MethAttr,Sizecheck_flag,Ret).
 
 janus_opts([],_,0).
 janus_opts([sizecheck(true)],In,Out):- !, Out is In \/ 1.
@@ -90,26 +92,23 @@ janus_opts([sizecheck(false)],In,In):- !.
 janus_opts([pyObject(true)],In,Out):- !,Out is In \/ 2.
 janus_opts(Opts,_):- abort(Opts).
 
-%pymeth(Mod,Obj,Meth,Ret):- 
-%    pydot(Mod,Obj,Meth,Ret).
-
 :- import term_psc/2, psc_arity/2, term_arg/3 from machine.
 
 get_def_vars(Call,PosArgNbr,Dict):-
     check_callable(Call,'pyfunc/[3,4]',2),
     term_psc(Call, PSC),  
     psc_arity(PSC, Arity),
-    get_def_vars_1(Call,Arity,PosArgNbr,VL),
+    get_def_vars_1(Arity,Call,PosArgNbr,VL),
     (VL= [] -> Dict = 0 ; def_vars_to_dict(VL,Dict)).
 
-get_def_vars_1(_,0,0,[]):-!.
-get_def_vars_1(Call,ArgNbr,PosArgNbr,VarList):-
+get_def_vars_1(0,_,0,[]):-!.
+get_def_vars_1(ArgNbr,Call,PosArgNbr,VarList):-
 %    writeln(get_def_vars_1(Call,ArgNbr,PosArgNbr,VarList)),
     term_arg(Call,ArgNbr,Arg),
     (Arg = =(A,B) ->
 	 VarList = [A=B|VL1],
 	 ArgNbr1 is ArgNbr-1,
-	 get_def_vars_1(Call,ArgNbr1,PosArgNbr,VL1)
+	 get_def_vars_1(ArgNbr1,Call,PosArgNbr,VL1)
     ;    VarList = [],PosArgNbr = ArgNbr).
 
 def_vars_to_dict(X,{}(Y)):-
@@ -181,10 +180,10 @@ values(Dict,Key,Val):-
 	 ; member(PYTUP_PROLOG(Key,Val),List)).
 	 
 obj_dict(Obj,Dict):-
-    pydot(Obj,'__dict__',Dict).
+    py_dot(Obj,'__dict__',Dict).
 
 obj_dir(Obj,Dir):-
-     pydot(Obj,'__dir__'(),Dir).
+     py_dot(Obj,'__dir__'(),Dir).
 
 end_of_file.
 
