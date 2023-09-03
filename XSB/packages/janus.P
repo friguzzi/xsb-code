@@ -11,6 +11,7 @@
 :- export py_func/3, py_func/4.
 :- export py_dot/3,py_dot/4,py_iter/3,py_iter/4.
 :- export janus_python_version/1, py_free/1.
+:- export py_call/2, py_call/3.
 
 :- import bootstrap_package/2, xsb_running_under/1 from packaging.
 
@@ -87,9 +88,10 @@ py_dot(Obj,MethAttr,Ret,Opts):-
     py_dot_int(Obj,MethAttr,Sizecheck_flag,Ret).
 
 janus_opts([],_,0).
-janus_opts([sizecheck(true)],In,Out):- !, Out is In \/ 1.
+janus_opts([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
 janus_opts([sizecheck(false)],In,In):- !.
-janus_opts([pyObject(true)],In,Out):- !,Out is In \/ 2.
+janus_opts([pyObject(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
+janus_opts([do_iter(true)],In,Out):- !,Out is In \/ MATERIALIZE_ITERS.
 janus_opts(Opts,_):- abort(Opts).
 
 :- import term_psc/2, psc_arity/2, term_arg/3 from machine.
@@ -183,7 +185,24 @@ obj_dict(Obj,Dict):-
     py_dot(Obj,'__dict__',Dict).
 
 obj_dir(Obj,Dir):-
-     py_dot(Obj,'__dir__'(),Dir).
+    py_dot(Obj,'__dir__'(),Dir).
+
+:- import pyObj/1 from usermod.
+py_call(pyObj(O):Call,Ret):- !,
+    py_dot(pyObj(O),Call,Ret).
+py_call(Mod:Call,Ret):-
+    writeln(mod(Mod)),
+    (structure(Call) -> 
+	 py_func(Mod,Call,Ret)
+     ;   py_dot(Mod,Call,Ret)).
+
+py_call(pyObj(O):Call,Ret,Opts):- !,
+    writeln(found_structure),
+    py_dot(pyObj(O),Call,Ret,Opts).
+py_call(Mod:Call,Ret,Opts):- 
+    (structure(Call) -> 
+	 py_func(Mod,Call,Ret,Opts)
+     ;   py_dot(Mod,Call,Ret,Opts)).
 
 end_of_file.
 
