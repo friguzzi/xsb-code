@@ -1,3 +1,4 @@
+(should error) pyfunc set:  ++Error[janus]: Improper Prolog term inside Janus dictionary
 caught error for path.append(Dir)
 caught error for path.append(Dir,Dor)
 caught error for path.append(Dir,Dor,Dur)
@@ -12,7 +13,6 @@ int conversion tests successful
 int conversion_sizecheck tests successful
 json_2({glossary : {(title : example glossary,GlossDiv : {(title : S,GlossList : {GlossEntry : {(ID : SGML,SortAs : SGML,GlossTerm : Standard Generalized Markup Language,Acronym : SGML,Abbrev : ISO 8879:1986,GlossDef : {(para : A meta-markup language, used to create markup languages such as DocBook.,GlossSeeAlso : [GML,XML])},GlossSee : markup)}})})}})
 json_loads_test successful
-kwargs([foo,bar - 1,baz - 2])
 list conversion tests successful
 list conversion_sizecheck tests successful
 personErr1( ++Error[janus]: arg 1 of pydot/4 is not a Python module or object: 1)
@@ -30,7 +30,12 @@ pydot(sys,exc_info(),-(@(None),@(None),@(None))) succeeded.
 pydot(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(False),0,0,@(False),-1)) succeeded.
 pyfunc(Person,Person(john,35),pyObj) succeeded.
 pyfunc(builtins,float(+1E6),1000000.0) succeeded.
+pyfunc(builtins,set([a,b,c,d]),pyObj,[pyObject(true)]) succeeded.
+pyfunc(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(baz,2),-(bar,1)]) succeeded.
 pyfunc(test_janus_plg,returnSet(),[1,hello,-(a,b,7)]) succeeded.
+pyfunc(test_janus_plg,return_False(),@(False)) succeeded.
+pyfunc(test_janus_plg,return_None(),@(None)) succeeded.
+pyfunc(test_janus_plg,return_True(),@(True)) succeeded.
 pyfunc(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
 set conversion tests successful
 set conversion_sizecheck tests successful
