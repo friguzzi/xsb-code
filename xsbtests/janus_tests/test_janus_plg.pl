@@ -35,9 +35,18 @@ func_tests :-
     check_call(py_func(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
     fail.
 func_tests :- 
-    catch(py_func(builtins,set({a,b,c,d}),_),_E,(xsb_error_get_message(_E,M),
-						lazy_writeln(['(should error) py_func set: ',M]))),
-						fail.
+    check_call(py_func(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
+    fail.
+func_tests :- 
+    catch(py_func(builtins,set({a,b,c,d}),_),_E,
+	  (xsb_error_get_message(_E,M),lazy_writeln(['(should error) py_func set: ',M]))),
+    fail.
+func_tests :- 
+    check_call(py_func(test_janus_plg,my_generation(5),_),pyObj(_)),
+    fail.
+func_tests :- 
+    check_call(py_func(test_janus_plg,my_generation(5),_,[do_iter(true)]),[1,2,3,4]),
+    fail.
 func_tests.
 
 %-------------------------------
@@ -54,6 +63,9 @@ py_iter_tests:-
 py_iter_tests:-
     check_call(setof(Ret,py_iter(test_janus_plg,kwargs_append(foo,bar=1,baz=2),Ret),_List),
 		     [foo,-(bar,1),-(baz,2)]),
+    fail.
+py_iter_tests:-
+    check_call(setof(Ret,py_iter(test_janus_plg,my_generation(5),Ret),_List),[1,2,3,4]),
     fail.
 py_iter_tests.
     
@@ -322,6 +334,8 @@ meth_tests:-
 	       'Hello my name is john and I''m a real doofus'),
     check_call(py_dot(Obj,func3(real,big,doofus),_Ret5),
 	       'Hello my name is john and I''m a real big doofus'),
+    check_call(py_call(Obj:func3(eager,janus,programmer),_Ret6),
+	       'Hello my name is john and I''m a eager janus programmer'),
     fail.
 meth_tests:-
     check_call(py_dot(sys,flags,_Res),
@@ -379,13 +393,24 @@ check_call(py_func(Mod,MA,Res),Atom):-
       lazy_writeln([py_func(Mod,MA,ResOut),' succeeded.'])
     ; lazy_writeln(['!!! ',py_func(Mod,MA,Res),' failed.  Did not match ',Atom])).
 check_call(py_func(Mod,Func,Res,Opts),Atom):-
-    py_func(Mod,Func,Res,Opts)
-    ,
+    py_func(Mod,Func,Res,Opts),
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
       lazy_writeln([py_func(Mod,Func,ResOut,Opts),' succeeded.'])
     ; lazy_writeln(['!!! ',py_func(Mod,Func,Res,Opts),' failed.  Did not match ',Atom])).
-% specific to a single test...
+check_call(py_call(Mod:Func,Res),Atom):-
+    py_call(Mod:Func,Res),
+    (Res = Atom ->
+      (Mod = pyObj(_) -> ModOut = pyObj ; ModOut = Mod),
+      (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
+      lazy_writeln([py_call(ModOut,Func,ResOut),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_call(ModOut,Func,Res),' failed.  Did not match ',Atom])).
+check_call(py_call(Mod:Func,Res,Opts),Atom):-
+    py_call(Mod:Func,Res,Opts),
+    (Res = Atom ->
+      (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
+      lazy_writeln([py_call(Mod,Func,ResOut,Opts),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_call(Mod,Func,Res,Opts),' failed.  Did not match ',Atom])).
 check_call(setof(Res,py_iter(Mod,MA,Res),List),GoodList):- 
     setof(Res,py_iter(Mod,MA,Res),List),
     (List = GoodList ->
@@ -401,6 +426,20 @@ check_sort_call(py_func(Mod,MA,Res),Atom):-
     (SetSort = [1,hello,-(a,b,7)] -> 
       lazy_writeln([py_func(Mod,MA,SetSort),' succeeded.'])
     ; lazy_writeln(['!!! ',py_func(Mod,MA,SetSort),' failed.  Did not match ',Atom])).
+
+py_call_tests :- 
+    check_call(py_call(test_janus_plg:sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
+    fail.
+py_call_tests :- 
+    check_call(py_call(sys:flags,_), -(0,0,0,0,0,0,0,0,0,0,0,1,0,@('false'),0,0,@('false'),-1)),
+    fail.
+py_call_tests :- 
+    check_call(py_call(sys:exc_info(),_),-(@('none'),@('none'),@('none'))),
+    fail.
+%py_call_tests :- 
+%    check_call(py_call(Obj,favorite_ice_cream,_Ret3),chocolate),
+%    fail.
+py_call_tests.
 
 end_of_file.
 

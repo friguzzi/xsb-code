@@ -134,6 +134,14 @@ def tupletest_func():
 	l = (5, (), 'hello', (5, 6, 7))
 	return l
 
+#--------------
+
+def my_generation(N):
+        for i in range(1,N):
+                yield i
+
+#--------------
+
 import inspect
 
 def inspect_function1(module,func):
