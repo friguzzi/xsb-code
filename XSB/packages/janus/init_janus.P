@@ -23,7 +23,7 @@ to that included at the end of this file.
 :- import misc_error/1 from error_handler.
 %%:- import xsb_error_get_message/2 from error_handler.
 %:- import shell/1 from shell.
-:- import pyfunc/3,pydot/3 from janus.
+:- import py_func/3,py_dot/3 from janus.
 :- import init_python/0 from janusm.
 :- import add_lib_dir/1 from consult.
 :- import messageln/1 from standard.
@@ -45,15 +45,15 @@ init_janus(Pyversion):-
     concat_atom([PackDir,'/janus/janus-py'],PxDir),
 %    concat_atom([PackDir,'/janus/test'],TestDir),
     init_python(),
-%    pyfunc('janus/add_python_path',add_python_path(JanusDir),_),
-    pyfunc('janus/jns_utils',add_python_path(JanusDir),_),
-    pyfunc(jns_utils,add_python_path(XSBLibDir),_),
-    pyfunc(jns_utils,add_python_path(StarterDir),_),
-%    pyfunc(add_python_path,add_python_path(XSBLibDir),_),
-%    pyfunc(add_python_path,add_python_path(StarterDir),_),
+%    py_func('janus/add_python_path',add_python_path(JanusDir),_),
+    py_func('janus/jns_utils',add_python_path(JanusDir),_),
+    py_func(jns_utils,add_python_path(XSBLibDir),_),
+    py_func(jns_utils,add_python_path(StarterDir),_),
+%    py_func(add_python_path,add_python_path(XSBLibDir),_),
+%    py_func(add_python_path,add_python_path(StarterDir),_),
     add_lib_dir(StarterDir),  % starters
     add_lib_dir(PxDir),       % in case XSB is being called from Python
-%    pyfunc(add_python_path,add_python_path(TestDir),_),
+%    py_func(add_python_path,add_python_path(TestDir),_),
     set_heap_margin(512),   % 4x the amount in v. 4.0
     messageln(janus_initted_with_python(Version)),
     !.
@@ -69,10 +69,10 @@ compile_janusm_for_windows :-
     compile(janusm,[if_needed,cc_opts(PyInclude),ld_opts(PyLibs)]).
 
 add_py_lib_dir(Dir):- 
-    pyfunc(add_python_path,add_python_path(Dir),_).
+    py_func(add_python_path,add_python_path(Dir),_).
 
 py_lib_dirs(List):-
-    pydot(sys,path,List).
+    py_dot(sys,path,List).
 
 % Below:
 % -Wl, Opt passes the option from gcc to the compiler.
@@ -158,7 +158,7 @@ end_of_file.
 %    xsb_configuration(packagesdir, PackDir),
 %%    concat_atom([PackDir,'/janus'],JanusDir),
 %    concat_atom([PackDir,'/janus/test'],TestDir),
-%    pyfunc(add_python_path,add_python_path(TestDir),_),
+%    py_func(add_python_path,add_python_path(TestDir),_),
 %    add_lib_dir(TestDir),
 %    ensure_loaded(testSuite),
 %    concat_atom([TestDir,'/','test_janus_out_new'],TestOut),
@@ -179,7 +179,7 @@ end_of_file.
 
 
 %objref(Obj,PYOBJ_PROLOG(R1)):- 
-%    pyfunc(other_tests,read_obj(Obj),R1). 
+%    py_func(other_tests,read_obj(Obj),R1). 
 
 
 %aida_getenv(Envar,Val):-
@@ -188,9 +188,9 @@ end_of_file.
 %    existence_error(environment_variable,Envar,aida_getenv,2).
     
 %teri_test:-
-%    pyfunc('test/tupInList', func(), R1), pyList2prList(R1, Y1),
+%    py_func('test/tupInList', func(), R1), pyList2prList(R1, Y1),
 %    writeq(Y1),nl,writeln('-------------'),
-%    pyfunc('test/tupInList', func1( ), R2 ), pyTuple2prTuple(R2, Y2 ),
+%    py_func('test/tupInList', func1( ), R2 ), pyTuple2prTuple(R2, Y2 ),
 %    writeq(Y2),nl,writeln('-------------'),
 %    write(Y2).
 

@@ -2,7 +2,7 @@
 #define PYSET_C "pySet"
 #define PYOBJ_C "pyObj"
 #define PYDICT_C "{}"
-#define PYNONE_C "None"
+#define PYNONE_C "none"
 #define PROLOG_TERM_C "plgTerm"
 #define PYTUP_C  "-"
 

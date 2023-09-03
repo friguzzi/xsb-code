@@ -329,11 +329,11 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
 	*pyObj = Py_None;
 	return TRUE;
       }
-      else if (strcmp(p2c_string(arg),"True") == 0) {
+      else if (strcmp(p2c_string(arg),"true") == 0) {
 	*pyObj = Py_True;
 	return TRUE;
       }
-      else if (strcmp(p2c_string(arg),"False") == 0) {
+      else if (strcmp(p2c_string(arg),"false") == 0) {
 	*pyObj = Py_False;
 	return TRUE;
       }
@@ -501,13 +501,13 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
     if(pyObj == Py_True){
       c2p_functor("@",1,*prTerm);
       prolog_term arg = p2p_arg(*prTerm,1);
-      c2p_string("True",arg);
+      c2p_string("true",arg);
       return TRUE;
     }
     if(pyObj == Py_False){
       c2p_functor("@",1,*prTerm);
       prolog_term arg = p2p_arg(*prTerm,1);
-      c2p_string("False",arg);
+      c2p_string("false",arg);
       return TRUE;
     }
     /* Check subtypes of long that *aren't* boolean */
@@ -619,7 +619,7 @@ PyInit_janusm(void)
 }
 
 
-// -------------------- pyfunc
+// -------------------- py_func
 
  // TES needs update for Windows; Doesn't handle on path -- just syspath.
  // Also, I don't think it works correctly for relative paths.
@@ -645,7 +645,7 @@ void set_python_argument(CTXTdeclc prolog_term temp, PyObject *pArgs,int i, char
   PyObject *pValue;
   if(!convert_prObj_pyObj(CTXTc temp, &pValue))
     xsb_abort("++Error[janus]: argument %d of %s/%d could not be translated to python"
-		"(arg 2 of pyfunc/[3,4,5])\n",i,funct,arity);
+		"(arg 2 of py_func/[3,4,5])\n",i,funct,arity);
   //  if (is_functor(temp) && strcmp(p2c_functor(temp),PYOBJ_C) == 0 ) {
   //      Py_INCREF(pValue);
   //    }
@@ -714,7 +714,7 @@ PyObject *call_variadic_method(PyObject *pObjIn,PyObject *pyMeth,prolog_term prM
     //    Py_DECREF(pyArg1); Py_DECREF(pyArg2); Py_DECREF(pyArg3);
   }
   else {
-    xsb_abort("++Error[janus]: Cannot call pydot/[3,4] with a method of arity greater than "
+    xsb_abort("++Error[janus]: Cannot call py_dot/[3,4] with a method of arity greater than "
 	    "three: %s/%d\n",p2c_functor(prMethIn),args_count);
   }
   return pObjOut;
@@ -762,7 +762,7 @@ void xp_python_error() {
 // Does not take dictionary values, as this doesn't seem to be supported
 // By the Python C-API
 // Tried to decref pObjIn but this didn't work. Not collecting pObjOut
-DllExport int pydot_int(CTXTdecl) {
+DllExport int py_dot_int(CTXTdecl) {
   PyObject *pModule = NULL, *pObjIn = NULL, *pObjOut = NULL;
   prolog_term prObjIn, prMethIn; 
   char *function, *module;
@@ -779,13 +779,13 @@ DllExport int pydot_int(CTXTdecl) {
     if(pModule == NULL) {
       PyErr_Print();
       xsb_abort("++Error[janus]: no Python module named \'%s\' could be found."
-		"(in arg 1 of pydot/4)\n",module);
+		"(in arg 1 of py_dot/4)\n",module);
     }
     pObjIn = pModule;
   }
   else {
     sprintTerm(forest_log_buffer_1, prObjIn);
-    xsb_abort("++Error[janus]: arg 1 of pydot/4 is not a Python module or object: %s\n",
+    xsb_abort("++Error[janus]: arg 1 of py_dot/4 is not a Python module or object: %s\n",
 	      forest_log_buffer_1->fl_buffer);
   }
   prMethIn = (Cell) extern_reg_term(2);
@@ -803,7 +803,7 @@ DllExport int pydot_int(CTXTdecl) {
   }
   else {
     sprintTerm(forest_log_buffer_1, prMethIn);
-    xsb_abort("++Error[janus]: arg 2 of pydot/4 is not a Python function or attribute: %s\n",
+    xsb_abort("++Error[janus]: arg 2 of py_dot/4 is not a Python function or attribute: %s\n",
 	      forest_log_buffer_1->fl_buffer);
   }
   if (pObjOut == NULL) { // TES todo change to check for python error
@@ -814,7 +814,7 @@ DllExport int pydot_int(CTXTdecl) {
   ensureXSBStackSpace(CTXTc pObjOut,flag);
   prolog_term return_pr = p2p_new(CTXT);
   if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
-    xsb_abort("++Error[janus]: The return of pydot/4  could not be translated to Prolog");
+    xsb_abort("++Error[janus]: The return of py_dot/4  could not be translated to Prolog");
   } 
   if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 4)))
     return FALSE;
@@ -834,7 +834,7 @@ PyObject *get_module(char *module) {
   return pModule;
 }
 	   
-DllExport int pyfunc_int(CTXTdecl) {
+DllExport int py_func_int(CTXTdecl) {
   PyObject *pModule = NULL, *pFunc = NULL;
   PyObject *pArgs = NULL, *pValue = NULL, *pyDefVarsDict = NULL;
   prolog_term CallTerm, temp,Dict;
@@ -861,7 +861,7 @@ DllExport int pyfunc_int(CTXTdecl) {
     }
     else   // it isn't callable
       xsb_abort("++Error[janus]: %s/%d is not a callable function in "
-		"the Python module \'%s\' (arg 2 of pyfunc/3)\n",get_name(get_str_psc(CallTerm)),
+		"the Python module \'%s\' (arg 2 of py_func/3)\n",get_name(get_str_psc(CallTerm)),
 		get_arity(get_str_psc(CallTerm)),mod_string);
     Dict = extern_reg_term(3);
     convert_prObj_pyObj(CTXTc Dict,&pyDefVarsDict);
@@ -885,7 +885,7 @@ DllExport int pyfunc_int(CTXTdecl) {
       // ususally returns pyobject by default.
       if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, 1)) {
 	xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
-		  "(in pyfunc/[3,4,5])\n",function,args_count);
+		  "(in py_func/[3,4,5])\n",function,args_count);
       }
     }
     else {
@@ -897,10 +897,10 @@ DllExport int pyfunc_int(CTXTdecl) {
   } /* if is_functor(CallTerm) */
   else	{
     if (isstring(CallTerm))
-      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
+      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of py_func/3)\n",
 		cs_val(CallTerm),mod_string);
     else
-      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
+      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of py_func/3)\n",
 		CallTerm,mod_string);
   }
   //  Py_Finalize();
@@ -1187,7 +1187,8 @@ DllExport int py_get_iter_int(CTXTdecl) {
   V = extern_reg_term(2);
   if(is_functor(V)) {
     char *function = p2c_functor(V);
-    int args_count = p2c_arity(V);
+    int args_count = p2c_int(reg_term(4));
+    //    int args_count = p2c_arity(V);
     pFunc = PyObject_GetAttrString(pModule, function);
     Py_DECREF(pModule);  // TES move
     if(pFunc && PyCallable_Check(pFunc)) {
@@ -1227,16 +1228,16 @@ DllExport int py_get_iter_int(CTXTdecl) {
     c2p_functor(CTXTc "pyIter", 1, ref);
     prolog_term ref_inner = p2p_arg(ref, 1);
     c2p_string(CTXTc str, ref_inner);		
-    if(!p2p_unify(CTXTc ref, reg_term(CTXTc 4)))
+    if(!p2p_unify(CTXTc ref, reg_term(CTXTc 5)))
       return FALSE;
     return TRUE;
   }
   else	{
     if (isstring(V))
-      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of pyfunc/3)\n",
+      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of py_func/3)\n",
 		cs_val(V),module);
     else
-      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of pyfunc/3)\n",
+      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of py_func/3)\n",
 		V,module);
   }
   //  Py_Finalize();
