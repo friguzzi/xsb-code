@@ -19,3 +19,4 @@
 
 #define SIZECHECK 1
 #define RETURN_PYOBJ 2
+#define MATERIALIZE_ITERS 4

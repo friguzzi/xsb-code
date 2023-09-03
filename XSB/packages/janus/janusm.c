@@ -185,10 +185,8 @@ Integer get_safe_python_size(PyObject *pyObj) {
 // On ubuntu sizeof(size_t) is 8.
 // check_glstack overflow expands by Overflow margin + input
 void ensureXSBStackSpace(CTXTdeclc PyObject *pyObj,int flag) {
-  //  int sizecheck_flag = p2c_int(extern_reg_term(4));
   if (flag & SIZECHECK) {
     Integer size = get_safe_python_size(pyObj);
-    //    printf("safe size %ld\n",size);
     check_glstack_overflow(5,pcreg,2*size*sizeof(size_t));
   }
   else if (PyList_Check(pyObj) || PySet_Check(pyObj)) {
@@ -523,9 +521,23 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
     c2p_string(PYNONE_C,arg);
     return TRUE;
   }
-  else if (PyIter_Check(pyObj)) {
-      printf("found an iterator\n");
+  else if (PyIter_Check(pyObj) && (flag&MATERIALIZE_ITERS)) {
+    prolog_term head, tail;
+    prolog_term P = p2p_new(CTXT);
+    PyObject *pyObjInner, *nextObj;
+    tail = P;
+    while((nextObj = PyIter_Next(pyObj))) {
+      c2p_list(CTXTc tail);
+      head = p2p_car(tail);
+      pyObjInner = nextObj;
+      convert_pyObj_prObj(CTXTc pyObjInner, &head, 1);	
+      tail = p2p_cdr(tail);
     }
+    c2p_nil(CTXTc tail);
+    if(!p2p_unify(CTXTc P, *prTerm))
+      return FALSE;
+    return TRUE;
+  }
   /* default -- not of a type that is handled */
   char str[30];
   sprintf(str, "p%p", pyObj);
@@ -883,7 +895,7 @@ DllExport int py_func_int(CTXTdecl) {
       ensureXSBStackSpace(CTXTc pValue,flag);
      return_pr = p2p_new(CTXT);
       // ususally returns pyobject by default.
-      if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, 1)) {
+      if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, flag)) {
 	xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
 		  "(in py_func/[3,4,5])\n",function,args_count);
       }
@@ -1060,7 +1072,7 @@ DllExport void  pyObj_next_int(CTXTdecl) {
 //		{
 //			size_t size = PyList_Size(pyObj);
 //			size_t i = 0;
-//			prolog_term head, tail;
+//@@			prolog_term head, tail;
 //			prolog_term P = p2p_new(CTXT);
 //			tail = P;
 //		
