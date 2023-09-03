@@ -1,6 +1,6 @@
 
 :- ensure_loaded(janus).
-:- import pyfunc_int/6 from janusm.
+:- import py_func_int/6 from janusm.
 
 bench:-
     writeln('--------- func__int_incr(t00000) ---------'),
@@ -9,8 +9,8 @@ bench:-
     bench_call(func_incr(500000)),
     writeln('--------- func_kw_incr(t00000) ---------'),
     bench_call(func_kw_incr(500000)),
-    writeln('--------- pyfunc_list(1000000) ---------'),
-    bench_call(pyfunc_list(1000000)),
+    writeln('--------- py_func_list(1000000) ---------'),
+    bench_call(py_func_list(1000000)),
     writeln('--------- pyiter_list(1000000) ---------'),
     bench_call(py_iter_list(1000000)).
 
@@ -26,24 +26,24 @@ bench_call(Call):-
 
 func_int_incr(0):- !.
 func_int_incr(Num):- 
-    pyfunc_int(jns_plg_benches,incr(0),0,1,0,_),
+    py_func_int(jns_plg_benches,incr(0),0,1,0,_),
     Num1 is Num-1,
     func_int_incr(Num1).
 
 func_incr(0):- !.
 func_incr(Num):-
-    pyfunc(jns_plg_benches,incr(Num),_),
+    py_func(jns_plg_benches,incr(Num),_),
     Num1 is Num-1,
     func_incr(Num1).
 
 func_kw_incr(0):- !.
 func_kw_incr(Num):-
-    pyfunc(jns_plg_benches,kw_incr(0,a=b),_),
+    py_func(jns_plg_benches,kw_incr(0,a=b),_),
     Num1 is Num-1,
     func_kw_incr(Num1).
 
-pyfunc_list(N):-
-    pyfunc(jns_plg_benches,makelist_ret(N),_F).
+py_func_list(N):-
+    py_func(jns_plg_benches,makelist_ret(N),_F).
 
 py_iter_list(N):-
     py_iter(jns_plg_benches,makelist_ret(N),_F),

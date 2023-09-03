@@ -3,7 +3,7 @@
 #include "../../XSB/packages/janus/janus_defs.h"
 :-  set_prolog_flag(character_set, utf_8) . 
 
-:- import pyfunc/3, pydot/3, pyfunc/4,pyfunc/5,janus_python_version/1 from janus.
+:- import py_func/3, py_dot/3, py_func/4,py_func/5,janus_python_version/1 from janus.
 :- import concat_atom/2 from string.
 :- import length/2 from basics.
 :- import xsb_error_get_message/2,xsb_error_get_tag/2 from error_handler.
@@ -20,23 +20,23 @@ test:-
     variadic_tests,
     pyc_tests,
     py_iter_tests,
-    pyfunc(gc,collect(),Collect),
+    py_func(gc,collect(),Collect),
     writeln(collect(Collect)).
 
 %--------------------------------
 
 func_tests :- 
-    check_call(pyfunc(test_janus_plg, sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
+    check_call(py_func(test_janus_plg, sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
     fail.
 func_tests :- 
-    check_call(pyfunc(builtins,float('+1E6'),_Res2),1000000.0),
+    check_call(py_func(builtins,float('+1E6'),_Res2),1000000.0),
     fail.
 func_tests :- 
-    check_call(pyfunc(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
+    check_call(py_func(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
     fail.
 func_tests :- 
-    catch(pyfunc(builtins,set({a,b,c,d}),_),_E,(xsb_error_get_message(_E,M),
-						lazy_writeln(['(should error) pyfunc set: ',M]))),
+    catch(py_func(builtins,set({a,b,c,d}),_),_E,(xsb_error_get_message(_E,M),
+						lazy_writeln(['(should error) py_func set: ',M]))),
 						fail.
 func_tests.
 
@@ -51,14 +51,18 @@ py_iter_tests:-
 py_iter_tests:-
     check_call(setof(Ret,py_iter(builtins,range(1,6),Ret),_List),[1,2,3,4,5]),
     fail.
+py_iter_tests:-
+    check_call(setof(Ret,py_iter(test_janus_plg,kwargs_append(foo,bar=1,baz=2),Ret),_List),
+		     [foo,-(bar,1),-(baz,2)]),
+    fail.
 py_iter_tests.
     
 pyObj_GetIterTest :- 
-	pyfunc(test_janus_plg, sumlist3(5,[1,2,3]), R),
+	py_func(test_janus_plg, sumlist3(5,[1,2,3]), R),
 	pyObj_GetIter(R, R1), pyObj_Next(R1, 6).
 
 pyObj_NextTest :- 
-	pyfunc(test_janus_plg, sumlist3(5,[1,2,3]), R),
+	py_func(test_janus_plg, sumlist3(5,[1,2,3]), R),
 	pyObj_GetIter(R, R1), pyObj_Next(R1, 6), not(pyObj_Next(R, 6)).
 
 %--------------------------------
@@ -91,13 +95,13 @@ dataConversionTests :-
     ;    write('!!!dict conversion tests failed\n')),
     fail.
 dataConversionTests :-
-    check_call(pyfunc(test_janus_plg,return_None(),_None),@('None')),
+    check_call(py_func(test_janus_plg,return_None(),_None),@('none')),
     fail.
 dataConversionTests :- 
-    check_call(pyfunc(test_janus_plg,return_True(),_True),@('True')),
+    check_call(py_func(test_janus_plg,return_True(),_True),@('true')),
     fail.
 dataConversionTests :- 
-    check_call(pyfunc(test_janus_plg,return_False(),_False),@('False')),
+    check_call(py_func(test_janus_plg,return_False(),_False),@('false')),
     fail.
 dataConversionTests :- 
     (intConvTest_sizecheck->
@@ -126,86 +130,86 @@ dataConversionTests:-
     fail.
 dataConversionTests.
 
-pyfunc_sc(Mod,Func,Reg):-
-    pyfunc(Mod,Func,Reg,[sizecheck(true)]).
+py_func_sc(Mod,Func,Reg):-
+    py_func(Mod,Func,Reg,[sizecheck(true)]).
 
 intConvTest :-
     current_prolog_flag(min_integer, MinValue), 
     not(var(MinValue)), 
     current_prolog_flag(max_integer, MaxValue), 
     not(var(MaxValue)),
-    pyfunc(test_janus_plg, returnVal(MinValue), MinValue), 
-    pyfunc(test_janus_plg, returnVal(MaxValue), MaxValue).
+    py_func(test_janus_plg, returnVal(MinValue), MinValue), 
+    py_func(test_janus_plg, returnVal(MaxValue), MaxValue).
 
 intConvTest_sizecheck :-
     current_prolog_flag(min_integer, MinValue), 
     not(var(MinValue)), 
     current_prolog_flag(max_integer, MaxValue), 
     not(var(MaxValue)),
-    pyfunc_sc(test_janus_plg, returnVal(MinValue), MinValue), 
-    pyfunc_sc(test_janus_plg, returnVal(MaxValue), MaxValue).
+    py_func_sc(test_janus_plg, returnVal(MinValue), MinValue), 
+    py_func_sc(test_janus_plg, returnVal(MaxValue), MaxValue).
 
 floatConvTest :- 
-    pyfunc(test_janus_plg, returnVal(3.54), 3.54),
-    pyfunc(test_janus_plg, returnVal(3.5535252352), 3.5535252352).
+    py_func(test_janus_plg, returnVal(3.54), 3.54),
+    py_func(test_janus_plg, returnVal(3.5535252352), 3.5535252352).
 
 floatConvTest_sizecheck :- 
-    pyfunc_sc(test_janus_plg, returnVal(3.54), 3.54),
-    pyfunc_sc(test_janus_plg, returnVal(3.5535252352), 3.5535252352).
+    py_func_sc(test_janus_plg, returnVal(3.54), 3.54),
+    py_func_sc(test_janus_plg, returnVal(3.5535252352), 3.5535252352).
 
 stringConvTest :-
-    pyfunc(test_janus_plg, returnVal(helloworld), helloworld),
-    pyfunc(test_janus_plg, returnVal('helloworld'), helloworld),
-    pyfunc(test_janus_plg, returnVal('Санкт-Петербург'),R3),R3 == 'Санкт-Петербург'.
+    py_func(test_janus_plg, returnVal(helloworld), helloworld),
+    py_func(test_janus_plg, returnVal('helloworld'), helloworld),
+    py_func(test_janus_plg, returnVal('Санкт-Петербург'),R3),R3 == 'Санкт-Петербург'.
 				  
 stringConvTest_sizecheck :-
-    pyfunc_sc(test_janus_plg, returnVal(helloworld), helloworld),
-    pyfunc_sc(test_janus_plg, returnVal('helloworld'), helloworld),
-    pyfunc_sc(test_janus_plg, returnVal('Санкт-Петербург'),R3),R3 == 'Санкт-Петербург'.
+    py_func_sc(test_janus_plg, returnVal(helloworld), helloworld),
+    py_func_sc(test_janus_plg, returnVal('helloworld'), helloworld),
+    py_func_sc(test_janus_plg, returnVal('Санкт-Петербург'),R3),R3 == 'Санкт-Петербург'.
 				  
 listConvTest:-
-    pyfunc(test_janus_plg, returnVal([a,b,c]), R1),R1 = [a,b,c],
-    pyfunc(test_janus_plg, returnVal([]), R2), R2 == [],
-    pyfunc(test_janus_plg, returnVal([1,[2,3,4],[hello,155]]), R3),
+    py_func(test_janus_plg, returnVal([a,b,c]), R1),R1 = [a,b,c],
+    py_func(test_janus_plg, returnVal([]), R2), R2 == [],
+    py_func(test_janus_plg, returnVal([1,[2,3,4],[hello,155]]), R3),
     R3 ==  [1, [2, 3, 4], ['hello', 155]],
-    pyfunc(test_janus_plg, func(), R4), R4 == [1,2,3, PYTUP_PROLOG(5, 6), 'hello', [11,17]],
+    py_func(test_janus_plg, func(), R4), R4 == [1,2,3, PYTUP_PROLOG(5, 6), 'hello', [11,17]],
     !.
 listConvTest_sizecheck:-
-    pyfunc_sc(test_janus_plg, returnVal([a,b,c]), R1),R1 = [a,b,c],
-    pyfunc_sc(test_janus_plg, returnVal([]), R2), R2 == [],
-    pyfunc_sc(test_janus_plg, returnVal([1,[2,3,4],[hello,155]]), R3),
+    py_func_sc(test_janus_plg, returnVal([a,b,c]), R1),R1 = [a,b,c],
+    py_func_sc(test_janus_plg, returnVal([]), R2), R2 == [],
+    py_func_sc(test_janus_plg, returnVal([1,[2,3,4],[hello,155]]), R3),
     R3 ==  [1, [2, 3, 4], ['hello', 155]],
-    pyfunc_sc(test_janus_plg, func(), R4), R4 == [1,2,3, PYTUP_PROLOG(5, 6), 'hello', [11,17]],
+    py_func_sc(test_janus_plg, func(), R4), R4 == [1,2,3, PYTUP_PROLOG(5, 6), 'hello', [11,17]],
     !.
 
 setConvTest:- 
-    check_sort_call(pyfunc(test_janus_plg,returnSet( ),_Ret1),
+    check_sort_call(py_func(test_janus_plg,returnSet( ),_Ret1),
 		      ['"foo"','''bar''',PYSET_PROLOG([1,-(a,b,7),hello])]).
 
 setConvTest_sizecheck:- 
-    pyfunc_sc(test_janus_plg,returnSet( ) ,F ),
+    py_func_sc(test_janus_plg,returnSet( ) ,F ),
     F = ['"foo"','''bar''',PYSET_PROLOG(S)],
     length(S,3),
-    pyfunc_sc(test_janus_plg, returnVal(PYSET_PROLOG([a,b,c])), R1 ),
+    py_func_sc(test_janus_plg, returnVal(PYSET_PROLOG([a,b,c])), R1 ),
     arg(1,R1,A), length(A,3),!.
 
 tupleConvTest:-
-    pyfunc(test_janus_plg, returnVal(PYTUP_PROLOG(a,b,c)), R1),R1 = PYTUP_PROLOG(a,b,c),
-    pyfunc(test_janus_plg,tupletest_func(),R2),
+    py_func(test_janus_plg, returnVal(PYTUP_PROLOG(a,b,c)), R1),R1 = PYTUP_PROLOG(a,b,c),
+    py_func(test_janus_plg,tupletest_func(),R2),
     R2 = PYTUP_PROLOG(5,PYTUP_PROLOG(),hello,PYTUP_PROLOG(5,6,7)),
     !.
 
 tupleConvTest_sizecheck:-
-    pyfunc_sc(test_janus_plg, returnVal(PYTUP_PROLOG(a,b,c)), R1),R1 = PYTUP_PROLOG(a,b,c),
-    pyfunc_sc(test_janus_plg,tupletest_func(),R2), R2 = PYTUP_PROLOG(5,PYTUP_PROLOG(),hello,PYTUP_PROLOG(5,6,7)),
+    py_func_sc(test_janus_plg, returnVal(PYTUP_PROLOG(a,b,c)), R1),R1 = PYTUP_PROLOG(a,b,c),
+    py_func_sc(test_janus_plg,tupletest_func(),R2), R2 = PYTUP_PROLOG(5,PYTUP_PROLOG(),hello,PYTUP_PROLOG(5,6,7)),
     !.
 
 dictConvTest_sizecheck:-
-    pyfunc(returnVal,return_dictionary(),Ret,[sizecheck(true)]),
+    py_func(returnVal,return_dictionary(),Ret,[sizecheck(true)]),
     Ret =  {('Name' : 'Geeks',1 : [1,2,3,4])}.
 
 dictConvTest:-
-    pyfunc(returnVal,return_dictionary(),Ret),
+    py_func(returnVal,return_dictionary(),Ret),
     Ret =  {('Name' : 'Geeks',1 : [1,2,3,4])}.
 
 %--------------------------------
@@ -214,7 +218,7 @@ dictConvTest:-
 % it *might* be responsible for uninitialized stack frame problem.
 
 callback_test:- 
-    pyfunc('test/testc', tester(),  X),
+    py_func('test/testc', tester(),  X),
     X = [['Санкт-Петербург', '2']],
     writeln('callback test successful'),
     !.
@@ -230,14 +234,14 @@ q(2).
 
 % numpy
 pyc_tests:- 
-    pyfunc(test_janus_plg,go(),X),X == 2,!,
+    py_func(test_janus_plg,go(),X),X == 2,!,
     writeln('pyc_tests successful').
 pyc_tests:- 
     writeln('!!!pyc_tests failed').
 
 json_tests:-
     Jstring = '{"name": "Bob", "languages": ["English", "Fench","GERMAN"]}',
-     pyfunc(test_janus_plg,prolog_loads(Jstring),F),
+     py_func(test_janus_plg,prolog_loads(Jstring),F),
      (F = {(name : 'Bob',languages : ['English','Fench','GERMAN'])} -> 
 	  writeln('json_loads_test successful')
         ; writeln('!!!json_loads_test_failed') ),
@@ -245,8 +249,8 @@ json_tests:-
 %json_tests:-
 %    Jstring = '{"name": "Bob", "languages": ["English", "French","GERMAN"]}',
 %      atom_chars(Jgood,Jgch),write(Jgch),nl,
-%  pyfunc('janus_json',prolog_loads(Jstring),Jdict),
-%    pyfunc('janus_json',prolog_dumps(Jdict),[indent=2],Jindent),
+%  py_func('janus_json',prolog_loads(Jstring),Jdict),
+%    py_func('janus_json',prolog_dumps(Jdict),[indent=2],Jindent),
 %    (Jindent = Jgood -> 
 %      writeln('json_dumps_test successful')
 %    ; write('!!!json_dumps_test_failed'),nl,
@@ -256,13 +260,13 @@ json_tests:-
 %      atom_chars(Jindent,Jich),writeq(Jich),nl ),
 %    fail.
 json_tests:- 
-    pyfunc(test_janus_plg,prolog_load('sample.json'),Json),
+    py_func(test_janus_plg,prolog_load('sample.json'),Json),
     writeln(json_2(Json)),
     fail.
 json_tests.    
 
 kwargs_tests:-
-    check_call(pyfunc(test_janus_plg,kwargs_append(foo,bar=1,baz=2),_),[foo,-(baz,2),-(bar,1)]),
+    check_call(py_func(test_janus_plg,kwargs_append(foo,bar=1,baz=2),_),[foo,-(baz,2),-(bar,1)]),
     fail.
 kwargs_tests.
 
@@ -272,18 +276,18 @@ error_tests:-
 		   'Value: ModuleNotFoundError("No module named ''no_module''")',_]),
     fail.
 error_tests:-
-%    catch(pyfunc(kwargs,foo(1),_X),E,(xsb_error_get_message(E,M),writeln(M))),
+%    catch(py_func(kwargs,foo(1),_X),E,(xsb_error_get_message(E,M),writeln(M))),
     error_tests_1(test_janus_plg,foo(1),
-		  [' ++Error[janus]: foo/1 is not a callable function in the Python module \'test_janus_plg\' (arg 2 of pyfunc/3)']),
+		  [' ++Error[janus]: foo/1 is not a callable function in the Python module \'test_janus_plg\' (arg 2 of py_func/3)']),
     fail.
 error_tests:-
-    catch(pyfunc(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
+    catch(py_func(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
     (T = type_error(callable_term,7) ->
-	 true ; writeln('catch(pyfunc(test_janus_plg,7)) failed')),
+	 true ; writeln('catch(py_func(test_janus_plg,7)) failed')),
     fail.
 % returns obj
 %error_tests:-
-%    catch(pyfunc(test_err,raise_err_3(),_X),E,(xsb_error_get_message(E,M),writeln(M))),
+%    catch(py_func(test_err,raise_err_3(),_X),E,(xsb_error_get_message(E,M),writeln(M))),
 %    fail.
 error_tests:-
     \+ janus_python_version('python3.11'),
@@ -302,7 +306,7 @@ error_tests:-
 error_tests.
 
 error_tests_1(Mod,Goal,Message):-
-    catch(pyfunc(Mod,Goal,_X),E,xsb_error_get_message(E,Mess)),
+    catch(py_func(Mod,Goal,_X),E,xsb_error_get_message(E,Mess)),
     (concat_atom(Message,Mess) ->
 	 true
     ;  writeln('!!!failed'(error_tests_1(Mod,Goal))),
@@ -310,46 +314,46 @@ error_tests_1(Mod,Goal,Message):-
        writeln(Message)).
     
 meth_tests:- 
-    check_call(pyfunc('Person','Person'(john,35),Obj),pyObj(_)),
-    check_call(pydot(Obj,func0(),_Ret1),'Hello my name is john'),
-    check_call(pydot(Obj,func1(doofus),_Ret2),'Hello my name is john and I''m a doofus'),
-    check_call(pydot(Obj,favorite_ice_cream,_Ret3),chocolate),
-    check_call(pydot(Obj,func2(real,doofus),_Ret4),
+    check_call(py_func('Person','Person'(john,35),Obj),pyObj(_)),
+    check_call(py_dot(Obj,func0(),_Ret1),'Hello my name is john'),
+    check_call(py_dot(Obj,func1(doofus),_Ret2),'Hello my name is john and I''m a doofus'),
+    check_call(py_dot(Obj,favorite_ice_cream,_Ret3),chocolate),
+    check_call(py_dot(Obj,func2(real,doofus),_Ret4),
 	       'Hello my name is john and I''m a real doofus'),
-    check_call(pydot(Obj,func3(real,big,doofus),_Ret5),
+    check_call(py_dot(Obj,func3(real,big,doofus),_Ret5),
 	       'Hello my name is john and I''m a real big doofus'),
     fail.
 meth_tests:-
-    check_call(pydot(sys,flags,_Res),
-	       -(0,0,0,0,0,0,0,0,0,0,0,1,0,@('False'),0,0,@('False'),-1)),
-    check_call(pydot(sys,exc_info(),_Res1),-(@('None'),@('None'),@('None'))),
+    check_call(py_dot(sys,flags,_Res),
+	       -(0,0,0,0,0,0,0,0,0,0,0,1,0,@('false'),0,0,@('false'),-1)),
+    check_call(py_dot(sys,exc_info(),_Res1),-(@('none'),@('none'),@('none'))),
     fail.
 meth_tests:-
-    pyfunc('Person','Person'(mary,34),Obj),
+    py_func('Person','Person'(mary,34),Obj),
     obj_dict(Obj,Dict),writeln(dict(Dict)),
     obj_dir(Obj,Dir),writeln(dir(Dir)),
     fail.
 meth_tests:- 
-    catch(pydot(1,favorite_ice_cream,_Ret4),E2,xsb_error_get_message(E2,Msg2)),
+    catch(py_dot(1,favorite_ice_cream,_Ret4),E2,xsb_error_get_message(E2,Msg2)),
     writeln(personErr1(Msg2)),
-    pyfunc('Person','Person'(john,35),Obj),
-    catch(pydot(Obj,1,_Ret5),E3,xsb_error_get_message(E3,Msg3)),
+    py_func('Person','Person'(john,35),Obj),
+    catch(py_dot(Obj,1,_Ret5),E3,xsb_error_get_message(E3,Msg3)),
     writeln(personErr2(Msg3)),fail.
 meth_tests:-
-    catch(pydot(   sys,'path.append'(_Dir1),_F1),_,true),
+    catch(py_dot(   sys,'path.append'(_Dir1),_F1),_,true),
     writeln('caught error for path.append(Dir)'),
-    catch(pydot(   sys,'path.append'(_Dir2,_Dor2),_F2),_,true),
+    catch(py_dot(   sys,'path.append'(_Dir2,_Dor2),_F2),_,true),
     writeln('caught error for path.append(Dir,Dor)'),
-    catch(pydot(   sys,'path.append'(_Dir3,_Dor3,_Dur3),_F3),_,true),
+    catch(py_dot(   sys,'path.append'(_Dir3,_Dor3,_Dur3),_F3),_,true),
     writeln('caught error for path.append(Dir,Dor,Dur)'),
     fail.
 meth_tests.
 
 variadic_tests:-
-    testit(pyfunc(variadic,variadic_print('a','b','c'),A),A,'a|b|c|'),
-    testit(pyfunc(variadic,variadic_print('a','b','c','d'),B),B,'a|b|c|d|'),
-    testit(pyfunc(variadic,opt_print('a'),C),C,'a|1'),
-    testit(pyfunc(variadic,opt_print('b','c'),D),D,'b|c'),
+    testit(py_func(variadic,variadic_print('a','b','c'),A),A,'a|b|c|'),
+    testit(py_func(variadic,variadic_print('a','b','c','d'),B),B,'a|b|c|d|'),
+    testit(py_func(variadic,opt_print('a'),C),C,'a|1'),
+    testit(py_func(variadic,opt_print('b','c'),D),D,'b|c'),
     writeln('variadic tests succeeded'),!.
 variadic_tests:-
     writeln('!!!variadic test failed').
@@ -361,26 +365,26 @@ testit(Call,Var,Answer):-
     ; writeln('!!!wrong_answer'(Call,Var,Answer)),
       fail).
 
-check_call(pydot(Obj,MA,Res),Atom):-
-    pydot(Obj,MA,Res),
+check_call(py_dot(Obj,MA,Res),Atom):-
+    py_dot(Obj,MA,Res),
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
       (Obj = pyObj(_) -> ObjOut = pyObj ; ObjOut = Obj),
-      lazy_writeln([pydot(ObjOut,MA,ResOut),' succeeded.'])
-    ; lazy_writeln(['!!! ',pydot(pyObj,MA,ResOut),' failed.  Did not match ',Atom])).
-check_call(pyfunc(Mod,MA,Res),Atom):-
-    pyfunc(Mod,MA,Res),
+      lazy_writeln([py_dot(ObjOut,MA,ResOut),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_dot(pyObj,MA,ResOut),' failed.  Did not match ',Atom])).
+check_call(py_func(Mod,MA,Res),Atom):-
+    py_func(Mod,MA,Res),
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
-      lazy_writeln([pyfunc(Mod,MA,ResOut),' succeeded.'])
-    ; lazy_writeln(['!!! ',pyfunc(Mod,MA,Res),' failed.  Did not match ',Atom])).
-check_call(pyfunc(Mod,Func,Res,Opts),Atom):-
-    pyfunc(Mod,Func,Res,Opts)
+      lazy_writeln([py_func(Mod,MA,ResOut),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_func(Mod,MA,Res),' failed.  Did not match ',Atom])).
+check_call(py_func(Mod,Func,Res,Opts),Atom):-
+    py_func(Mod,Func,Res,Opts)
     ,
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
-      lazy_writeln([pyfunc(Mod,Func,ResOut,Opts),' succeeded.'])
-    ; lazy_writeln(['!!! ',pyfunc(Mod,Func,Res,Opts),' failed.  Did not match ',Atom])).
+      lazy_writeln([py_func(Mod,Func,ResOut,Opts),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_func(Mod,Func,Res,Opts),' failed.  Did not match ',Atom])).
 % specific to a single test...
 check_call(setof(Res,py_iter(Mod,MA,Res),List),GoodList):- 
     setof(Res,py_iter(Mod,MA,Res),List),
@@ -388,19 +392,19 @@ check_call(setof(Res,py_iter(Mod,MA,Res),List),GoodList):-
       lazy_writeln([py_iter(Mod,MA,List),' succeeded.'])
     ; lazy_writeln(['!!! ',py_iter(Mod,MA,List),' failed.  Did not match ',GoodList])).
 
-check_sort_call(pyfunc(Mod,MA,Res),Atom):-
-    pyfunc(Mod,MA,Res),
+check_sort_call(py_func(Mod,MA,Res),Atom):-
+    py_func(Mod,MA,Res),
     (Res = ['"foo"','''bar''',pySet(Set)] ->
        true
-    ; lazy_writeln(['!!!-1 ',pyfunc(Mod,MA,Res),' failed. Did not match ',['"foo"','bar',pySet(Set)]])),
+    ; lazy_writeln(['!!!-1 ',py_func(Mod,MA,Res),' failed. Did not match ',['"foo"','bar',pySet(Set)]])),
     sort(Set,SetSort),
     (SetSort = [1,hello,-(a,b,7)] -> 
-      lazy_writeln([pyfunc(Mod,MA,SetSort),' succeeded.'])
-    ; lazy_writeln(['!!! ',pyfunc(Mod,MA,SetSort),' failed.  Did not match ',Atom])).
+      lazy_writeln([py_func(Mod,MA,SetSort),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_func(Mod,MA,SetSort),' failed.  Did not match ',Atom])).
 
 end_of_file.
 
-%pytXSB :- pyfunc('test/testc', tester(),  X), pyList2prList(X, []).
+%pytXSB :- py_func('test/testc', tester(),  X), pyList2prList(X, []).
 %pythonXSBTests :- (pytXSB->write('python to XSB tests successful\n'); write('python to XSB tests %failed\n')).
 
 
@@ -414,8 +418,8 @@ end_of_file.
 %    Ret3 = chocolate,
 %    Ret4 = 'Hello my name is john and I''m a real doofus',
 %    Ret5 = 'Hello my name is john and I''m a real big doofus',
-%    M1 = ' ++Error[janus]: arg 1 of pydot/4 is not a Python Object: 1',
-%    M2 = ' ++Error[janus]: arg 2 of pydot/4 is not a Python function or attribute: 1',
+%    M1 = ' ++Error[janus]: arg 1 of py_dot/4 is not a Python Object: 1',
+%    M2 = ' ++Error[janus]: arg 2 of py_dot/4 is not a Python function or attribute: 1',
 %    writeln('Person test succeeded'),!.
 %meth_tests:- 
 %    writeln('!!!Person test failed').
