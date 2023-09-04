@@ -6,6 +6,7 @@
 #define PYTHON_BIN              @PYTHON_BIN@
 #define PYTHON_BIN_QUOTED       '@PYTHON_BIN@'
 #define PYTHON_LIB              @PYTHON_LIB@
+#define PYTHON_LIB_QUOTED       '@PYTHON_LIB@'
 #define PYTHON_EXTRA_LIB        @PYTHON_EXTRA_LIB@
 #define PYTHON_EXTRA_LIB_QUOTED '@PYTHON_EXTRA_LIB@'
 #define PYTHON_LIB_NAME         @PYTHON_LIB_NAME@

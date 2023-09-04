@@ -1,4 +1,5 @@
 autom4te.cache/*
+*dylib*
 *.log
 *~
 *xwam
@@ -7,12 +8,13 @@ test_xsbpy_out.txt
 .#*
 \#*
 *.so
+*.dll
 *.o
 */*.o
 */*/*.o
 */*/*/*.o
-*.csav
-*.cnew
+*.sav
+*.new
 /xsb2py_connect_defs.h
 /confdefs.h
 /Installation_summary
@@ -20,10 +22,8 @@ test_xsbpy_out.txt
 /configvars.sh
 */.tmp_pxsetup.py
 /.tmp_pxsetup.py
-/.px_mk_setup_query.P
-/.make_px_pkg.sh
-/.px_activate
-/px_activate
-/make_px_pkg.sh
-/test_LDLIBRARY.py
 /px_mk_setup_query.P
+/make_px_pkg.sh
+/px_activate
+/.px_activate
+/test_LDLIBRARY.py
