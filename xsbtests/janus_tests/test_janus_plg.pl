@@ -419,9 +419,9 @@ check_call(setof(Res,py_iter(Mod,MA,Res),List),GoodList):-
 
 check_sort_call(py_func(Mod,MA,Res),Atom):-
     py_func(Mod,MA,Res),
-    (Res = ['"foo"','''bar''',pySet(Set)] ->
+    (Res = ['"foo"','''bar''',py_set(Set)] ->
        true
-    ; lazy_writeln(['!!!-1 ',py_func(Mod,MA,Res),' failed. Did not match ',['"foo"','bar',pySet(Set)]])),
+    ; lazy_writeln(['!!!-1 ',py_func(Mod,MA,Res),' failed. Did not match ',['"foo"','bar',py_set(Set)]])),
     sort(Set,SetSort),
     (SetSort = [1,hello,-(a,b,7)] -> 
       lazy_writeln([py_func(Mod,MA,SetSort),' succeeded.'])
