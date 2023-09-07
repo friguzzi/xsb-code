@@ -157,3 +157,8 @@ def inspect_function2(module,function):
         print(func)
         return inspect.signature(module.func)
 
+def prolog_load(File,**Features):
+    with open(File) as fileptr:
+        data = json.load(fileptr,**Features)
+        return(data)
+

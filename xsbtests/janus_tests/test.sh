@@ -29,6 +29,7 @@ echo "uname for this system is $u";
 #------------------------------------
     # XEMU and options must be together in quotes
 ../gentest.sh "$XEMU $options" test_janus_plg "test."
+../nosorttest.sh "$XEMU $options" test_py_pp "test"  # no . needed here
 echo "-------------------------------------------------------"
 
 $XEMU << EOF
