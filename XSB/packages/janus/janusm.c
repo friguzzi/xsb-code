@@ -287,7 +287,7 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       list = p2p_arg(prTerm, 1);
       pyset = PySet_New(NULL);
       if (!is_list(list)) {
-	xsb_abort("++Error[janus]: pySet/1 contains an improper argument. "
+	xsb_abort("++Error[janus]: py_set/1 contains an improper argument. "
 		  "(The argument must be a list.)");
       }
       while (is_list(list)) {   

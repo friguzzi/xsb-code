@@ -209,30 +209,23 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
   }
   //  else if(PyAnySet_Check(pyObj)) {           // maybe PyAnySet_Check
   else if(PySet_Check(pyObj)) {           // maybe PyAnySet_Check
-    size_t size = PySet_GET_SIZE(pyObj);  // macro version since obj is a set
-    size_t i = 0;
     prolog_term head, tail;
     prolog_term P = p2p_new(CTXT);
     PyObject *pyObjInner;
-
     c2p_functor(PYSET_C,1,P);
     tail = p2p_arg(P, 1);
-    
-    for(i = 0; i < size; i++) {
+    PyObject *iterator = PyObject_GetIter(pyObj);
+    while ((pyObjInner = PyIter_Next(iterator))) {
       c2p_list(CTXTc tail);
       head = p2p_car(tail);
-      pyObjInner = PySet_Pop(pyObj);
       convert_pyObj_prObj(CTXTc pyObjInner, &head);	
-      //printPyObj(CTXTc pyObjInner);
-      //printPyObjType(CTXTc pyObjInner);
-      //printPlgTerm(CTXTc head);
       tail = p2p_cdr(tail);
     }
     c2p_nil(CTXTc tail);
     if(!p2p_unify(CTXTc P, *prTerm))
       return FALSE;
     return TRUE;
-  } 
+  }
   else if(PyLong_Check(pyObj)) {
     if(pyObj == Py_True){
       c2p_functor("@",1,*prTerm);
@@ -330,7 +323,7 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       list = p2p_arg(prTerm, 1);
       pyset = PySet_New(NULL);
       if (!is_list(list)) {
-	xsb_abort("++Error[janus]: pySet/1 contains an improper argument. "
+	xsb_abort("++Error[janus]: py_set/1 contains an improper argument. "
 		  "(The argument must be a list.)");
       }
       while (is_list(list)) {   
