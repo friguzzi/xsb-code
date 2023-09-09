@@ -110,11 +110,10 @@ get_compiler_opts(auto,CompilerOpts,auto(PYTHON_BIN_QUOTED)):-
 		 ' -I/Library/Developer/CommandLineTools/usr/lib/clang/12.0.5/include',
 		 ' -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include',
 		 ' -I/Library/Developer/CommandLineTools/usr/include',
-%		' -I',PYTHON_INCLUDE_DIR_QUOTED	
-                 %% MK: Teri, I think PYTHON_LIBDIR_QUOTED (= '/usr/lib') below
-                 %%     should be -L PYTHON_LIB_QUOTED  (= '/usr/lib/pythonX.Y')
+%%	 	 ' -I',PYTHON_INCLUDE_DIR_QUOTED	
 		 ' -L',PYTHON_LIBDIR_QUOTED,' ',
-		' -l',PYTHON_BIN_QUOTED,
+		 ' -L',PYTHON_LIB_QUOTED,' ',
+		 ' -l',PYTHON_BIN_QUOTED,
 		    ' -g' ],CompilerOpts).
 
 get_compiler_opts(auto,CompilerOpts,auto(PYTHON_BIN_QUOTED)):-
@@ -132,6 +131,7 @@ get_compiler_opts(auto,CompilerOpts,auto(PYTHON_BIN_QUOTED)):-
                  %% This is how it was originally (without using gpp's vars)
                  %% but you then changed it to PYTHON_BIN_QUOTED on 6/30/21
                  ' -L',PYTHON_LIB_QUOTED,
+		 ' -L',PYTHON_LIBDIR_QUOTED,' ',
 % for debugging ' -Wl,--verbose',
 		' -Wl,-rpath=',PYTHON_LIBDIR_QUOTED,' -g' ],CompilerOpts).
 
