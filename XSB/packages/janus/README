@@ -31,8 +31,8 @@ Sequence of building the py<->xsb connector by the XSB configurator:
            #included by janusm.c
         - make_janus_pkg.sh from make_janus_pkg.sh.in
            o creates the setup file for
-             the py->xsb connector (called px/.tmp_pxsetup.py)
-           o uses px/.tmp_pxsetup.py to make the px package & install
+             the py->xsb connector (called px/.tmp_janussetup.py)
+           o uses px/.tmp_janussetup.py to make the px package & install
               it in Python
            o ./px_mk_setup.P creates janus.px_activate
              shell file that sets PYTHONPATH, LD_LIBRARY_PATH
@@ -47,7 +47,7 @@ Sequence of building the py<->xsb connector by the XSB configurator:
 
 3. Then ./configure creates the python px package by calling
       cd px
-      python .tmp_pxsetup.py   (created by ./configure in step 2).
+      python .tmp_janussetup.py   (created by ./configure in step 2).
       python -m pip -v install --no-index --find-links=dist px --user
 
 4. janus/make_px_pkg.sh,

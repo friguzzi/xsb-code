@@ -129,7 +129,7 @@ fi
 ) | tee Installation_summary
 
 # set up janus Python package
-setupfile_name=".tmp_pxsetup.py"
+setupfile_name=".tmp_janussetup.py"
 setupfile_path="'janus-py/$setupfile_name'"
 py_includedir="'$PYTHON_INCLUDE_DIR'"
 
