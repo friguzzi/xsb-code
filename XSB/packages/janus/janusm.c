@@ -50,6 +50,7 @@
 #endif
 
 int convert_pyObj_prObj(CTXTdeclc PyObject *, prolog_term *, int);
+int convert_only_base_noniter(CTXTdeclc PyObject *, prolog_term *);
 int convert_prObj_pyObj(CTXTdeclc prolog_term , PyObject **);
 void printPlgTerm(prolog_term term2);
 void printPyObj(PyObject *obj1);
@@ -354,6 +355,70 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
 
 // -------------------- Python to Prolog
 // TES: need to add decrefs
+
+int convert_pyObj_prObj_switch(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag) {
+  if (!(flag&RETURN_PYOBJ))
+    return convert_pyObj_prObj(CTXTc pyObj, prTerm, flag);
+  else
+    return convert_only_base_noniter(CTXTc pyObj, prTerm);
+}
+      
+int convert_only_base_noniter(CTXTc PyObject *pyObj, prolog_term *prTerm) {
+  if(PyLong_CheckExact(pyObj)) {
+    prolog_int result = PyLong_AsSsize_t(pyObj);
+    c2p_int(CTXTc result, *prTerm);
+    return TRUE;
+  }
+  else if(PyUnicode_CheckExact(pyObj)) {
+    const  char *result = PyUnicode_AsUTF8(pyObj);		
+    if (!result) {
+      PyObject *ptype, *pvalue, *ptraceback;
+      PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+      PyObject* ptypeRepresentation = PyObject_Repr(ptype);
+      PyObject* pvalueRepresentation = PyObject_Repr(pvalue);
+      PyErr_Restore(ptype, pvalue, ptraceback);
+      xsb_abort("++Error[janus]: A Python Error Occurred.  A Python Unicode object "
+		"could not be translated to a UTF8 string: %s/%s",
+		PyUnicode_AsUTF8(ptypeRepresentation),PyUnicode_AsUTF8(pvalueRepresentation));
+    }
+    else 
+      c2p_string(CTXTc (char *) result, *prTerm);
+    return 1;
+  }
+  else if(PyFloat_CheckExact(pyObj)) {
+    double result = PyFloat_AS_DOUBLE(pyObj);
+    c2p_float(CTXTc result, *prTerm);
+    return TRUE;
+  }
+  else if(pyObj == Py_True){
+      c2p_functor("@",1,*prTerm);
+      prolog_term arg = p2p_arg(*prTerm,1);
+      c2p_string("true",arg);
+      return TRUE;
+    }
+  else if(pyObj == Py_False){
+      c2p_functor("@",1,*prTerm);
+      prolog_term arg = p2p_arg(*prTerm,1);
+      c2p_string("false",arg);
+      return TRUE;
+    }
+  else if(pyObj == Py_None){
+    c2p_functor("@",1,*prTerm);
+    prolog_term arg = p2p_arg(*prTerm,1);
+    c2p_string(PYNONE_C,arg);
+    return TRUE;
+  }
+  /* default -- not of a type that is handled */
+  char str[30];
+  sprintf(str, "p%p", pyObj);
+  prolog_term ref = p2p_new(CTXT);
+  c2p_functor(CTXTc PYOBJ_C, 1, ref);
+  prolog_term ref_inner = p2p_arg(ref, 1);
+  c2p_string(CTXTc str, ref_inner);		
+  if(!p2p_unify(CTXTc ref, *prTerm))
+    return FALSE;	
+  return TRUE;
+}
 
 int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag) {
   if(PyLong_CheckExact(pyObj)) {
@@ -891,19 +956,14 @@ DllExport int py_func_int(CTXTdecl) {
     }
     int flag = p2c_int(extern_reg_term(5));
     prolog_term return_pr;
-    if (!(flag & RETURN_PYOBJ)) {
-      ensureXSBStackSpace(CTXTc pValue,flag);
-     return_pr = p2p_new(CTXT);
-      // ususally returns pyobject by default.
-      if(!convert_pyObj_prObj(CTXTc pValue, &return_pr, flag)) {
-	xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
-		  "(in py_func/[3,4,5])\n",function,args_count);
-      }
+    ensureXSBStackSpace(CTXTc pValue,flag);
+    return_pr = p2p_new(CTXT);
+    // ususally returns pyobject by default.
+    if(!convert_pyObj_prObj_switch(CTXTc pValue, &return_pr, flag)) {
+      xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
+		"(in py_func/[3,4,5])\n",function,args_count);
     }
-    else {
-     return_pr = make_prolog_pyObj(pValue);
-    }
-  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 6))) 
+    if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 6))) 
       return FALSE;
     return TRUE;
   } /* if is_functor(CallTerm) */
@@ -1072,7 +1132,7 @@ DllExport void  pyObj_next_int(CTXTdecl) {
 //		{
 //			size_t size = PyList_Size(pyObj);
 //			size_t i = 0;
-//@@			prolog_term head, tail;
+//			prolog_term head, tail;
 //			prolog_term P = p2p_new(CTXT);
 //			tail = P;
 //		
