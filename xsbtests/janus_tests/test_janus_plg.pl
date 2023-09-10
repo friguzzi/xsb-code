@@ -10,7 +10,8 @@
 :- import lazy_writeln/1 from standard.
 
 test:-
-    func_tests, 
+    func_tests,
+    py_object_tests,
     dataConversionTests,
 %    callback_test,
     json_tests,
@@ -32,12 +33,6 @@ func_tests :-
     check_call(py_func(builtins,float('+1E6'),_Res2),1000000.0),
     fail.
 func_tests :- 
-    check_call(py_func(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
-    fail.
-func_tests :- 
-    check_call(py_func(builtins,set([a,b,c,d]),_F,[pyObject(true)]),pyObj(_)),
-    fail.
-func_tests :- 
     catch(py_func(builtins,set({a,b,c,d}),_),_E,
 	  (xsb_error_get_message(_E,M),lazy_writeln(['(should error) py_func set: ',M]))),
     fail.
@@ -48,6 +43,35 @@ func_tests :-
     check_call(py_func(test_janus_plg,my_generation(5),_,[do_iter(true)]),[1,2,3,4]),
     fail.
 func_tests.
+
+py_object_tests :- 
+    check_call(py_func(builtins,float('+1E6'),_Res2,[py_object(true)]),1000000.0),
+    fail.
+py_object_tests :- 
+    check_call(py_func(test_janus_plg, returnVal(1234), _,[py_object(true)]),1234),
+    fail.
+py_object_tests :- 
+    check_call(py_func(test_janus_plg, returnVal(foobar), _,[py_object(true)]),foobar),
+    fail.
+py_object_tests :- 
+    check_call(py_func(test_janus_plg, returnVal(@(true)),_,[py_object(true)]),@(true)),
+    fail.
+py_object_tests :- 
+    check_call(py_func(builtins,float('+1E6'),_Res2,[py_object(true)]),1000000.0),
+    fail.
+py_object_tests :- 
+    check_call(py_func(builtins,set([a,b,c,d]),_F,[py_object(true)]),pyObj(_)),
+    fail.
+py_object_tests :- 
+    check_call(py_func(test_janus_plg, returnVal([1,2,3,4]),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_object_tests :- 
+    check_call(py_func(test_janus_plg, returnVal(-(1,2,3,4)),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_object_tests :- 
+    check_call(py_func(test_janus_plg, returnVal({1:2,3:4}),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_object_tests.
 
 %-------------------------------
 

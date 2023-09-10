@@ -162,3 +162,10 @@ def prolog_load(File,**Features):
         data = json.load(fileptr,**Features)
         return(data)
 
+#----------------------------------
+
+from collections import namedtuple
+
+Author = namedtuple('author','journal volume year')
+
+John =  Author('TPLP',3,2021)

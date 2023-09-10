@@ -40,5 +40,3 @@ EOF
 
 echo "-------------------------------------------------------"
 $XEMU --quietload -e "[jns_plg_benches],bench,halt."
-
-#../gentest.sh test_janus_py "test."
