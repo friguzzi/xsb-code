@@ -35,22 +35,29 @@ to that included at the end of this file.
    from string.
 :- import str_len/2 from machine.
 
-%% remove lib and .a, .so from library names, add -l
+%% remove lib and .a, .so, .dylib, .dll from library names, add -l
 hack_lib_name(Name,HackedN) :-
         str_len(Name,L),
-        (str_match('lib',Name,forward,0,_), str_match('.a',Name,reverse,_,-1)
-        %% libLIB.a found
+        str_match('lib',Name,forward,0,_),
+        (str_match('.a',Name,reverse,_,-1) %% libLIB.a found
         ->
             Beg is L-2,
             string_substitute(Name, [s(0,3),s(Beg,-1)], ['-l',''],HackedN)
-        ; str_match('lib',Name,forward,0,_), str_match('.so',Name,reverse,_,-1)
-        %% libLIB.so found
+        ; str_match('.so',Name,reverse,_,-1) %% libLIB.so found
         ->
             Beg is L-3,
             string_substitute(Name, [s(0,3),s(Beg,-1)], ['-l',''],HackedN)
-        ;
-            HackedN = Name
-        ).
+        ; str_match('.dylib',Name,reverse,_,-1) %% libLIB.dylib found
+        ->
+            Beg is L-6,
+            string_substitute(Name, [s(0,3),s(Beg,-1)], ['-l',''],HackedN)
+        ; str_match('.dll',Name,reverse,_,-1) %% libLIB.dll found
+        ->
+            Beg is L-4,
+            string_substitute(Name, [s(0,3),s(Beg,-1)], ['-l',''],HackedN)
+        ),
+        !.
+hack_lib_name(Name,Name).
 
 
 init_xsbpy(Pyversion):-
