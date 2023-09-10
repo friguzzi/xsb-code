@@ -29,6 +29,30 @@ to that included at the end of this file.
 :- import messageln/1 from standard.
 :- import getenv/2 from machine.
 
+:- import 
+        str_match/5,
+        string_substitute/4
+   from string.
+:- import str_len/2 from machine.
+
+%% remove lib and .a, .so from library names
+hack_lib_name(Name,HackedN) :-
+        str_len(Name,L),
+        (str_match('lib',Name,forward,0,_), str_match('.a',Name,reverse,_,-1)
+        %% libLIB.a found
+        ->
+            Beg is L-2,
+            string_substitute(Name, [s(0,3),s(Beg,-1)], ['-l',''],HackedN)
+        ; str_match('lib',Name,forward,0,_), str_match('.so',Name,reverse,_,-1)
+        %% libLIB.so found
+        ->
+            Beg is L-3,
+            string_substitute(Name, [s(0,3),s(Beg,-1)], ['-l',''],HackedN)
+        ;
+            HackedN = Name
+        ).
+
+
 init_xsbpy(Pyversion):-
 %    findall(Dir,usermod:library_directory(Dir),Dirs),
 %    writeln(dirs(Dirs)),
@@ -121,12 +145,13 @@ get_compiler_opts(auto,CompilerOpts,auto(PYTHON_BIN_QUOTED)):-
     XSBLIB =  XSBCONFIG_BINDIR_QUOTED,
     concat_atom(['\'',XSBLIB,'/libxsb.so','\''],LIBXSBSO),
     xsb_configuration(config_bindir,Dir),concat_atom([Dir,'/xsb'],XSB),
+    hack_lib_name(PYTHON_EXTRA_LIB_QUOTED,Extra_Lib),
     concat_atom(['-I',XSB,'../../emu',' -I',PYTHON_INCLUDE_DIR_QUOTED,
 		' -L',PYTHON_LIBDIR_QUOTED,
 		' -Wl,-rpath=',PYTHON_LIBDIR_QUOTED,',',LIBXSBSO,' ', 
                  %% Changed to PYTHON_EXTRA_LIB_QUOTED
                  %% by Teri/MK on 6/8/22. Previously: PYTHON_BIN_QUOTED
-		PYTHON_EXTRA_LIB_QUOTED,
+		Extra_Lib,
                  %% MK: Changed PYTHON_BIN_QUOTED to PYTHON_LIB_QUOTED
                  %% This is how it was originally (without using gpp's vars)
                  %% but you then changed it to PYTHON_BIN_QUOTED on 6/30/21
