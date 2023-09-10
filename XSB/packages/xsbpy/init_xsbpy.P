@@ -35,7 +35,7 @@ to that included at the end of this file.
    from string.
 :- import str_len/2 from machine.
 
-%% remove lib and .a, .so from library names
+%% remove lib and .a, .so from library names, add -l
 hack_lib_name(Name,HackedN) :-
         str_len(Name,L),
         (str_match('lib',Name,forward,0,_), str_match('.a',Name,reverse,_,-1)
