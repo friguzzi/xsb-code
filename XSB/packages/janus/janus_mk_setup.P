@@ -26,7 +26,7 @@ mk_setup(PythonIncludeDir) :-
         write('                                    \''), write(ConfigDir), writeln('\'],'),
         writeln('                    libraries = [\'xsb\'],'),
         write('                    library_dirs = [\''), write(ConfigBinDir), writeln('\'],'),
-        writeln('                    sources = [\'xsbext.c\', \'xsbpy_common.c\'])'),
+        writeln('                    sources = [\'xsbext.c\', \'janus_common.c\'])'),
         writeln('
 setup (name = \'janus\',
        version = \'0.1\',

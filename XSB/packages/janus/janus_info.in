@@ -1,6 +1,6 @@
 %% @configure_input@
 
-/* File:      janus_info.in -- configuration info for Janusand px
+/* File:      janus_info.in -- configuration info for Janus
 ** Author(s): kifer
 ** Contact:   xsb-users@lists.sourceforge.net
 ** 

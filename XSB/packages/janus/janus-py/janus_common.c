@@ -117,7 +117,7 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
       PyObject* ptypeRepresentation = PyObject_Repr(ptype);
       PyObject* pvalueRepresentation = PyObject_Repr(pvalue);
       PyErr_Restore(ptype, pvalue, ptraceback);
-      xsb_abort("++Error[xsbpy]: A Python Error Occurred.  A Python Unicode object "
+      xsb_abort("++Error[janus]: A Python Error Occurred.  A Python Unicode object "
 		"could not be translated to a UTF8 string: %s/%s",
 		PyUnicode_AsUTF8(ptypeRepresentation),PyUnicode_AsUTF8(pvalueRepresentation));
     }
