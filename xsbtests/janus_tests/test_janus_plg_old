@@ -23,6 +23,13 @@ py_dot(pyObj,func0(),Hello my name is john) succeeded.
 py_dot(pyObj,func1(doofus),Hello my name is john and I'm a doofus) succeeded.
 py_dot(pyObj,func2(real,doofus),Hello my name is john and I'm a real doofus) succeeded.
 py_dot(pyObj,func3(real,big,doofus),Hello my name is john and I'm a real big doofus) succeeded.
+py_dot(pyObj,returnVal(-(1,2,3,4)),pyObj) succeeded.
+py_dot(pyObj,returnVal(3.14),3.14) succeeded.
+py_dot(pyObj,returnVal(42),42) succeeded.
+py_dot(pyObj,returnVal([1,2,3,4]),pyObj) succeeded.
+py_dot(pyObj,returnVal(mystring),mystring) succeeded.
+py_dot(pyObj,returnVal(py_set([1,2,3,4])),pyObj) succeeded.
+py_dot(pyObj,returnVal({}(,(:(1,2),:(3,4)))),pyObj) succeeded.
 py_dot(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 py_dot(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeeded.
 py_func(Person,Person(john,35),pyObj) succeeded.

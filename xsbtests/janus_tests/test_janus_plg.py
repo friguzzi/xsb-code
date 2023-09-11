@@ -164,6 +164,16 @@ def prolog_load(File,**Features):
 
 #----------------------------------
 
+class ReturnVal:
+        
+        def __init__(self):
+                pass
+
+        def returnVal(self,X):
+                return(X)
+
+#----------------------------------
+
 from collections import namedtuple
 
 Author = namedtuple('author','journal volume year')

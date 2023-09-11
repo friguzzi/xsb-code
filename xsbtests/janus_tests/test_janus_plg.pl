@@ -71,7 +71,40 @@ py_object_tests :-
 py_object_tests :- 
     check_call(py_func(test_janus_plg, returnVal({1:2,3:4}),_,[py_object(true)]),pyObj(_)),
     fail.
+py_object_tests :- 
+    py_dot_py_object_tests.
 py_object_tests.
+
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal([1,2,3,4]),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal(py_set([1,2,3,4])),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal(-(1,2,3,4)),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal({1:2,3:4}),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal(42),_,[py_object(true)]),42),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal(3.14),_,[py_object(true)]),3.14),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal(mystring),_,[py_object(true)]),mystring),
+    fail.
+py_dot_py_object_tests.
+	       
 
 %-------------------------------
 
@@ -405,6 +438,13 @@ testit(Call,Var,Answer):-
 
 check_call(py_dot(Obj,MA,Res),Atom):-
     py_dot(Obj,MA,Res),
+    (Res = Atom ->
+      (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
+      (Obj = pyObj(_) -> ObjOut = pyObj ; ObjOut = Obj),
+      lazy_writeln([py_dot(ObjOut,MA,ResOut),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_dot(pyObj,MA,ResOut),' failed.  Did not match ',Atom])).
+check_call(py_dot(Obj,MA,Res,Opts),Atom):-
+    py_dot(Obj,MA,Res,Opts),
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
       (Obj = pyObj(_) -> ObjOut = pyObj ; ObjOut = Obj),
