@@ -133,6 +133,8 @@ int find_length_prolog_list(prolog_term V)
 	return count;
 }
 
+extern PyObject *PyObject_CallMethodNoArgs(PyObject *obj, PyObject *name);
+
 // TES: tries to make a reasonable but safe approximation of the size of a Python term
 // Counts 4 bytes for each character just to be sure.
 Integer get_safe_python_size(PyObject *pyObj) {
