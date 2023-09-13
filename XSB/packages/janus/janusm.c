@@ -889,10 +889,11 @@ DllExport int py_dot_int(CTXTdecl) {
     xp_python_error();
   }
   //  Py_DECREF(pyMeth);
-  int flag = p2c_int(extern_reg_term(4));
+  int flag = p2c_int(extern_reg_term(3));
   ensureXSBStackSpace(CTXTc pObjOut,flag);
   prolog_term return_pr = p2p_new(CTXT);
-  if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
+  //  if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
+  if (!convert_pyObj_prObj_switch(CTXTc pObjOut, &return_pr, flag)) {
     xsb_abort("++Error[janus]: The return of py_dot/4  could not be translated to Prolog");
   } 
   if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 4)))
