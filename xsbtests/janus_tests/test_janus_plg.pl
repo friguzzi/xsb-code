@@ -448,8 +448,8 @@ check_call(py_dot(Obj,MA,Res,Opts),Atom):-
     (Res = Atom ->
       (Res = pyObj(_) -> ResOut = pyObj ; ResOut = Res),
       (Obj = pyObj(_) -> ObjOut = pyObj ; ObjOut = Obj),
-      lazy_writeln([py_dot(ObjOut,MA,ResOut),' succeeded.'])
-    ; lazy_writeln(['!!! ',py_dot(pyObj,MA,ResOut),' failed.  Did not match ',Atom])).
+      lazy_writeln([py_dot(ObjOut,MA,ResOut,Opts),' succeeded.'])
+    ; lazy_writeln(['!!! ',py_dot(pyObj,MA,ResOut,Opts),' failed.  Did not match ',Atom])).
 check_call(py_func(Mod,MA,Res),Atom):-
     py_func(Mod,MA,Res),
     (Res = Atom ->

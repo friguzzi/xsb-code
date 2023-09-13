@@ -3,7 +3,7 @@
 python=$1
 
 # Only needed for the Mac due to its crypto-fascist System Integrity Protection
-source ../../XSB/packages/xsbpy/px_activate
+source ../../XSB/packages/janus/janus_activate
 
 #if [ -z ${python+x} ];  then 
 if [ $# -eq 0 ]
