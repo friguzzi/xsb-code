@@ -13,7 +13,7 @@ echo "Testing $BASEDIR/$FILE"
 
 # TES: needed because Mac shells do not inherit dyld_library_path
 # due to the wisdom of System Integrity Protection
-source ../../XSB/packages/xsbpy/px_activate
+source ../../XSB/packages/janus/janus_activate
 
 $PYTHON $FILE
 
