@@ -2,7 +2,6 @@
 
 #include "janus/janus_defs.h"
 #include "janus/janus_connect_defs.h"
-
 :- export items/2, keys/2, values/3, obj_dict/2, obj_dir/2.
 :- export key/2, value/3.
 
@@ -23,7 +22,7 @@
 :- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
 :- import free_python_object_int/1, py_get_iter_int/5, pyObj_next_int/3  from janusm.
 :- import member/2,memberchk/2 from basics.
-:- import check_callable/3 from error_handler.
+:- import check_callable/3,check_nonvar/2 from error_handler.
 
 %% CHANGE WHEN WINDOZE CONFIG IS INCORPORATED
 ?- \+xsb_running_under(windows),
@@ -33,14 +32,9 @@
 
 %---------
 
-%py_iter(Mod,Func,Return):-
-%    get_def_vars(Call,PosArgNbr,Dict),
-%    py_get_iter(Mod,Func,Def_vars,Iter),
-%    py_iter_1(Iter,Return).
-
 % no options for py_iter.
 py_iter(Mod,Call,Return):-
-    get_def_vars(Call,PosArgNbr,Dict),
+    get_def_vars(Call,py_iter,PosArgNbr,Dict),
     py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
     py_iter_1(Iter,Return).
 
@@ -59,24 +53,16 @@ py_iter_1(Iter,Return):-
 %---------
 
 py_func(Mod,Call,Ret,Opts):-
-    get_def_vars(Call,PosArgNbr,Dict),
+    get_def_vars(Call,py_func,PosArgNbr,Dict),
 %    (Dict1 == {}()-> Dict = 0 ; Dict = Dict1),
     janus_opts(Opts,0,Flags),
     py_func_int(Mod,Call,Dict,PosArgNbr,Flags,Ret).
 
 py_func(Mod,Call,Ret):-
 %    writeln(pyfunc(Mod,Call,Ret)),
-    get_def_vars(Call,PosArgNbr,Dict),
+    get_def_vars(Call,py_func,PosArgNbr,Dict),
 %    writeln(pf_int(Mod,Call,Dict,PosArgNbr,0,Ret)),
     py_func_int(Mod,Call,Dict,PosArgNbr,0,Ret).
-
-%pyfunc(Mod,Func,Def_vars,Ret):-
-%    get_def_vars(Call,PosArgNbr,Dict1),
-%    (Dict1 == {}()-> Dict = 0 ; true),
-%    pyfunc_1(Mod,Func,Dict,Ret).
-
-%pyfunc_1(Mod,Func,Dict,Ret):- 
-%    pyfunc_int(Mod,Func,Dict,0,Ret).
 
 %---------
 
@@ -84,33 +70,33 @@ py_dot(Obj,MethAttr,Ret):-
     py_dot_int(Obj,MethAttr,0,Ret).
 
 py_dot(Obj,MethAttr,Ret,Opts):-
-    janus_opts(Opts,Sizecheck_flag),
-    py_dot_int(Obj,MethAttr,Sizecheck_flag,Ret).
+    janus_opts(Opts,0,Flags),
+    py_dot_int(Obj,MethAttr,Flags,Ret).
 
 janus_opts([],_,0).
 janus_opts([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
 janus_opts([sizecheck(false)],In,In):- !.
-janus_opts([pyObject(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
+janus_opts([py_object(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
 janus_opts([do_iter(true)],In,Out):- !,Out is In \/ MATERIALIZE_ITERS.
-janus_opts(Opts,_):- abort(Opts).
+janus_opts(Opts,_,_):- abort(['Improper option in option list: [',Opts,']']).
 
 :- import term_psc/2, psc_arity/2, term_arg/3 from machine.
 
-get_def_vars(Call,PosArgNbr,Dict):-
+get_def_vars(Call,Pred,PosArgNbr,Dict):-
     check_callable(Call,'pyfunc/[3,4]',2),
     term_psc(Call, PSC),  
     psc_arity(PSC, Arity),
-    get_def_vars_1(Arity,Call,PosArgNbr,VL),
+    get_def_vars_1(Arity,Call,Pred,PosArgNbr,VL),
     (VL= [] -> Dict = 0 ; def_vars_to_dict(VL,Dict)).
 
-get_def_vars_1(0,_,0,[]):-!.
-get_def_vars_1(ArgNbr,Call,PosArgNbr,VarList):-
-%    writeln(get_def_vars_1(Call,ArgNbr,PosArgNbr,VarList)),
+get_def_vars_1(0,_,_Pred,0,[]):-!.
+get_def_vars_1(ArgNbr,Call,Pred,PosArgNbr,VarList):-
     term_arg(Call,ArgNbr,Arg),
-    (Arg = =(A,B) ->
+    check_nonvar(Arg,['All arguments of the Python goal ',Call,' in ',Pred/2,' must be nonvar.']),
+	(Arg = =(A,B) ->    % checking for A = B as argument.
 	 VarList = [A=B|VL1],
 	 ArgNbr1 is ArgNbr-1,
-	 get_def_vars_1(ArgNbr1,Call,PosArgNbr,VL1)
+	 get_def_vars_1(ArgNbr1,Call,_Pred,PosArgNbr,VL1)
     ;    VarList = [],PosArgNbr = ArgNbr).
 
 def_vars_to_dict(X,{}(Y)):-
@@ -174,7 +160,6 @@ values(Dict,List,Val):-
     values(Dict,Key,Dict1),
     values(Dict1,Rest,Val).
 values(Dict,Key,Val):-
-%    writeln(checking(Key)),
     Dict = PYDICT_PROLOG(List),
 %    pp_py(List),
     (nonvar(Key) -> 
@@ -205,4 +190,17 @@ py_call(Mod:Call,Ret,Opts):-
      ;   py_dot(Mod,Call,Ret,Opts)).
 
 end_of_file.
+
+%py_iter(Mod,Func,Return):-
+%    get_def_vars(Call,PosArgNbr,Dict),
+%    py_get_iter(Mod,Func,Def_vars,Iter),
+%    py_iter_1(Iter,Return).
+
+%pyfunc(Mod,Func,Def_vars,Ret):-
+%    get_def_vars(Call,PosArgNbr,Dict1),
+%    (Dict1 == {}()-> Dict = 0 ; true),
+%    pyfunc_1(Mod,Func,Dict,Ret).
+
+%pyfunc_1(Mod,Func,Dict,Ret):- 
+%    pyfunc_int(Mod,Func,Dict,0,Ret).
 
