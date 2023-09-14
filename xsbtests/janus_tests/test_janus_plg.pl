@@ -8,6 +8,7 @@
 :- import length/2 from basics.
 :- import xsb_error_get_message/2,xsb_error_get_tag/2 from error_handler.
 :- import lazy_writeln/1 from standard.
+:- import numbervars/1 from num_vars.
 
 test:-
     func_tests,
@@ -41,6 +42,11 @@ func_tests :-
     fail.
 func_tests :- 
     check_call(py_func(test_janus_plg,my_generation(5),_,[do_iter(true)]),[1,2,3,4]),
+    fail.
+func_tests:- 
+    catch(py_func( test_janus_plg, returnVal(_),_),_E,
+	  (xsb_error_get_message(_E,M),numbervars(M),
+	   lazy_writeln(['(should error) py_func check_var: ',M]))),
     fail.
 func_tests.
 

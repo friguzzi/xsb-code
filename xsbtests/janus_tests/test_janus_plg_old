@@ -1,3 +1,4 @@
+(should error) py_func check_var: [All arguments of the Python goal ,returnVal($VAR(0)), in ,/(py_func,2), must be nonvar.]
 (should error) py_func set:  ++Error[janus]: Improper Prolog term inside Janus dictionary
 caught error for path.append(Dir)
 caught error for path.append(Dir,Dor)
