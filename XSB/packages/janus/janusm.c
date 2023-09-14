@@ -152,14 +152,12 @@ Integer get_safe_python_size(PyObject *pyObj) {
     
     for(i = 0; i < listlength; i++) {
       size = size + get_safe_python_size(PyList_GetItem(pyObj, i));
-      //      printf("list %ld\n",size);
     }
   } else if (PyTuple_Check(pyObj)) {
     size_t tuplesize = PyTuple_Size(pyObj);
     size = size + PYTUP_OVERHEAD;
     for (i = 0; i < tuplesize; i++) {
       size = size + get_safe_python_size(PyTuple_GetItem(pyObj, i));
-      //      printf("tuple %ld\n",size);
       
     }
   } else if(PyDict_Check(pyObj)) {
@@ -177,7 +175,7 @@ Integer get_safe_python_size(PyObject *pyObj) {
     PyObject *pyObjInner;
     size = size + PYDICT_OVERHEAD;
     while ((pyObjInner = PyIter_Next(iterator))) {
-      size = size + get_safe_python_size(pyObjInner);      //printf("set %ld\n",size);
+      size = size + get_safe_python_size(pyObjInner);      
       Py_DECREF(pyObjInner);
     }
     Py_DECREF(iterator);  
@@ -932,8 +930,8 @@ DllExport int py_func_int(CTXTdecl) {
     pFunc = PyObject_GetAttrString(pModule, function);
     Py_DECREF(pModule);  // TES move
     if(pFunc && PyCallable_Check(pFunc)) {
-      pArgs = PyTuple_New(args_count);
       int i;
+      pArgs = PyTuple_New(args_count);
       for(i = 1; i <= args_count; i++) {
 	temp = p2p_arg(CallTerm, i);
 	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
