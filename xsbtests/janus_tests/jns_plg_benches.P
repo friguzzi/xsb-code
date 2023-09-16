@@ -1,6 +1,6 @@
 
 :- ensure_loaded(janus).
-:- import py_func_int/6 from janusm.
+:- import py_func_int/6,py_dot_int/6 from janusm.
 
 bench:-
     writeln('--------- func__int_incr(t00000) ---------'),
@@ -9,6 +9,10 @@ bench:-
     bench_call(func_incr(500000)),
     writeln('--------- func_kw_incr(t00000) ---------'),
     bench_call(func_kw_incr(500000)),
+    writeln('--------- dot__int_incr(t00000) ---------'),
+    bench_call(dot_int_incr(500000)),
+    writeln('--------- dot_incr(t00000) ---------'),
+    bench_call(dot_incr(500000)),
     writeln('--------- py_func_list(1000000) ---------'),
     bench_call(py_func_list(1000000)),
     writeln('--------- pyiter_list(1000000) ---------'),
@@ -50,3 +54,22 @@ py_iter_list(N):-
     fail.
 py_iter_list(_N).
 
+dot_incr(Num):-
+    py_dot(jns_plg_benches,'BenchClass'(),Obj),
+    dot_incr_1(Num,Obj).
+
+dot_incr_1(0,_):- !.
+dot_incr_1(Num,Obj):-
+    py_dot(Obj,incr(Num),_),
+    Num1 is Num-1,
+    dot_incr_1(Num1,Obj).
+
+dot_int_incr(Num):-
+    py_dot(jns_plg_benches,'BenchClass'(),Obj),
+    dot_int_incr_1(Num,Obj).
+
+dot_int_incr_1(0,_):- !.
+dot_int_incr_1(Num,Obj):-
+    py_dot_int(Obj,incr(Num),0,1,0,_),
+    Num1 is Num-1,
+    dot_int_incr_1(Num1,Obj).

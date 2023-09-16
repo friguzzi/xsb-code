@@ -46,7 +46,12 @@ func_tests :-
 func_tests:- 
     catch(py_func( test_janus_plg, returnVal(_),_),_E,
 	  (xsb_error_get_message(_E,M),numbervars(M),
-	   lazy_writeln(['(should error) py_func check_var: ',M]))),
+	   lazy_writeln(['(should error) py_func check_var top level: ',M]))),
+    fail.
+func_tests:- 
+    catch(py_func(test_janus_plg, returnVal([a,b,_]),_MinValue),_E,
+	  (xsb_error_get_message(_E,M),numbervars(M),
+	   lazy_writeln(['(should error) py_func check_var in term: ',M]))),
     fail.
 func_tests.
 
@@ -109,7 +114,16 @@ py_dot_py_object_tests:-
     py_func(test_janus_plg,'ReturnVal'(),PyObj),
     check_call(py_dot(PyObj,returnVal(mystring),_,[py_object(true)]),mystring),
     fail.
-py_dot_py_object_tests.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal_kwargs([1,2,3,4],bar=1,baz=2),_F),[[1,2,3,4],baz - 2,bar - 1]),
+    fail.
+py_dot_py_object_tests:-
+    py_func(test_janus_plg,'ReturnVal'(),PyObj),
+    check_call(py_dot(PyObj,returnVal_kwargs7(a,b,c,d,e,f,g,bar=1,baz=2),_H),
+	       [[a,b,c,d,e,f,g],-(baz,2),-(bar,1)]),
+    fail.
+y_dot_py_object_tests.
 	       
 
 %-------------------------------
@@ -412,10 +426,10 @@ meth_tests:-
     fail.
 meth_tests:- 
     catch(py_dot(1,favorite_ice_cream,_Ret4),E2,xsb_error_get_message(E2,Msg2)),
-    writeln(personErr1(Msg2)),
+    writeln('personErr1 (should err)'(Msg2)),
     py_func('Person','Person'(john,35),Obj),
-    catch(py_dot(Obj,1,_Ret5),E3,xsb_error_get_message(E3,Msg3)),
-    writeln(personErr2(Msg3)),fail.
+    catch(py_dot(Obj,1,_Ret5),E3,xsb_error_get_tag(E3,Msg3)),
+    writeln('personErr2 (should err)'(Msg3)),fail.
 meth_tests:-
     catch(py_dot(   sys,'path.append'(_Dir1),_F1),_,true),
     writeln('caught error for path.append(Dir)'),

@@ -1,4 +1,5 @@
-(should error) py_func check_var: [All arguments of the Python goal ,returnVal($VAR(0)), in ,/(py_func,2), must be nonvar.]
+(should error) py_func check_var in term:  ++Error[janus]: argument 1 of returnVal/1 could not be translated to python(arg 2 of py_func/[3,4,5])
+(should error) py_func check_var top level: [All arguments of the Python goal ,returnVal($VAR(0)), in ,/(py_func,2), must be nonvar.]
 (should error) py_func set:  ++Error[janus]: Improper Prolog term inside Janus dictionary
 caught error for path.append(Dir)
 caught error for path.append(Dir,Dor)
@@ -16,8 +17,8 @@ json_2({glossary : {(title : example glossary,GlossDiv : {(title : S,GlossList :
 json_loads_test successful
 list conversion tests successful
 list conversion_sizecheck tests successful
-personErr1( ++Error[janus]: arg 1 of py_dot/4 is not a Python module or object: 1)
-personErr2( ++Error[janus]: arg 2 of py_dot/4 is not a Python function or attribute: 1)
+personErr1 (should err)( ++Error[janus]: arg 1 of py_dot/4 is not a Python module or object: 1)
+personErr2 (should err)(type_error(callable_term,1))
 py_call(pyObj,func3(eager,janus,programmer),Hello my name is john and I'm a eager janus programmer) succeeded.
 py_dot(pyObj,favorite_ice_cream,chocolate) succeeded.
 py_dot(pyObj,func0(),Hello my name is john) succeeded.
@@ -31,6 +32,8 @@ py_dot(pyObj,returnVal([1,2,3,4]),pyObj,[py_object(true)]) succeeded.
 py_dot(pyObj,returnVal(mystring),mystring,[py_object(true)]) succeeded.
 py_dot(pyObj,returnVal(py_set([1,2,3,4])),pyObj,[py_object(true)]) succeeded.
 py_dot(pyObj,returnVal({}(,(:(1,2),:(3,4)))),pyObj,[py_object(true)]) succeeded.
+py_dot(pyObj,returnVal_kwargs([1,2,3,4],=(bar,1),=(baz,2)),[[1,2,3,4],-(baz,2),-(bar,1)]) succeeded.
+py_dot(pyObj,returnVal_kwargs7(a,b,c,d,e,f,g,=(bar,1),=(baz,2)),[[a,b,c,d,e,f,g],-(baz,2),-(bar,1)]) succeeded.
 py_dot(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 py_dot(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeeded.
 py_func(Person,Person(john,35),pyObj) succeeded.

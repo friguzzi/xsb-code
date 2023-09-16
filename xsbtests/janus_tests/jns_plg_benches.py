@@ -16,4 +16,10 @@ def makelist_ret(N):
         list.append(i)
     return list
 
+class BenchClass:
+        
+    def __init__(self):
+        pass
 
+    def incr(self,N):
+        return(N+1)

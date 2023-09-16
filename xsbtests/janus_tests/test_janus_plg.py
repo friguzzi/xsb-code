@@ -172,6 +172,14 @@ class ReturnVal:
         def returnVal(self,X):
                 return(X)
 
+        def returnVal_kwargs(self,X,**Features):
+                ret = kwargs_append(X,**Features)
+                return(ret)
+
+        def returnVal_kwargs7(self,A,B,C,D,E,F,G,**Features):
+                ret = kwargs_append([A,B,C,D,E,F,G],**Features)
+                return(ret)
+
 #----------------------------------
 
 from collections import namedtuple
