@@ -17,7 +17,7 @@
 :- bootstrap_package(janus, janus).
 
 :- import init_janus/1 from init_janus.
-:- import py_func_int/6,py_dot_int/4 from janusm.
+:- import py_func_int/6,py_dot_int/6 from janusm.
 :- import add_py_lib_dir/1 from init_janus as add_py_lib_dir/1.
 :- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
 :- import free_python_object_int/1, py_get_iter_int/5, pyObj_next_int/3  from janusm.
@@ -59,19 +59,20 @@ py_func(Mod,Call,Ret,Opts):-
     py_func_int(Mod,Call,Dict,PosArgNbr,Flags,Ret).
 
 py_func(Mod,Call,Ret):-
-%    writeln(pyfunc(Mod,Call,Ret)),
     get_def_vars(Call,py_func,PosArgNbr,Dict),
-%    writeln(pf_int(Mod,Call,Dict,PosArgNbr,0,Ret)),
+%    writeln(py_func_int(Mod,Call,Dict,PosArgNbr,0,Ret)),
     py_func_int(Mod,Call,Dict,PosArgNbr,0,Ret).
 
 %---------
 
 py_dot(Obj,MethAttr,Ret):-
-    py_dot_int(Obj,MethAttr,0,Ret).
+    get_def_vars(MethAttr,py_dot,PosArgNbr,Dict),
+    py_dot_int(Obj,MethAttr,Dict,PosArgNbr,0,Ret).
 
 py_dot(Obj,MethAttr,Ret,Opts):-
+    get_def_vars(Obj,py_dot,PosArgNbr,Dict),
     janus_opts(Opts,0,Flags),
-    py_dot_int(Obj,MethAttr,Flags,Ret).
+    py_dot_int(Obj,MethAttr,Dict,PosArgNbr,Flags,Ret).
 
 janus_opts([],_,0).
 janus_opts([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
