@@ -91,35 +91,6 @@ enum prolog_term_type
 	PPYLIST = 10, 
 };
 
-int find_prolog_term_type(CTXTdeclc prolog_term term) {
-  if(is_float(term))
-    return PYFLOAT;
-  else if(is_int(term))
-    return PYINT;
-  else if(is_list(term))
-    return PYLIST;
-  else if(is_var(term))
-    return PYVAR;
-  else if(is_nil(term))
-    return PYNIL;
-  else if(is_string(term))
-    return PYSTRING;
-  else if(is_functor(term))	{
-    if(strcmp(p2c_functor(term),PYOBJ_C) == 0 ) {
-      return PYREF;	
-    }
-    //    else if(strcmp(p2c_functor(term),"pyList") == 0)
-    //      return PPYLIST;
-    else if(strcmp(p2c_functor(term),"pyIter") == 0)
-      return PYITER;
-    else if(strcmp(p2c_functor(term), PYTUP_C) == 0)
-      return PYTUP;
-    return PYFUNCTOR;
-  }
-  else 
-    return -1;
-}
-
 int find_length_prolog_list(prolog_term V)
 {
 	prolog_term temp = V;
@@ -253,13 +224,15 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
     *pyObj = PyUnicode_FromString(argument_char);
     return TRUE;
   }
-  else if(find_prolog_term_type(CTXTc prTerm) == PYFLOAT) {
+  //  else if(find_prolog_term_type(CTXTc prTerm) == PYFLOAT) {
+  else if(is_float(prTerm)) {
     prolog_term argument = prTerm;
     prolog_float argument_float = p2c_float(argument);
     *pyObj = PyFloat_FromDouble(argument_float);
     return TRUE;
   }
-  else if(find_prolog_term_type(CTXTc prTerm) == PYLIST || find_prolog_term_type(CTXTc prTerm) == PYNIL ) {
+  //  else if(find_prolog_term_type(CTXTc prTerm) == PYLIST || find_prolog_term_type(CTXTc prTerm) == P
+  else if (islist(prTerm) || isnil(prTerm) ) {
     prolog_term argument = prTerm;
     int count = find_length_prolog_list(argument);
     PyObject *pList = PyList_New(count);
@@ -1031,10 +1004,13 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
 
 DllExport int jns_GetIter(CTXTdecl) {
 	prolog_term prTerm = extern_reg_term(1);
-	if(find_prolog_term_type(CTXTc prTerm) == PYREF 
-		|| find_prolog_term_type(CTXTc prTerm) == PYTUP 
-		|| find_prolog_term_type(CTXTc prTerm) == PPYLIST)
-	{
+	//	if(find_prolog_term_type(CTXTc prTerm) == PYREF 
+	//	|| find_prolog_term_type(CTXTc prTerm) == PYTUP 
+	//		|| find_prolog_term_type(CTXTc prTerm) == PPYLIST)
+	if  ( (strcmp(p2c_functor(prTerm),PYOBJ_C) == 0)
+	     || (strcmp(p2c_functor(prTerm),PYTUP_C) == 0)
+	     || islist(prTerm))
+	  {
 	  //	  int temp = find_prolog_term_type(CTXTc prTerm);
 	  prolog_term ref_pyobj = p2p_arg(prTerm, 1);
 	  char *node_pointer = p2c_string(ref_pyobj); 
@@ -1060,7 +1036,8 @@ DllExport int jns_GetIter(CTXTdecl) {
 DllExport void  pyObj_next_int(CTXTdecl) {
   prolog_term prTerm = extern_reg_term(1);
   prolog_term indicator = extern_reg_term(3);
-  if(find_prolog_term_type(CTXTc prTerm) == PYITER)
+  //  if(find_prolog_term_type(CTXTc prTerm) == PYITER)
+     if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
     {
       prolog_term ref_pyobj = p2p_arg(prTerm, 1);
       char *node_pointer = p2c_string(ref_pyobj); 
