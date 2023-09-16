@@ -840,14 +840,14 @@ void xp_python_error() {
 // By the Python C-API
 // Tried to decref pObjIn but this didn't work. Not collecting pObjOut
 DllExport int py_dot_int(CTXTdecl) {
-  PyObject *pModule = NULL, *pObjIn = NULL, *pObjOut = NULL;
+  PyObject *pModule = NULL, *pyObjIn = NULL, *pObjOut = NULL;
   prolog_term prObjIn, prMethIn; 
   char *function, *module;
   PyErr_Clear();
   prObjIn = extern_reg_term(1);
   //  Skipping several typechecks, as Python does them.
   if(is_functor(prObjIn) && strcmp(p2c_functor(prObjIn),PYOBJ_C) == 0) {
-    convert_prObj_pyObj(CTXTc prObjIn, &pObjIn);
+    convert_prObj_pyObj(CTXTc prObjIn, &pyObjIn);
   }
   else if (isstring(prObjIn)) {
     module = p2c_string(prObjIn);
@@ -858,7 +858,7 @@ DllExport int py_dot_int(CTXTdecl) {
       xsb_abort("++Error[janus]: no Python module named \'%s\' could be found."
 		"(in arg 1 of py_dot/4)\n",module);
     }
-    pObjIn = pModule;
+    pyObjIn = pModule;
   }
   else {
     sprintTerm(forest_log_buffer_1, prObjIn);
@@ -868,15 +868,44 @@ DllExport int py_dot_int(CTXTdecl) {
   prMethIn = (Cell) extern_reg_term(2);
   XSB_Deref(prMethIn);
   if (isconstr(prMethIn)) {
-    PyObject *pyMeth = NULL;
+    PyObject *args[10];
+    PyObject *pyDefVarsDict = NULL, *pyMethStr;
+    prolog_term Dict;
+    int i;
     function = p2c_functor(prMethIn);
-    pyMeth = PyUnicode_FromString(function);  
-    int args_count = p2c_arity(prMethIn);
-    //    printPyObj(pyMeth);
-    pObjOut = call_variadic_method(pObjIn,pyMeth,prMethIn,args_count);
+    pyMethStr = PyUnicode_FromString(function);  
+    int args_count = p2c_int(reg_term(4));
+    if (args_count > 0) {
+      //      printf("args count %d\n",args_count);
+      args[0] = pyObjIn;
+      for(i = 1; i <= (args_count); i++) {
+	convert_prObj_pyObj(CTXTc p2p_arg(prMethIn, i),&args[i]);
+      }
+      Dict = extern_reg_term(3);
+      convert_prObj_pyObj(CTXTc Dict,&pyDefVarsDict);
+      if(PyDict_Check(pyDefVarsDict)) {
+	PyObject *key, *value;
+	Py_ssize_t pos = 0;
+	int num_pairs = (int) PyDict_Size(pyDefVarsDict);
+	//	printPyObj(pyDefVarsDict);
+	PyObject *tup = PyTuple_New(num_pairs);
+	for (int iterator = 1 ; iterator <= num_pairs ; iterator++) {
+	  PyDict_Next(pyDefVarsDict, &pos, &key, &value);
+	  //	  printPyObj(key);
+	  args[i] = value; i++;
+	  PyTuple_SET_ITEM(tup,(iterator-1),key);
+	}
+	pObjOut = PyObject_VectorcallMethod(pyMethStr,args,(args_count+1),tup);
+      } else {
+	pObjOut = PyObject_VectorcallMethod(pyMethStr,args,(args_count+1),NULL);
+      }
+    }
+    else {
+      pObjOut = PyObject_CallMethodNoArgs(pyObjIn,pyMethStr);
+    }
   }
   else if (isstring(prMethIn)) {
-    pObjOut = PyObject_GetAttrString(pObjIn,string_val(prMethIn));
+    pObjOut = PyObject_GetAttrString(pyObjIn,string_val(prMethIn));
   }
   else {
     sprintTerm(forest_log_buffer_1, prMethIn);
@@ -887,14 +916,14 @@ DllExport int py_dot_int(CTXTdecl) {
     xp_python_error();
   }
   //  Py_DECREF(pyMeth);
-  int flag = p2c_int(extern_reg_term(3));
+  int flag = p2c_int(extern_reg_term(5));
   ensureXSBStackSpace(CTXTc pObjOut,flag);
   prolog_term return_pr = p2p_new(CTXT);
   //  if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
   if (!convert_pyObj_prObj_switch(CTXTc pObjOut, &return_pr, flag)) {
     xsb_abort("++Error[janus]: The return of py_dot/4  could not be translated to Prolog");
   } 
-  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 4)))
+  if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 6)))
     return FALSE;
   return TRUE;
 }
@@ -1334,4 +1363,5 @@ DllExport int py_get_iter_int(CTXTdecl) {
       //#else
       //    xsb_abort("++Error[janus]: Improper or unspecified Python version.  Currently only supporting 3.7 and 3.8\n");
       //#endif     
+
 
