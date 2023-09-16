@@ -1,33 +1,54 @@
 
 :- ensure_loaded(janus).
 :- import py_func_int/6,py_dot_int/6 from janusm.
-
+:- import reverse/2 from basics.
+   
 bench:-
-    writeln('--------- func__int_incr(t00000) ---------'),
+    writeln('--------- func__int_incr(500000) ---------'),
     bench_call(func_int_incr(500000)),
-    writeln('--------- func_incr(t00000) ---------'),
+    writeln('--------- func_incr(500000) ---------'),
     bench_call(func_incr(500000)),
-    writeln('--------- func_kw_incr(t00000) ---------'),
+    writeln('--------- func_kw_incr(500000) ---------'),
     bench_call(func_kw_incr(500000)),
-    writeln('--------- dot__int_incr(t00000) ---------'),
+    writeln('--------- dot_incr_int(500000) ---------'),
     bench_call(dot_int_incr(500000)),
-    writeln('--------- dot_incr(t00000) ---------'),
+    writeln('--------- dot_incr(500000) ---------'),
     bench_call(dot_incr(500000)),
-    writeln('--------- py_func_list(1000000) ---------'),
-    bench_call(py_func_list(1000000)),
-    writeln('--------- pyiter_list(1000000) ---------'),
-    bench_call(py_iter_list(1000000)).
+    writeln('--------- py_func_list(2,000,000) ---------'),
+    bench_call(py_func_list(2000000)),
+    writeln('--------- py_iter_list(2,000,000) ---------'),
+    bench_call(py_iter_list(2000000)).
 
 bench_call(Call):-     
-    arg(1,Call,N),
-    cputime(Start),walltime(_WStart),
+    arg(1,Call,N),    walltime(_WStart),
+    cputime(Start),
     Call,
     cputime(End),walltime(_WEnd),
     CPU is End-Start,
     PerSec is N/CPU,
-    write('% Time: '),write_term(CPU,[float_precision(8)]),
-    write(' ; '),write_term(PerSec,[float_precision(8)]), writeln(' Per sec.').
+    write('% Time: '),    write_term(CPU,[float_precision(8)]),
+    write(' ; '),
+%    write_term(PerSec,[float_precision(8)]), nl.
+    make_readable(PerSec,RPerSec),write(RPerSec),writeln(' Per sec.').
 
+make_readable(PerSec,RPerSec):-
+    number_chars(PerSec,List),
+    reverse(List,RevList),
+    trim_frac(RevList,RevList1),
+    RevList1 = [_N,'.'|IntPart],
+    put_in_commas(IntPart,IntCommas),
+    reverse(IntCommas,RList),
+    atom_chars(RPerSec,RList).
+
+trim_frac([],[]).
+trim_frac([N,'.'|Rest],[N,'.'|Rest]):-!.
+trim_frac([_|R1],Out):-
+    trim_frac(R1,Out).
+
+put_in_commas([One,Two,Three,Four|R],[One,Two,Three,','|NR]):- !,
+    put_in_commas([Four|R],NR).
+put_in_commas(L,L).
+    
 func_int_incr(0):- !.
 func_int_incr(Num):- 
     py_func_int(jns_plg_benches,incr(0),0,1,0,_),
