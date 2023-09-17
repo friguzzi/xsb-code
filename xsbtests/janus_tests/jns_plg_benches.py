@@ -16,6 +16,9 @@ def makelist_ret(N):
         list.append(i)
     return list
 
+def dummy(Dummy):
+    return True
+
 class BenchClass:
         
     def __init__(self):
@@ -23,3 +26,7 @@ class BenchClass:
 
     def incr(self,N):
         return(N+1)
+
+    def incr_kw(self,N,**kwargs):
+        return(N+1)
+
