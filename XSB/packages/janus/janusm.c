@@ -888,11 +888,16 @@ void xp_pyerr_print() {
 PyObject *get_module(char *mod_string) {
   PyObject *pyModule = NULL;
   mod_string = set_path_name(mod_string);
-  pyModule = PyImport_ImportModule(mod_string);
-  if(pyModule == NULL) {
-    xp_python_error();
+  PyObject *mod_name = PyUnicode_FromString(mod_string);
+  if ((pyModule = PyImport_GetModule(mod_name))) 
+    return pyModule;
+  else {
+    pyModule = PyImport_ImportModule(mod_string);
+    if(pyModule == NULL) {
+      xp_python_error();
+    }
+    return pyModule;
   }
-  return pyModule;
 }
 	   
 DllExport int py_func_int(CTXTdecl) {
