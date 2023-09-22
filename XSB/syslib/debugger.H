@@ -80,6 +80,9 @@
 :- import file_get/2, file_put/2, file_flush/2 from file_io.
 :- import file_reopen/4, file_clone/3 from file_io.
 
+:- import xsb_backtrace/1 from machine.
+:- import throw/1 from standard .
+
 :- dynamic 
 	debug_display_call_hook(_),
 	debug_tracelog_predicate(_),

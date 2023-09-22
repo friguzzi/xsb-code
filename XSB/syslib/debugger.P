@@ -40,6 +40,7 @@
 #define TRACELOGPRED      xsb_tracelog
 #define TRACEGOALSTACK    '_$_$xsb_backtrace_stack'
 #define INITIALGOALSTACK  []
+#define INITIALCALLSTACK  []
 
 #define CURRENTLYTRACING    '_$_$_currently_tracing'
 
@@ -48,6 +49,11 @@
 	CURRENTLYTRACING/1.
 :- mode_on_success(TRACEGOALSTACK(+,+)).
 :- mode_on_success(CURRENTLYTRACING(+)).
+
+:- dynamic
+	TRACECALLSTACK/2 .
+:- mode_on_success(TRACECALLSTACK(+,+)).
+
 
 :- set_inthandler('_$deb_spy'(_), MYSIG_SPY),
    set_inthandler('_$deb_trace'(_), MYSIG_TRACE).
@@ -95,6 +101,7 @@ dump :- ll_write('dump not implemented yet').
 
 trace :-
 	init_goalstack,
+	init_callstack,
 	debug,
 	stat_set_flag(TRACE,1). % set trace flag on
 notrace :-                      %% Added by MK 10/10/2013
@@ -106,7 +113,8 @@ notrace :-
 	make_trace_interactive,
 	ll_flush,
 	nodebug,		% ??dsw added, (no load msgs)
-	clear_goalstack.
+	clear_goalstack,
+	clear_callstack.
 %% dumps trace into a file
 :- mode trace(+).
 trace(File) :-
@@ -246,7 +254,6 @@ pop_cputime(_CallNum,_CallType,noprint) :-
 	set_cputime_stack(Rest).
 pop_cputime(_CallNum,_CallType,_).
 
-
 init_goalstack :-
 	retractall(TRACEGOALSTACK(_,_)),
 	assert(TRACEGOALSTACK(0,INITIALGOALSTACK)).
@@ -260,7 +267,6 @@ trace_goalstack(Depth,Stack) :- TRACEGOALSTACK(Depth,Stack).
 
 
 push_goalstack(CallNum) :-
-	debug_logging_queriable_trace(on),
 	!,
 	trace_goalstack(Len,Stack),
 	Len1 is Len+1,
@@ -272,7 +278,6 @@ push_goalstack(_).
 %% search for goal in the stack and pop everything above it
 %% maybe an overkill
 pop_goalstack(CallNum) :-
-	debug_logging_queriable_trace(on),
 	!,
 	trace_goalstack(Len,Stack),
 	pop_goalstack(CallNum,Len,Stack).
@@ -289,6 +294,49 @@ pop_goalstack(CallNum,Len,[CallNum|Stack]) :-
 pop_goalstack(CallNum,Len,[_|Stack]) :-
 	Len1 is Len-1,
 	pop_goalstack(CallNum,Len1,Stack).
+
+init_callstack :-
+	retractall(TRACECALLSTACK(_,_)),
+	assert(TRACECALLSTACK(0,INITIALCALLSTACK)).
+
+clear_callstack :-
+	retractall(TRACECALLSTACK(_,_)).
+
+%% this is exported
+:- mode trace_callstack(?,?).
+trace_callstack(Depth,Stack) :- TRACECALLSTACK(Depth,Stack).
+
+push_callstack(CallNum) :-
+	%debug_logging_queriable_trace(on),
+	!,
+	trace_callstack(Len,Stack),
+	Len1 is Len+1,
+	Stack1 = [CallNum|Stack],
+	clear_callstack,
+	assert(TRACECALLSTACK(Len1,Stack1)).
+push_callstack(_).
+
+%% search for goal in the stack and pop everything above it
+%% maybe an overkill
+pop_callstack(CallNum) :-
+	%debug_logging_queriable_trace(on),
+	!,
+	trace_callstack(Len,Stack),
+	pop_callstack(CallNum,Len,Stack).
+pop_callstack(_).
+
+%% if didn't find the goal in stack, nothing is popped
+pop_callstack(_CallNum,_Len,INITIALCALLSTACK) :- !.
+pop_callstack(_CallNum,0,_) :- !.  %% just a precaution
+pop_callstack(CallNum,Len,[CallNum|Stack]) :-
+	!,
+	clear_callstack,
+	Len1 is Len-1,
+	assert(TRACECALLSTACK(Len1,Stack)).
+pop_callstack(CallNum,Len,[_|Stack]) :-
+	Len1 is Len-1,
+	pop_callstack(CallNum,Len1,Stack).
+
 
 %% Hide (don''t trace) inside the argument predicates
 user_hide([]).
@@ -336,6 +384,11 @@ debugging :-
 /* -- trace interrupt handler ------------------------------------------ */
 
 :- mode '_$deb_trace'(?).
+
+'_$deb_trace'(Call) :-
+	Call =.. [P|_], 
+	(P == ll_write) , ! .
+
 '_$deb_trace'(Call) :-
 	%%ll_write(trace(Call)),ll_nl,
         (   callable(Call)
@@ -348,8 +401,14 @@ debugging :-
 	    ->	term_arg(Call,1,Ncall), '_$deb_trace'(Ncall)
 	    ;	Call = '_$load_undef'(Ncall)
 	    ->	'_$deb_trace'(Ncall)
-	    ;	must_load(PSC,Call)
-	    ->	'_$deb_trace'(Call)
+		; 	must_load(PSC,Call)
+		-> 	(test_loaded(PSC,Call) -> 
+				'_$deb_trace'(Call)
+			;
+				notrace,
+				xsb_backtrace(BT),  % no usermod file to load!
+				throw(error(existence_error(predicate,Call),context([],BT))) )
+
 	    ;	hide_this_show(P,A)
 	    ->	basic_call(0,PSC,Call) % and turn tracing back on
 	    ;	hide_this_hide(P,A)
@@ -388,6 +447,7 @@ show_this_hide_call(P,A) :- '_$_deb_user_hidden'(P,A).
 
 /* TLS: assuming that this affects only undefined preds, so I'm not
    making a check for only one thread. */
+
 must_load(PSC,Call) :-
 	psc_type(PSC, T),
 	( T =:= 2 -> fail
@@ -397,6 +457,14 @@ must_load(PSC,Call) :-
 	; load_pred(PSC,Call)
 	).
 
+
+test_loaded(PSC,Call) :-
+	psc_type(PSC, T),
+	( T =:= 2 -> true
+	; T =:= 1 -> true
+	; T =:= 13 -> true
+%%%	; T =:= 14 -> true 
+	; fail ) .
 
 /* -- spy interrupt handler ------------------------------------------ */
 
@@ -456,13 +524,15 @@ deb_enterpred(N,PSC,Call,Spy,Tr) :-
 	    retractall(CURRENTLYTRACING(_)),
 	    gensym(id,CallId),
 	    init_goalstack,
+		init_callstack,
 	    assert(CURRENTLYTRACING(CallId))
 	; CURRENTLYTRACING(CallId) -> true
 	; CallId = '???',  %% happens when errors are thrown
 	    assert(CURRENTLYTRACING(CallId))
 	),
-	deb_traceget(N,Spy,'Call',Call,_),
 	push_goalstack(N),
+	push_callstack(Call),
+	deb_traceget(N,Spy,'Call',Call,_),
 	push_cputime,		% push cpu time on the stack
 	(   basic_call(Tr,PSC,Call),
 	    %% Call succeded
@@ -472,9 +542,11 @@ deb_enterpred(N,PSC,Call,Spy,Tr) :-
 		(   still_displaying(Spy)
 		->  conset('_$_verbose_skip_current_callno', N),
 		    pop_goalstack(N),
+			pop_callstack(Call),
 		    deb_traceget(N,Spy,'Exit',Call,_),
 		    (N==0 ->
 			init_goalstack,
+			init_callstack,
 			retractall(CURRENTLYTRACING(_))
 		    ; true
 		    ),
@@ -489,6 +561,7 @@ deb_enterpred(N,PSC,Call,Spy,Tr) :-
 		    assert(CURRENTLYTRACING(CallId)),
 		    deb_traceget(N,Spy,'Redo',Call,_),
 		    push_goalstack(N),
+			push_callstack(Call),
 		    push_cputime   % push cpu time on the stack, if on
 		;   true
 		),
@@ -505,9 +578,11 @@ deb_enterpred(N,PSC,Call,Spy,Tr) :-
 	    (	still_displaying(Spy) 	           % if still tracing/debugging
 	    ->	conset('_$_verbose_skip_current_callno', N),
 		pop_goalstack(N),
+		pop_callstack(Call),
 		deb_traceget(N,Spy,'Fail',Call,C2),
 		(N==0 ->
 		    init_goalstack,
+			init_callstack,
 		    retractall(CURRENTLYTRACING(_))
 		; true
 		),
@@ -534,7 +609,8 @@ still_displaying(Spy) :-
 /* retry recursive call-------------------------------------------------*/
 
 deb_retry(Call,inspy)   :- !, '_$deb_spy'(Call).
-deb_retry(Call,intrace) :- '_$deb_trace'(Call).
+deb_retry(Call,intrace) :- '_$deb_trace'(Call).
+
 
 %% produce a log
 deb_traceget(N,Spy,Type,Call,C) :-
@@ -585,21 +661,27 @@ deb_traceget(N,Spy,Type,Call,C) :-
 	->  (	(Type == 'Exit' ; Type == 'Fail')
 	    ->	pop_cputime(N,Type,print) % pop cputime stack & print cpu time
 	    ;	true),
-	    deb_writepref(Spy),
-	    ll_write(' ('), ll_write(N), ll_write(') '),
-	    ll_write(Type),ll_write(': '),
-	    debug_display_call(Call),
+		%ll_write(' ('), ll_write(N), ll_write(') '),
+	    %ll_write(Type),ll_write(': '),
+	    %debug_display_call(Call),
+		debug_display_num_and_call(N,Spy,Type,Call),
 	    (Type == 'Exit', xwam_state(2,DelayReg), DelayReg =\= 0
 	    -> ll_write(' - possibly undefined ')
 	    ; true
 	    ),
-	    deb_prompt(Type,Spy,C)
+		deb_prompt(N,Spy,Type,Call,C)
 	;   C = CH_NEWLINE,
 	    (	(Type == 'Exit' ; Type == 'Fail')
 	    ->	pop_cputime(N,Type,noprint)  % pop cputime stack & don''t print
 	    ;	true)
 	),
 	set_print_control(P,A,Type).
+
+debug_display_num_and_call(N,Spy,Type,Call) :-
+	deb_writepref(Spy),
+	ll_write(' ('), ll_write(N), ll_write(') '),
+    ll_write(Type),ll_write(': '),
+    debug_display_call(Call) .
 
 debug_display_call(Call) :- (debug_display_call_hook(Hook)
 			    -> Invocation =.. [Hook, Call],
@@ -676,25 +758,25 @@ deb_writepref(inspy) :- ll_write('**').
 deb_writepref(intrace) :- ll_write('  ').
 deb_writepref(cpu) :- ll_write('..').
 
-
-%% Print debugger prompt, take user input
-deb_prompt(Type, Spy, C) :- 
+deb_prompt(N,Spy,Type,Call,C) :-
 	(leashed(Type,Spy)	% interactive
 	 ->	ll_flush,
-		deb_getonechar(C1),
-		(leg_r(C1,Type)
-		 ->	C = C1,
-			deb_ug(C)
-		 ;	deb_prompt(Type,Spy,C)
+		(deb_getonechar(N,Spy,Type,Call,C),
+			leg_r(C,Type)
+		->	deb_ug(C)
+		;	deb_prompt(N,Spy,Type,Call,C)
 		)
 	 ;      ll_nl,	% non-interactive
 		C=CH_NEWLINE
 	).
 
 
+
 % legal responses to prompt:
 leg_r(CH_NEWLINE,_).          leg_r(CH_a,_).  leg_r(CH_b,_).
 leg_r(CH_c,_).  leg_r(CH_e,_).  leg_r(CH_f,_).  leg_r(CH_l,_).
+
+leg_r(CH_g,_).
 leg_r(CH_n,_).  leg_r(CH_q,_).
 leg_r(CH_r,'Fail').
 leg_r(CH_s,'Call').
@@ -715,6 +797,7 @@ deb_ug(CH_b) :- !, stat_set_flag(SKIPPING, 0),	   %  b: break,
 deb_ug(CH_c) :- !,stat_set_flag(TRACE,1).	%  c: creep 	(trace = 1)
 deb_ug(CH_e) :- !,halt.				%  e: exit Prolog %
 deb_ug(CH_f) :- !,stat_set_flag(HIDE_STATE,0), fail.	%  f: fail
+deb_ug(CH_g) .
 deb_ug(CH_l) :- !,stat_set_flag(TRACE, 0).		%  l: leap (trace = 0)
 deb_ug(CH_n) :- !,notrace.			%  n: notrace
 deb_ug(CH_q) :- !,stat_set_flag(QUASI_SKIPPING, 1).	%  q: quasi-skip 
@@ -736,15 +819,35 @@ deb_ug(CH_S) :- !,     	       	       	       % like skip, but print the trace
 	(retract(hide_this_hide(setof,3)), ! ; true),
 	stat_set_flag(TRACE, 1).
 
+deb_printstacks() :-
+	trace_goalstack(Depth,Goals),
+	trace_callstack(Depth2,Calls),
+	(Goals = [] ->
+		ll_write('Goal stack is empty'), ll_nl
+	;
+		ll_write('Current stack:'), ll_nl, deb_printstacks(Goals,Calls)),! .
+
+deb_printstacks([G|Goals],[C|Calls]) :-
+	ll_write('['), ll_write(G), ll_write('] '), ll_write(C), ll_nl,
+	deb_printstacks(Goals,Calls) .
+deb_printstacks([],[]) .
+
+deb_debugprintstacks() :-
+	trace_goalstack(Depth,Goals),
+	trace_callstack(Depth2,Calls),
+	ll_write([Goals,Calls]),
+	ll_nl .
+
 deb_printhelp :- 
 	ll_write('   <cr>   creep          a      abort') ,ll_nl,
 	ll_write('   c      creep          f      fail')  ,ll_nl,
 	ll_write('   r      retry (fail)   h      help')  ,ll_nl,
 	ll_write('   n      nodebug        e      exit')  ,ll_nl,
 	ll_write('   b      break          s      skip')  ,ll_nl,
-	ll_write('   q      quasi-skip     l      leap').
+	ll_write('   q      quasi-skip     l      leap') , ll_nl,
+	ll_write('   g      print stack') , ll_nl .
 
-deb_getonechar(C) :- 
+deb_getonechar(N,Spy,Type,Call,C) :- 
 	prompt(Prompt,Prompt,'_$debug_prompt'(_)),
 	ll_write(Prompt),
 	%%ll_write(' ? '),
@@ -756,8 +859,12 @@ deb_getonechar(C) :-
 	 ->	C=CH_e
 	 ;	deb_skiptoaft,
 	    	(C1=:=CH_h    %% help
-		->	deb_printhelp, deb_getonechar(C)
-		;	C=C1
+		->	deb_printhelp, debug_display_num_and_call(N,Spy,Type,Call), deb_getonechar(N,Spy,Type,Call,C)
+		; (C1 =:= CH_g
+			% use deb_traceget to print the last debugging prompt again
+			-> deb_printstacks, debug_display_num_and_call(N,Spy,Type,Call), deb_getonechar(N,Spy,Type,Call,C)  %deb_traceget(N,Spy,Type,Call,C), ll_write([C,C1]), C1 = C
+			;	C=C1
+			)
 		)
 	).
 	
@@ -857,7 +964,6 @@ nospy(M:T) :- !,
 nospy(T):- type_error(predicate_indicator,T,(nospy)/1,1).
 % Old default case.
 %nospy(T) :- !, nospy([]:T).
-
 
 spy_psc(M, P, A, Psc) :-
 	conname(M, MName),
