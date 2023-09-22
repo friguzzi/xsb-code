@@ -90,6 +90,12 @@ def return_True():
 def return_False():
         return(False)
 
+def return_empty_dict():
+        return({})
+
+def return_empty_set():
+        return(set())
+
 def returnSet():
         empty = set()
         X = ['"foo"',"'bar'",{1,"hello",('a','b',7)}]
