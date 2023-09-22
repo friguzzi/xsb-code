@@ -454,43 +454,33 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
   else if(PyDict_Check(pyObj)) {
     prolog_term head, tail, pkey, pval;
     prolog_term P = p2p_new(CTXT);
-    c2p_functor(PYDICT_C,1,P);
-    tail = p2p_arg(P, 1);
-    
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-
     int num_pairs = (int) PyDict_Size(pyObj);
-    for (int iterator = 1 ; iterator < num_pairs ; iterator++) {
-      PyDict_Next(pyObj, &pos, &key, &value);
-      c2p_functor(",",2,tail);
-      head = p2p_arg(tail, 1);
-      c2p_functor(":",2,head);
-      pkey = p2p_arg(head, 1);
-      pval = p2p_arg(head, 2);
-      convert_pyObj_prObj(CTXTc  key, &pkey, 1);	
-      convert_pyObj_prObj(CTXTc  value, &pval, 1);	
-      tail = p2p_arg(tail,2);
-    }
+    if (num_pairs > 0) {
+      PyObject *key, *value;
+      Py_ssize_t pos = 0;
+      c2p_functor(PYDICT_C,1,P);
+      tail = p2p_arg(P, 1);
+      for (int iterator = 1 ; iterator < num_pairs ; iterator++) {
+	PyDict_Next(pyObj, &pos, &key, &value);
+	c2p_functor(",",2,tail);
+	head = p2p_arg(tail, 1);
+	c2p_functor(":",2,head);
+	pkey = p2p_arg(head, 1);
+	pval = p2p_arg(head, 2);
+	convert_pyObj_prObj(CTXTc  key, &pkey, 1);	
+	convert_pyObj_prObj(CTXTc  value, &pval, 1);	
+	tail = p2p_arg(tail,2);
+      }
       PyDict_Next(pyObj, &pos, &key, &value);
       c2p_functor(":",2,tail);
       pkey = p2p_arg(tail, 1);
       pval = p2p_arg(tail, 2);
       convert_pyObj_prObj(CTXTc  key, &pkey, 1);	
       convert_pyObj_prObj(CTXTc  value, &pval, 1);
-      //      PyTuple_SET_ITEM(tup,0,key);      
-      //    while (PyDict_Next(pyObj, &pos, &key, &value)) {
-      //      printf("key: ");printPyObj(CTXTc key);
-      //      printf("val: ");printPyObj(CTXTc value);
-      //      c2p_list(CTXTc tail);
-      //      head = p2p_car(tail);
-      //      tup = PyTuple_New(2);
-
-      //      PyTuple_SET_ITEM(tup,1,value);		
-      //      printPyObj(CTXTc tup);
-      //      convert_pyObj_prObj(CTXTc tup, &head, 1);	
-
-    //    c2p_nil(CTXTc tail);
+    }
+    else {
+      c2p_functor(PYDICT_C,0,P);
+    }
     if(!p2p_unify(CTXTc P, *prTerm))
       return FALSE;
     return TRUE;
@@ -844,7 +834,7 @@ DllExport int py_dot_int(CTXTdecl) {
 	PyObject *tup = PyTuple_New(num_pairs);
 	for (int iterator = 1 ; iterator <= num_pairs ; iterator++) {
 	  PyDict_Next(pyDefVarsDict, &pos, &key, &value);
-	  //	  printPyObj(key);
+ //	  printPyObj(key);
 	  args[i] = value; i++;
 	  PyTuple_SET_ITEM(tup,(iterator-1),key);
 	}
@@ -859,6 +849,7 @@ DllExport int py_dot_int(CTXTdecl) {
   }
   else if (isstring(prMethIn)) {
     pObjOut = PyObject_GetAttrString(pyObjIn,string_val(prMethIn));
+    //    printPyObj(pObjOut);
   }
   else {
     sprintTerm(forest_log_buffer_1, prMethIn);
@@ -875,7 +866,7 @@ DllExport int py_dot_int(CTXTdecl) {
   //  if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
   if (!convert_pyObj_prObj_switch(CTXTc pObjOut, &return_pr, flag)) {
     xsb_abort("++Error[janus]: The return of py_dot/4  could not be translated to Prolog");
-  } 
+  }
   if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 6)))
     return FALSE;
   return TRUE;
@@ -1022,6 +1013,8 @@ DllExport int jns_GetIter(CTXTdecl) {
 DllExport void  pyObj_next_int(CTXTdecl) {
   prolog_term prTerm = extern_reg_term(1);
   prolog_term indicator = extern_reg_term(3);
+  int flag = p2c_int(reg_term(4));
+  //  printf("flag %d\n",flag);
   //  if(find_prolog_term_type(CTXTc prTerm) == PYITER)
      if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
     {
@@ -1029,15 +1022,17 @@ DllExport void  pyObj_next_int(CTXTdecl) {
       char *node_pointer = p2c_string(ref_pyobj); 
       PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
       PyObject *obj = PyIter_Next(iterator);
+      //      printPyObj(obj);
       if(obj == NULL) {
 	c2p_int(CTXTc FALSE, indicator);
 	return;
       }
       prolog_term return_pr = p2p_new(CTXT);
-      if(!convert_pyObj_prObj(CTXTc obj, &return_pr, 0)) {
+      if (!convert_pyObj_prObj_switch(CTXTc obj, &return_pr, flag)) {
 	c2p_int(CTXTc FALSE, indicator);
 	return;
       }
+      //      printPlgTerm(return_pr);
       prolog_term prRet = extern_reg_term(2);
       if(!p2p_unify(CTXTc return_pr, prRet)) {
 	c2p_int(CTXTc FALSE, indicator);
