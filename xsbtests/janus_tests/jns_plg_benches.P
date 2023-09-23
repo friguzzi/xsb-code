@@ -10,7 +10,7 @@ bench:-
     bench_call(func_incr(500000)),
     writeln('--------- py_func_kw_incr(500000) ---------'),
     bench_call(func_kw_incr(500000)),
-    writeln('--------- py_dot_incr_int(500000) ---------'),
+    writeln('--------- py_dot_int_incr(500000) ---------'),
     bench_call(dot_int_incr(500000)),
     writeln('--------- py_dot_incr(500000) ---------'),
     bench_call(dot_incr(500000)),
@@ -18,8 +18,8 @@ bench:-
     bench_call(dot_incr_kw(500000)),
     writeln('--------- py_iter_list(2,000,000) ---------'),
     bench_call(py_iter_list(2000000)),
-    writeln('--------- py_func_get_list(2,000,000) ---------'),
-    bench_call(py_func_get_list(2000000)),
+    writeln('--------- py_func_get_list(1,500,000) ---------'),
+    bench_call(py_func_get_list(1500000)),
     writeln('--------- py_func_send_list(2,000,000) ---------'),
     bench_call(py_func_send_list(2000000)),
     writeln('--------- plg_incr(4,000,000) ---------'),
@@ -74,7 +74,8 @@ func_kw_incr(Num):-
     func_kw_incr(Num1).
 
 py_func_get_list(N):-
-    py_func(jns_plg_benches,makelist_ret(N),_F).
+    py_func(jns_plg_benches,makelist_ret(N),_F),
+    writeln(also_done).
 
 py_func_send_list(N):-
     makelist(N,List),

@@ -38,6 +38,12 @@ func_tests :-
 	  (xsb_error_get_message(_E,M),lazy_writeln(['(should error) py_func set: ',M]))),
     fail.
 func_tests :- 
+    check_call(py_func(test_janus_plg,return_empty_dict(),_F),{}()),
+    fail.
+func_tests :- 
+    check_call(py_func(test_janus_plg,return_empty_set(),_F),py_set([])),
+    fail.
+func_tests :- 
     check_call(py_func(test_janus_plg,my_generation(5),_),pyObj(_)),
     fail.
 func_tests :- 
@@ -81,6 +87,13 @@ py_object_tests :-
     fail.
 py_object_tests :- 
     check_call(py_func(test_janus_plg, returnVal({1:2,3:4}),_,[py_object(true)]),pyObj(_)),
+    fail.
+py_object_tests:- 
+    check_call(py_func(test_janus_plg,returnVal([1,2,3,4]),Obj,[py_object(true)]),pyObj(_)),
+    py_func(test_janus_plg,returnVal(Obj),F),
+    (F = [1,2,3,4] ->
+       writeln(succeeded(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4])))
+     ; writeln('!!!failed'(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4]))) ),
     fail.
 py_object_tests :- 
     py_dot_py_object_tests.
@@ -456,6 +469,20 @@ testit(Call,Var,Answer):-
     ; writeln('!!!wrong_answer'(Call,Var,Answer)),
       fail).
 
+py_call_tests :- 
+    check_call(py_call(test_janus_plg:sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
+    fail.
+py_call_tests :- 
+    check_call(py_call(sys:flags,_), -(0,0,0,0,0,0,0,0,0,0,0,1,0,@('false'),0,0,@('false'),-1)),
+    fail.
+py_call_tests :- 
+    check_call(py_call(sys:exc_info(),_),-(@('none'),@('none'),@('none'))),
+    fail.
+%py_call_tests :- 
+%    check_call(py_call(Obj,favorite_ice_cream,_Ret3),chocolate),
+%    fail.
+py_call_tests.
+
 check_call(py_dot(Obj,MA,Res),Atom):-
     py_dot(Obj,MA,Res),
     (Res = Atom ->
@@ -510,20 +537,6 @@ check_sort_call(py_func(Mod,MA,Res),Atom):-
     (SetSort = [1,hello,-(a,b,7)] -> 
       lazy_writeln([py_func(Mod,MA,SetSort),' succeeded.'])
     ; lazy_writeln(['!!! ',py_func(Mod,MA,SetSort),' failed.  Did not match ',Atom])).
-
-py_call_tests :- 
-    check_call(py_call(test_janus_plg:sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
-    fail.
-py_call_tests :- 
-    check_call(py_call(sys:flags,_), -(0,0,0,0,0,0,0,0,0,0,0,1,0,@('false'),0,0,@('false'),-1)),
-    fail.
-py_call_tests :- 
-    check_call(py_call(sys:exc_info(),_),-(@('none'),@('none'),@('none'))),
-    fail.
-%py_call_tests :- 
-%    check_call(py_call(Obj,favorite_ice_cream,_Ret3),chocolate),
-%    fail.
-py_call_tests.
 
 end_of_file.
 
