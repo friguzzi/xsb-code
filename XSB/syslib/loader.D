@@ -27,9 +27,9 @@
 :- mode load_library_directories.
 :- mode load_object_file(?,?,?).
 :- mode load_object_file(?,?,+,?).
-:- mode load_pred(+).
-:- mode load_pred0(+).
-:- mode load_pred1(+).
+:- mode load_pred(+,?).
+:- mode load_pred0(+,?).
+:- mode load_pred1(+,?).
 :- mode loader_init(+).
 :- mode local_append(+,?,?).
 :- mode local_atom_codes(+,?).
@@ -96,9 +96,9 @@
 :- mode_on_success load_library_directories.
 :- mode_on_success load_object_file(g,g,g).
 :- mode_on_success load_object_file(g,g,g,g).
-:- mode_on_success load_pred(g).
-:- mode_on_success load_pred0(g).
-:- mode_on_success load_pred1(g).
+:- mode_on_success load_pred(g,A).
+:- mode_on_success load_pred0(g,A).
+:- mode_on_success load_pred1(g,A).
 :- mode_on_success loader_init(g).
 :- mode_on_success local_append(g,A,A).
 :- mode_on_success local_cd(g).
