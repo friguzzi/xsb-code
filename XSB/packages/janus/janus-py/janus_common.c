@@ -288,13 +288,15 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
     *pyObj = PyUnicode_FromString(argument_char);
     return TRUE;
   }
-  else if(find_prolog_term_type(CTXTc prTerm) == PYFLOAT) {
+  //  else if(find_prolog_term_type(CTXTc prTerm) == PYFLOAT) {
+  else if(is_float(prTerm)) {
     prolog_term argument = prTerm;
     prolog_float argument_float = p2c_float(argument);
     *pyObj = PyFloat_FromDouble(argument_float);
     return TRUE;
   }
-  else if(find_prolog_term_type(CTXTc prTerm) == PYLIST || find_prolog_term_type(CTXTc prTerm) == PYNIL ) {
+  //  else if(find_prolog_term_type(CTXTc prTerm) == PYLIST || find_prolog_term_type(CTXTc prTerm) == PYNIL ) {
+  else if (islist(prTerm) || isnil(prTerm) ) {
     prolog_term argument = prTerm;
     int count = find_length_prolog_list(argument);
     PyObject *pList = PyList_New(count);
