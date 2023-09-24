@@ -11,10 +11,21 @@ def test_iterations():
     pp_iteration(test_comp_no_tvs,50000)
     pp_iteration(test_comp_default_tvs,50000)
     pp_iteration(test_comp_delay_lists,50000)
-    py_to_xsb_list_xfer(1000000)        
-    xsb_to_py_list_xfer(1000000)        
+    bench_query_list(500000)
+    bench_querystring_list(500000)
+    py_to_xsb_list_xfer(1500000)        
+    xsb_to_py_list_xfer(1500000)        
+    pp_iteration(test_iteration_native,4000000)
 
 # ============= Iteration Code  =============
+
+def test_iteration_native(N):
+    for i in range(1,N):
+        my_incr(N)
+
+def my_incr(N):
+    return(N+1)
+
 def test_iteration_cmd(N):
     for i in range(1,N):
         jns_cmd('jns_test','simple_cmd',N)
@@ -79,5 +90,26 @@ def makelist(N):
         list.append(i)
     return list
 
+def bench_query_list(N):
+    start = time.time()
+    for i in Query('jns_test','backtrack_through_list',N):
+        pass
+    end = time.time()
+    PerSec = N/(end-start)
+    print('bench_query_list succeded: '+str(N))
+    print('# Time: {:.3f} secs; {:_.0f} per sec.'.format(end-start,PerSec))
+    print('')
+    
+def bench_querystring_list(N):
+    start = time.time()
+    QSC = QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)')
+    for i in QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)'):
+        pass
+    end = time.time()
+    PerSec = N/(end-start)
+    print('bench_querystring_list succeded: '+str(N))
+    print('# Time: {:.3f} secs; {:_.0f} per sec.'.format(end-start,PerSec))
+    print('')
+    
 
 test_iterations()
