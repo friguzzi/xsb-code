@@ -78,17 +78,17 @@ extern CPtr darwinDelayregHack;
 
 static PyMethodDef XsbMethods[] = {
   //    {"printPyObj", printPyObj, METH_VARARGS, "Print Python Obj from C"},
-    {"jns_init", px_init, METH_VARARGS, "Init XSB"},
-    {"jns_close", px_close, METH_VARARGS, "Close XSB"},
-    {"jns_cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
-    {"jns_qdet", px_qdet, METH_VARARGS, "Determiate XSB query execution using data structures"},
-    {"jns_comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
+    {"init", px_init, METH_VARARGS, "Init XSB"},
+    {"close", px_close, METH_VARARGS, "Close XSB"},
+    {"cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
+    {"qdet",px_qdet, METH_VARARGS, "Determiate XSB query execution using data structures"},
+    {"comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
     {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
     {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
-    {"jns_once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
+    {"once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
     {"jns_string_first", px_string_first, METH_VARARGS, "XSB execution via string and iterator"},
     {"jns_string_next", px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
-    {"jns_get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
+    {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 

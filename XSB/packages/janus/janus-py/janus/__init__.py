@@ -1,4 +1,5 @@
 from xsbext import *
+#import xsbext as jns
 import sys
 import time
 import atexit
@@ -11,23 +12,23 @@ import gc
 # Having said that, why gc before an exit of the main process?
 
 def _myexit():
-    jns_close()
+    close()
     gc.disable()
     print("XSB has been closed")
 
 atexit.register(_myexit)
 
-jns_init ( )
+init ( )
 
 DELAY_LISTS = 1
 NO_TRUTHVALS = 2
 PLAIN_TRUTHVALS = 4
 
-jns_cmd('curr_sym','set_prolog_flag','heap_garbage_collection','none')
+cmd('curr_sym','set_prolog_flag','heap_garbage_collection','none')
 
-jns_cmd('consult','consult','janus')    # was xsbpy
-jns_cmd('consult','consult','janus_py') # was px
-jns_cmd('consult','consult','jns_test')
+cmd('consult','consult','janus')    # was xsbpy
+cmd('consult','consult','janus_py') # was px
+cmd('consult','consult','jns_test')
 
 ################################################################
 # Modified from SWI
@@ -111,24 +112,24 @@ class QueryString:
 def ensure_loaded(File):
     """Convenience function for loading and/or compiling a Prolog 'file' as necessary.
 
-    Defined as jns_cmd('consult','ensure_loaded',File)
+    Defined as cmd('consult','ensure_loaded',File)
     """
     
-    jns_cmd('consult','ensure_loaded',File)
+    cmd('consult','ensure_loaded',File)
 
 def consult(File):
     """Convenience function for compiling a Prolog 'file' as necessary, and loading it.
 
-    Defined as jns_cmd('consult','consult',File)
+    Defined as cmd('consult','consult',File)
     """
     
-    jns_cmd('consult','consult',File)
+    cmd('consult','consult',File)
 
 def prolog_paths():
     """Convenience function to return a list of all current XSB library paths (XSB's equivalent of Python's sys.path).
     """
 
-    return jns_qdet('jns_test','prolog_paths')
+    return qdet('jns_test','prolog_paths')
     
 def add_prolog_path(List):
     """Convenience function to add one or more XSB library paths designated as a list of strings.  
@@ -143,7 +144,7 @@ def add_prolog_path(List):
 # Gives a Prolog-like echo to calls and writes answers in a Prolog-like manner
 
 def pp_jns_qdet(Module,Pred,*args):
-    """Pretty print jns_qdet() and its return
+    """Pretty print qdet() and its return
     """
 
     try: 
@@ -152,7 +153,7 @@ def pp_jns_qdet(Module,Pred,*args):
         else: 
             print('?- '+Module+':'+Pred+'('+str(args)+',Answer).')
         print('')
-        Tup = jns_qdet(Module,Pred,*args)
+        Tup = qdet(Module,Pred,*args)
         if Tup != 0:
             print('   Answer  = ' + str(Tup[0]))
             print('   TV = ' + _printable_tv(Tup[1]))
@@ -264,7 +265,7 @@ def pp_jns_cmd(Module,Pred,*args):
     """
     
     try:
-        Ret = jns_cmd(Module,Pred,*args)
+        Ret = cmd(Module,Pred,*args)
         print('?- '+Module+':'+Pred+'('+str(*args)+')')
         print('')
         print('   TV = ' + _printable_tv(Ret))
