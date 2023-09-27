@@ -1,11 +1,12 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-from janus import *
+import janus as jns
+from janus import pp_jns_cmd, pp_jns_qdet
 
 orig_output = sys.stdout 
 sys.stdout = open('./temp', 'w')
 
-jns_cmd('consult','ensure_loaded','jns_test')
+jns.cmd('consult','ensure_loaded','jns_test')
 
 def test_cmd_query():
     print('------------ command: arity 1 -------------')

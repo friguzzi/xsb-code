@@ -1,11 +1,12 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-from janus import *
+#from janus import *
+import janus as jns
 
 #orig_output = sys.stdout 
 #sys.stdout = open('./temp', 'w')
 
-jns_cmd('consult','ensure_loaded','test_returnval_py')
+jns.cmd('consult','ensure_loaded','test_returnval_py')
 
 def test_returnval():
     print('--------------------------')

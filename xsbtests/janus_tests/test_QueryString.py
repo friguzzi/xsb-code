@@ -1,29 +1,29 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-from janus import *
+import janus as jns
 
 orig_output = sys.stdout 
 sys.stdout = open('./temp', 'w')
 
-jns_cmd('consult','consult','jns_test')
+jns.cmd('consult','consult','jns_test')
 
 def test_qs():
-    for i in QueryString('jns_test:anti_member([1,2,3],FX)'):
+    for i in jns.QueryString('jns_test:anti_member([1,2,3],FX)'):
         print('for anti_member: ' + str(i))
     print('--------------------------')
-    C1 = QueryString('jns_test:anti_member([1,2,3],X)')
+    C1 = jns.QueryString('jns_test:anti_member([1,2,3],X)')
     print('anti_member 1: ' + str(C1.next()))
     print('anti_member 2: ' + str(C1.next()))
     print('anti_member 3: ' + str(C1.next()))
     print('anti_member 4: ' + str(C1.next()))
     print('--------------------------')
-    C2 = QueryString('jns_test:am_3(foobar,[1,2,3],X)')
+    C2 = jns.QueryString('jns_test:am_3(foobar,[1,2,3],X)')
     print('am_3 1: ' + str(C2.next()))
     print('am_3 2: ' + str(C2.next()))
     print('am_3 3: ' + str(C2.next()))
     print('am_3 4: ' + str(C2.next()))
     print('--------------------------')
-    C2 = QueryString('jns_test:bind_test(A,B,C,D,E,F,G)')
+    C2 = jns.QueryString('jns_test:bind_test(A,B,C,D,E,F,G)')
     print('bind_test1 - ' + str(C2.next()))
     print('bind_test2 - ' + str(C2.next()))
     print('bind_test3 - ' + str(C2.next()))

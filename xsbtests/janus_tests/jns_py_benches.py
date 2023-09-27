@@ -1,8 +1,9 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-from janus import *
+import janus as jns
+import time
 
-jns_cmd('consult','ensure_loaded','jns_test')
+jns.cmd('consult','ensure_loaded','jns_test')
 
 def test_iterations():
     pp_iteration(test_iteration_cmd,200000)
@@ -28,31 +29,31 @@ def my_incr(N):
 
 def test_iteration_cmd(N):
     for i in range(1,N):
-        jns_cmd('jns_test','simple_cmd',N)
+        jns.cmd('jns_test','simple_cmd',N)
 
 # deterministic query        
 def test_iteration_qdet(N):
     for i in range(1,N):
-        jns_qdet('jns_test','simple_call',N)
+        jns.qdet('jns_test','simple_call',N)
     
 def test_iteration_qdet_nd(N):
     for i in range(1,N):
-        jns_qdet('jns_test','nondet_query')
+        jns.qdet('jns_test','nondet_query')
 
 # Passes back 6 solutions of 2 vars w. default tv        
 def test_comp_default_tvs(N):
     for i in range(1,N):
-        jns_comp('jns_test','table_comp',vars=2)
+        jns.comp('jns_test','table_comp',vars=2)
 
 # Passes back 6 solutions of 2 vars w. no tvs        
 def test_comp_no_tvs(N):
     for i in range(1,N):
-        jns_comp('jns_test','table_comp',vars=2,truth_vals=NO_TRUTHVALS)
+        jns.comp('jns_test','table_comp',vars=2,truth_vals=jns.NO_TRUTHVALS)
 
 # Passes back 6 solutions of 2 vars w. delay_lists
 def test_comp_delay_lists(N):
     for i in range(1,N):
-        jns_comp('jns_test','table_comp',vars=2,truth_vals=DELAY_LISTS)
+        jns.comp('jns_test','table_comp',vars=2,truth_vals=jns.DELAY_LISTS)
 
 def pp_iteration(test_func,argument):
     Start = time.time()
@@ -67,7 +68,7 @@ def py_to_xsb_list_xfer(N):
     mylist = makelist(N)
 #    print('getting the length of List = makelist(100000)')
     start = time.time()
-    jns_qdet('basics','length',mylist)
+    jns.qdet('basics','length',mylist)
     end = time.time()
     PerSec = N/(end-start)
     print('py_to_xsb_list_xfer succeded: '+str(N))
@@ -77,7 +78,7 @@ def py_to_xsb_list_xfer(N):
 def xsb_to_py_list_xfer(N):
 #    print('calling prolog_makelist(1000000)')
     start = time.time()
-    jns_qdet('jns_test','prolog_makelist',N)    
+    jns.qdet('jns_test','prolog_makelist',N)    
     end = time.time()
     PerSec = N/(end-start)
     print('xsb_to_py_list_xfer succeded: '+str(N))
@@ -92,7 +93,7 @@ def makelist(N):
 
 def bench_query_list(N):
     start = time.time()
-    for i in Query('jns_test','backtrack_through_list',N):
+    for i in jns.Query('jns_test','backtrack_through_list',N):
         pass
     end = time.time()
     PerSec = N/(end-start)
@@ -102,8 +103,8 @@ def bench_query_list(N):
     
 def bench_querystring_list(N):
     start = time.time()
-    QSC = QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)')
-    for i in QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)'):
+#    QSC = jns.QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)')
+    for i in jns.QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)'):
         pass
     end = time.time()
     PerSec = N/(end-start)
