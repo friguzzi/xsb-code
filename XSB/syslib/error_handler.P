@@ -304,9 +304,12 @@ get_message(Msg,Msg).
 
 get_line_and_position(Msg-pos(FilePos,Line0,LinePos),Line,Pos,Msg) :- !,
 %%    standard:writeln(userout,pos(FilePos,Line,LinePos)),
-    integer(Line0),integer(FilePos),
+    integer(Line0),
     Line is Line0+1,
-    Pos is FilePos - LinePos.
+    (integer(FilePos) 
+     -> Pos is FilePos - LinePos
+     ;  Pos = FilePos
+    ).
 get_line_and_position(Msg,?,?,Msg).
 
 /*get_backtrace(+, -) gets backtrace as built by build_xsb_backtrace:
