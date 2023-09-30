@@ -11,6 +11,7 @@
 :- export py_dot/3,py_dot/4,py_iter/3,py_iter/4.
 :- export janus_python_version/1, py_free/1.
 :- export py_call/2, py_call/3.
+:- export py_is_object/1.
 
 :- import bootstrap_package/2, xsb_running_under/1 from packaging.
 
@@ -20,7 +21,7 @@
 :- import py_func_int/6,py_dot_int/6 from janusm.
 :- import add_py_lib_dir/1 from init_janus as add_py_lib_dir/1.
 :- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
-:- import free_python_object_int/1, py_get_iter_int/5, pyObj_next_int/3  from janusm.
+:- import free_python_object_int/1, py_get_iter_int/5, pyObj_next_int/4  from janusm.
 :- import member/2,memberchk/2 from basics.
 :- import check_callable/3,check_nonvar/2 from error_handler.
 
@@ -36,19 +37,24 @@
 py_iter(Mod,Call,Return):-
     get_def_vars(Call,py_iter,PosArgNbr,Dict),
     py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
-    py_iter_1(Iter,Return).
+    py_iter_1(Iter,Return,0).
+
+py_iter(Mod,Call,Return,Options):-
+    get_def_vars(Call,py_iter,PosArgNbr,Dict),
+    janus_opts(Options,0,Flags),
+    py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
+    py_iter_1(Iter,Return,Flags).
 
 %py_get_iter(Mod,Func,Def_vars,Ret):-
 %    (Def_vars == [] -> Dict = 0 ; def_vars_to_dict(Def_vars,Dict)),
 %    py_get_iter_int(Mod,Func,Dict,Ret).
 
-py_iter_1(Iter,Return):-
-    pyObj_next_int(Iter,Ret,Indicator),
-%    writeln(ret(Ret,Indicator)),
+py_iter_1(Iter,Return,Flag):-
+    pyObj_next_int(Iter,Ret,Indicator,Flag),
     (Indicator = 0 ->
        fail
     ; (Ret = Return
-      ; py_iter_1(Iter,Return))).
+      ; py_iter_1(Iter,Return,Flag))).
 
 %---------
 
@@ -190,6 +196,8 @@ py_call(Mod:Call,Ret,Opts):-
 	 py_func(Mod,Call,Ret,Opts)
      ;   py_dot(Mod,Call,Ret,Opts)).
 
+py_is_object(pyObj(_)).
+   
 end_of_file.
 
 %py_iter(Mod,Func,Return):-
