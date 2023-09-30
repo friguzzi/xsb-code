@@ -18,6 +18,8 @@ def test_once():
     X = jns.once('jns_test:bind_test(A,B,C,D,E,F,G)')
     print('bind_test: ' + str(X))
 
+    X = jns.once('jns_test','one_ary_fail(X)')
+    print('one_ary_fail: ' + str(X))
 
 test_once()
 
