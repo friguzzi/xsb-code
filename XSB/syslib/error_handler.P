@@ -271,8 +271,11 @@ get_sys_error_description(error(resource_error(Flag),Msg), ExceptionDesc) :-
 get_sys_error_description(error(SyntaxError,Msg), ExceptionDesc) :-
         get_line_and_position(Msg,Line,Pos,Msg1),
 	SyntaxError =.. [syntax_error,Culprit],
-	ExceptionDesc =   ('++Error[XSB/Runtime/P]: [Syntax] Line ',
-			   Line,' Position ',Pos,' (', Culprit1,')\n',Msg1),
+	(integer(Pos)
+	 -> ExceptionDesc = ('++Error[XSB/Runtime/P]: [Syntax] Line ',
+			    Line,' Position ',Pos,' (', Culprit1,')\n',Msg1)
+	 ;  ExceptionDesc = ('++Error[XSB/Runtime/P]: [Syntax] ',Msg1)
+	),
 	(var(Culprit)
 	 ->	Culprit1 = ''
 	 ; Culprit = [_H|_T]

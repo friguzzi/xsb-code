@@ -723,14 +723,17 @@ print_token(X)			:-    read_writecon(X).
 iso_read_syntax_error(File,_Psc,[],_Positions):- !,
     NewMessage = '  Empty clause (no term)',
     (current_prolog_flag(errors_with_position,on)
-    -> 	stream_property(File,position(FilePos1)),
+    ->  (stream_property(File,stream_class(console))
+	 -> FilePos1 = end_of_file
+	 ;  stream_property(File,position(FilePos1))
+	),
 	(stream_property(File,line_number(Line)) -> true ; Line = 0),
 	(stream_property(File,pos_at_line(LinePos)) -> true ; LinePos = 0),
 	Position = pos(FilePos1,Line,LinePos),
 	syntax_error(NewMessage-Position)
      ;	syntax_error(NewMessage)
     ).
-iso_read_syntax_error(_File,Psc,Tokens,Positions):-
+iso_read_syntax_error(File,Psc,Tokens,Positions):-
 	psc_prop(Psc, After),
 	length(Tokens,L),				
 	Length is L - After,		     
@@ -746,12 +749,15 @@ iso_read_syntax_error(_File,Psc,Tokens,Positions):-
 %	standard:writeln(userout,sy3(PrintList)),
 	cvt_strings(PrintList,PrintListNoStr),
 	concat_atom(PrintListNoStr,NewMessage),
-	( current_prolog_flag(errors_with_position,on) -> 
-		((After =:= 0 -> Index = Length ; Index is Length + 1),
-		ith(Index,Positions,Position),
-		syntax_error(NewMessage-Position)) 
-		;
-		syntax_error(NewMessage)),
+	(current_prolog_flag(errors_with_position,on)
+	 -> (stream_property(File,stream_class(console))
+	     -> Position = pos(end_of_file,0,0)
+	     ; (After =:= 0 -> Index = Length ; Index is Length + 1),
+	       ith(Index,Positions,Position)
+	    ),
+	    syntax_error(NewMessage-Position) 
+	 ;  syntax_error(NewMessage)
+	),
 	!. % failsafe, in case it would fail inappropriately
 iso_read_syntax_error(_File,_Psc,_Tokens,_Positions):- 
     standard:writeln('ERROR: Syntax error, but bug in reporting it:'),
