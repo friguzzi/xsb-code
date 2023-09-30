@@ -448,6 +448,11 @@ instantiation_error(Predicate,Arg):-
 instantiation_error(Predicate,Arg,State):- 
 	xsb_backtrace(Bt),
 	throw(error(instantiation_error,context((' in arg ',Arg,' of predicate ',Predicate,': must be ',State),Bt))).
+
+instantiation_error(Message):- 
+	xsb_backtrace(Bt),
+	throw(error(instantiation_error,context(Message,Bt))).
+   
 %------
 % Misc Errors (nee aborts)
 :- mode misc_error(?).
@@ -608,6 +613,12 @@ check_ground(Term,Predicate,Arg) :-
 check_nonvar(Term,Predicate,Arg) :- 
 	(var(Term) -> 
 	    instantiation_error(Predicate,Arg,nonvar)
+             ;  true).
+
+:- mode check_nonvar(?,+).
+check_nonvar(Term,Message) :- 
+	(var(Term) -> 
+	    instantiation_error(Message)
              ;  true).
 
 :- mode check_one_thread(?,+,+).
