@@ -83,12 +83,12 @@ static PyMethodDef XsbMethods[] = {
     {"cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
     {"qdet",px_qdet, METH_VARARGS, "Determiate XSB query execution using data structures"},
     {"comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
+    {"once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
+    {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
     {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
-    {"once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
     {"jns_string_first", px_string_first, METH_VARARGS, "XSB execution via string and iterator"},
     {"jns_string_next", px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
-    {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -142,16 +142,19 @@ static PyObject *px_close() {
 #define PYTRUE  1
 #define PYUNDEF 2
 
-#if defined(DARWIN)
-#define get_tv()						 \
-  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):		 \
-   (darwinDelayregHack?PyLong_FromLong(PYUNDEF):		 \
-    PyLong_FromLong(PYTRUE)))
+//  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):		 \
+//   (darwinDelayregHack?PyLong_FromLong(PYUNDEF):		 \
+//    PyLong_FromLong(PYTRUE)))
+//#else
+//#define get_tv()							\
+//  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):			\
+
+#if defined(DARWIN) 
+#define get_tv()				\
+  (delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE))
 #else
-#define get_tv()							\
-  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):			\
-   (delayreg?PyLong_FromLong(PYUNDEF):					\
-    PyLong_FromLong(PYTRUE)))
+#define get_tv()				\
+   (delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE))
 #endif
 
 /* For returning booleans
@@ -262,44 +265,33 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
   }
   //  if (gl_bot != (CPtr)glstack.low) printf("3 heap bot old %p new %p\n",gl_bot, glstack.low);
   xsb_query_save(tuplesize-1);
-if (gl_bot != (CPtr)glstack.low) {
-  //    printf("q4 heap bot old %p new %p\n",gl_bot, glstack.low);
+  if (gl_bot != (CPtr)glstack.low) {
+    //    printf("q4 heap bot old %p new %p\n",gl_bot, glstack.low);
     reset_local_heap_ptrs;
   }
-// printf("qd unify %d\n",p2p_unify(reg_term(CTXTc 1),new_call));
- p2p_unify(reg_term(CTXTc 1),new_call);
-  //  if (gl_bot != (CPtr)glstack.low) printf("5 heap bot old %p new %p\n",gl_bot, glstack.low);
+  p2p_unify(reg_term(CTXTc 1),new_call);
   c2p_int(CTXTc 0,reg_term(CTXTc 3));  /* set command for calling a goal */
   xsb(CTXTc XSB_EXECUTE,0,0);
-  //  printf("before conv: "); printPlgTerm(new_call);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
     return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
-            PyObject *tup = PyTuple_New(2);
-            PyTuple_SET_ITEM(tup,0,Py_None);
-            PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
-            return tup;
+      PyObject *pydict = PyDict_New();
+      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+      return pydict;
     }
     else {
-      PyObject *tup = PyTuple_New(2);
       if (gl_bot != (CPtr)glstack.low) {
 	//	printf("#6 heap bot old %p new %p\n",gl_bot, glstack.low);
 	reset_local_heap_ptrs;
       }
       convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
-      PyTuple_SET_ITEM(tup,0,newPyObj);
-#ifdef DARWIN
-      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
-#else
-      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
-#endif
+      PyObject *pydict = PyDict_New();
+      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),get_tv());
+      PyDict_SetItem(pydict,PyUnicode_FromString("return"),newPyObj);
       reset_regs;
-      //      pPO(CTXTc tup);
-      //      c2p_int(CTXTc 3,reg_term(CTXTc 3));  /* set command for calling a goal */
-      //      xsb(CTXTc XSB_EXECUTE,0,0);
-      return tup;
+      return pydict;
     }
   }
 }
@@ -680,7 +672,12 @@ static PyObject *px_cmd(PyObject *self,PyObject *args) {
     //    printf("Error: %s\n",xsb_get_error_message(CTXT));
     return Py_None;
     } else {
-    PyObject *tv = get_tv();
+    PyObject *tv;
+    if (is_var(reg_term(CTXTc 1))) {  
+      tv = PyLong_FromLong(PYFALSE);
+    } else {
+      tv = get_tv();
+    }
     reset_regs;
     return tv;
   }

@@ -153,12 +153,10 @@ def pp_jns_qdet(Module,Pred,*args):
         else: 
             print('?- '+Module+':'+Pred+'('+str(args)+',Answer).')
         print('')
-        Tup = qdet(Module,Pred,*args)
-        if Tup != 0:
-            print('   Answer  = ' + str(Tup[0]))
-            print('   TV = ' + _printable_tv(Tup[1]))
-        else:
-            print('   TV = ' + _printable_tv(Tup))
+        Dict = qdet(Module,Pred,*args)
+        print('   TV = ' + _printable_tv(Dict['truth']))
+        if (Dict['truth'] != 0):
+            print('   Answer  = ' + str(Dict['return']))
         print('')
     except Exception as err:
         _display_xsb_error(err)
@@ -276,7 +274,7 @@ def pp_jns_cmd(Module,Pred,*args):
 def _display_xsb_error(err):    
         print('Exception Caught from XSB: ')
 #        print('   ' + str(err))
-        print('      ' + jns_get_error_message())
+        print('      ' + get_error_message())
 
 def _printable_tv(TV):
     if TV == 1:
