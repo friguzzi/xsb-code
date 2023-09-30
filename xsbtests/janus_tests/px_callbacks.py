@@ -11,7 +11,8 @@ jns.consult('px_callbacks')
 print('xp_unicode:unicode_upper: '
       + str(jns.qdet('jns_unicode','unicode_upper','Η Google μου το μετέφρασε')))
 print('px_callbacks:test_json: ' + str(jns.qdet('px_callbacks','test_json')))
-NewClass,TV = jns.qdet('px_callbacks','test_class','joe')
-print('px_callbacks','test_class: ' + str(NewClass.name))
+#NewClass,TV = jns.qdet('px_callbacks','test_class','joe')
+Dict = jns.qdet('px_callbacks','test_class','joe')
+print('px_callbacks','test_class: ' + str(Dict['return'].name))
 
 sys.stdout = orig_output
