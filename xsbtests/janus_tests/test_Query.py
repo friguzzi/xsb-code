@@ -8,7 +8,8 @@ sys.stdout = open('./temp', 'w')
 jns.cmd('consult','consult','jns_test')
 
 def test_q():
-#    C1 = Query('jns_test','anti_member',[1,2,3])
+    for i in jns.Query('jns_test','one_ary_fail'):
+        print('one_ary_fail: ' + str(i))
     for i in jns.Query('jns_test','anti_member',[1,2,3]):
         print('for anti_member: ' + str(i))
     print('--------------------------')
