@@ -1,14 +1,14 @@
-for anti_member: (1, 1)
-for anti_member: (2, 1)
-for anti_member: (3, 1)
+for anti_member: {'truth': 1, 'return': 1}
+for anti_member: {'truth': 1, 'return': 2}
+for anti_member: {'truth': 1, 'return': 3}
 --------------------------
-anti_member: 1 (1, 1)
-anti_member: 2 (2, 1)
-anti_member: 3 (3, 1)
+anti_member: 1 {'truth': 1, 'return': 1}
+anti_member: 2 {'truth': 1, 'return': 2}
+anti_member: 3 {'truth': 1, 'return': 3}
 anti_member: 4 None
 --------------------------
-am_3: 1 (1, 1)
-am_3: 2 (2, 1)
-am_3: 3 (3, 1)
+am_3: 1 {'truth': 1, 'return': 1}
+am_3: 2 {'truth': 1, 'return': 2}
+am_3: 3 {'truth': 1, 'return': 3}
 am_3: 4 None
 --------------------------
