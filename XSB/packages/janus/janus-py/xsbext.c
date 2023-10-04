@@ -341,7 +341,6 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
       if (gl_bot != (CPtr)glstack.low) {
 	reset_local_heap_ptrs;
       }
-      //      printPlgTerm(new_call);
       PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,2));
       //      printPyObj(self,bindDict);
       PyTuple_SET_ITEM(tup,0,bindDict);
@@ -487,27 +486,21 @@ if (gl_bot != (CPtr)glstack.low) {
     return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
-      PyObject *tup = PyTuple_New(2);
-      PyTuple_SET_ITEM(tup,0,Py_None);
-      PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
-      return tup;
+      PyObject *pydict = PyDict_New();
+      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+      return pydict;
     }
     else {
       query_arity = tuplesize-1;
-      PyObject *tup = PyTuple_New(2);
       if (gl_bot != (CPtr)glstack.low) {
-	//	printf("#6 heap bot old %p new %p\n",gl_bot, glstack.low);
 	reset_local_heap_ptrs;
       }
       convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
-      PyTuple_SET_ITEM(tup,0,newPyObj);
-#ifdef DARWIN
-      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
-#else
-      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
-#endif
+      PyObject *pydict = PyDict_New();
+      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),get_tv());
+      PyDict_SetItem(pydict,PyUnicode_FromString("return"),newPyObj);
       //      reset_regs;
-      return tup;
+      return pydict;
     }
   }
 }
@@ -524,36 +517,26 @@ static PyObject *px_next(PyObject *self) {
   //  p2p_unify(reg_term(CTXTc 1),new_call);
 
   rcode = xsb_next(CTXT);
-  //  printf("px-n rcode %d\n",rcode);
   if (!rcode) {
     if (ccall_error_thrown(CTXT))  {
-      //    printf("Error: %s\n",xsb_get_error_message(CTXT));
       PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
       return Py_None;
     } else {
       if (is_var(reg_term(CTXTc 1))) {
-	query_arity = 0;
-	PyObject *tup = PyTuple_New(2);
-	PyTuple_SET_ITEM(tup,0,Py_None);
-	PyTuple_SET_ITEM(tup,1,PyLong_FromLong(PYFALSE));
-	return tup;
-    }
-    else {
-      PyObject *tup = PyTuple_New(2);
-      //      if (gl_bot != (CPtr)glstack.low) {
-      //	reset_local_heap_ptrs;
-      //      }
-      //      convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
-      convert_prObj_pyObj(p2p_arg(reg_term(1),query_arity),&newPyObj);
-      PyTuple_SET_ITEM(tup,0,newPyObj);
-#ifdef DARWIN
-      PyTuple_SET_ITEM(tup,1,(darwinDelayregHack?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
-#else
-      PyTuple_SET_ITEM(tup,1,(delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE)));
-#endif
-      reset_regs;
-      return tup;
-    }
+	PyObject *pydict = PyDict_New();
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+	return pydict;
+      }
+      else {
+	//      if (gl_bot != (CPtr)glstack.low) {
+	//	reset_local_heap_ptrs;
+	convert_prObj_pyObj(p2p_arg(reg_term(1),query_arity),&newPyObj);
+	PyObject *pyDict = PyDict_New();
+	PyDict_SetItem(pyDict,PyUnicode_FromString("truth"),get_tv());
+	PyDict_SetItem(pyDict,PyUnicode_FromString("return"),newPyObj);
+	reset_regs;
+	return pyDict;
+      }
     }
   }
   else
