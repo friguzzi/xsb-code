@@ -71,13 +71,13 @@ jns_table(X) :- call(X).
 
 eval_atom(-(Atom),Bindings):-
     string:concat_atom([Atom,'.'],Term),
+%    writeq(Term),nl,
     open(atom(Term),read,S),
-%    writeln(stream(S)),
     read_term(S,T,[variable_names(Bindings)]),
+    close(S),
 %    writeln(to_call(T)),
     call(T).
-%    pythonify(V,Bindings),
-%    writeln(bindings(Bindings)).
+%    writeln(bindings(T)).
 
 %pythonify([],[]).
 %pythonify([A=B|R],[-(A,B)|R1]):- 
