@@ -26,15 +26,12 @@ def test_qs():
     print('am_3 3: ' + str(C2.next()))
     print('am_3 4: ' + str(C2.next()))
     print('--------------------------')
-    C2 = jns.QueryString('jns_test:bind_test(A,B,C,D,E,F,G)')
-    print('bind_test1 - ' + str(C2.next()))
-    print('bind_test2 - ' + str(C2.next()))
-    print('bind_test3 - ' + str(C2.next()))
-    print('bind_test4 - ' + str(C2.next()))
-    print('bind_test5 - ' + str(C2.next()))
-    print('bind_test6 - ' + str(C2.next()))
-    print('bind_test7 - ' + str(C2.next()))
-    print('bind_test8 - ' + str(C2.next()))
+    for i in jns.QueryString('jns_test:bind_test(A,B,C,D,E,F,G)'):
+        print('bind_test ' + str(i))
+    print('--------------------------')
+    for i in jns.QueryString('jns_test:anti_member(X,Y)',Dict={'X':[1,2,3]}):
+        print('anti_member input_dict 1: ' + str(i))
+    print('--------------------------')
 
 test_qs()
 
