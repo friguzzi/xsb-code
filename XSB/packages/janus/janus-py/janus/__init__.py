@@ -33,6 +33,9 @@ cmd('consult','consult','jns_test')
 ################################################################
 # Modified from SWI
 
+def once(TermString,Dict={}):
+    return(jns_once(TermString,Dict))
+    
 class Query:
 
     first_time = True

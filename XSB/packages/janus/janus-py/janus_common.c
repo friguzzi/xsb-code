@@ -179,30 +179,39 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
   else if(PyDict_Check(pyObj)) {
     prolog_term head, tail, pkey, pval;
     prolog_term P = p2p_new(CTXT);
-    c2p_functor(PYDICT_C,1,P);
+    //    c2p_functor(PYDICT_C,1,P);
     tail = p2p_arg(P, 1);
     
     PyObject *key, *value;
     Py_ssize_t pos = 0;
 
     int num_pairs = (int) PyDict_Size(pyObj);
-    for (int iterator = 1 ; iterator < num_pairs ; iterator++) {
-      PyDict_Next(pyObj, &pos, &key, &value);
-      c2p_functor(",",2,tail);
-      head = p2p_arg(tail, 1);
-      c2p_functor(":",2,head);
-      pkey = p2p_arg(head, 1);
-      pval = p2p_arg(head, 2);
-      convert_pyObj_prObj(CTXTc  key, &pkey);	
-      convert_pyObj_prObj(CTXTc  value, &pval);	
-      tail = p2p_arg(tail,2);
-    }
+    if (num_pairs > 0) {
+      PyObject *key, *value;
+      Py_ssize_t pos = 0;
+      c2p_functor(PYDICT_C,1,P);
+      tail = p2p_arg(P, 1);
+      for (int iterator = 1 ; iterator < num_pairs ; iterator++) {
+	PyDict_Next(pyObj, &pos, &key, &value);
+	c2p_functor(",",2,tail);
+	head = p2p_arg(tail, 1);
+	c2p_functor(":",2,head);
+	pkey = p2p_arg(head, 1);
+	pval = p2p_arg(head, 2);
+	convert_pyObj_prObj(CTXTc  key, &pkey);	
+	convert_pyObj_prObj(CTXTc  value, &pval);	
+	tail = p2p_arg(tail,2);
+      }
       PyDict_Next(pyObj, &pos, &key, &value);
       c2p_functor(":",2,tail);
       pkey = p2p_arg(tail, 1);
       pval = p2p_arg(tail, 2);
       convert_pyObj_prObj(CTXTc  key, &pkey);	
       convert_pyObj_prObj(CTXTc  value, &pval);
+    }
+    else {
+      c2p_functor(PYDICT_C,0,P);
+    }
     if(!p2p_unify(CTXTc P, *prTerm))
       return FALSE;
     return TRUE;

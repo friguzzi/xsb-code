@@ -3,11 +3,10 @@
 #include "table_status_defs.h"
 #include "../janus_defs.h"
 
-:- export jns_comp/3, eval_atom/2.
+:- export jns_comp/3, eval_atom/3,eval_atom/2.
 :- export test_pred/2.
 :- import table_status/5 from tables.
-%:- import functor/4 from standard.
-%:- import comma_to_list/2 from basics.
+:- import memberchk/2 from basics.
 
 jns_comp(Goal,Set,Flag):-
     (tables:is_tabled(Goal) ->
@@ -69,19 +68,43 @@ strip_first_n(N,[_|Lin],Lout):-
 :- table jns_table/1 as variant, opaque.
 jns_table(X) :- call(X).
 
+%-------------------------
+
 eval_atom(-(Atom),Bindings):-
     string:concat_atom([Atom,'.'],Term),
-%    writeq(Term),nl,
     open(atom(Term),read,S),
     read_term(S,T,[variable_names(Bindings)]),
     close(S),
-%    writeln(to_call(T)),
     call(T).
-%    writeln(bindings(T)).
 
-%pythonify([],[]).
-%pythonify([A=B|R],[-(A,B)|R1]):- 
-%    pythonify(R,R1).
+eval_atom(Atom,InDict,RetVars):-
+    string:concat_atom([Atom,'.'],Term),
+%    writeq((Term,InDict)),nl,
+    open(atom(Term),read,S),
+    read_term(S,T,[variable_names(Bindings)]),
+    close(S),
+%    writeln(to_call(T,Bindings)),
+    dict_to_list(InDict,DictList),
+    partition_vars(Bindings,DictList,RetVars),
+    %    partially_instantiate_call(InDict,T,Bindings),
+%    writeln(abt_to_call(T)),
+    call(T).
+%    writeln(called(T,RetVars)).
+
+dict_to_list({}(),[]):- !.
+dict_to_list({D},List):-
+    dict_to_list_1(D,List).
+
+dict_to_list_1(','(A,B),[A|T]):- !,
+    dict_to_list_1(B,T).
+dict_to_list_1(B,[B]).
+
+partition_vars([],_DictList,[]).
+partition_vars([Varname = Var|RestVars],DictList,RetList):-
+    (memberchk(Varname:Bind,DictList) ->
+	 Var = Bind,RetList_Mid = RetList
+      ;  RetList = [Varname = Var | RetList_Mid]),
+    partition_vars(RestVars,DictList,RetList_Mid).
 
 end_of_file.
 
