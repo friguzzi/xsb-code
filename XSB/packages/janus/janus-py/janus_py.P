@@ -3,7 +3,7 @@
 #include "table_status_defs.h"
 #include "../janus_defs.h"
 
-:- export jns_comp/3, eval_atom/3,eval_atom/2.
+:- export jns_comp/3, eval_atom/3.
 :- export test_pred/2.
 :- import table_status/5 from tables.
 :- import memberchk/2 from basics.
@@ -86,10 +86,11 @@ eval_atom(Atom,InDict,RetVars):-
 %    writeln(to_call(T,Bindings)),
     dict_to_list(InDict,DictList),
     partition_vars(Bindings,DictList,RetVars),
+    %    writeln(partition_vars(Bindings,DictList,RetVars)),
     %    partially_instantiate_call(InDict,T,Bindings),
-%    writeln(abt_to_call(T)),
+    % writeln(abt_to_call(T)),
     call(T).
-%    writeln(called(T,RetVars)).
+%    writeln(succeeded(T)).
 
 dict_to_list({}(),[]):- !.
 dict_to_list({D},List):-

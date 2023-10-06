@@ -35,7 +35,10 @@ cmd('consult','consult','jns_test')
 
 def once(TermString,Dict={}):
     return(jns_once(TermString,Dict))
-    
+
+#def string_first(TermString,Dict={}):
+#    return(jns_string_first(TermString,Dict))
+
 class Query:
 
     first_time = True
@@ -78,11 +81,11 @@ class QueryString:
     first_time = True
     query_args = None
 
-    def __init__(self, *args):
+    def __init__(self, *args,Dict={}):
         """Create from query and inputs as janus.once()"""
         self.query_args = args
+        self.keyword_args = Dict
         self.first_time = True
-#        print(self.query_args)
     def __iter__(self):
         """Implement iter protocol"""
         return self
@@ -90,7 +93,8 @@ class QueryString:
         """Implement iter protocol. Returns a dict as janus.once()"""
         if (self.first_time):
             self.first_time = False
-            return jns_string_first(*self.query_args)
+            #            return jns_string_first(*self.query_args)
+            return jns_string_first(*self.query_args,self.keyword_args)
         else:
             rc = jns_string_next(*self.query_args)
             if rc == None:
@@ -102,7 +106,7 @@ class QueryString:
     def next(self):
         if (self.first_time):
             self.first_time = False
-            return jns_string_first(*self.query_args)
+            return jns_string_first(*self.query_args,self.keyword_args)
         else:
             return jns_string_next()
     def close(self):
