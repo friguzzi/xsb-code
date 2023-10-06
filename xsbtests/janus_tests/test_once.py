@@ -20,6 +20,13 @@ def test_once():
 
     X = jns.once('jns_test','one_ary_fail(X)')
     print('one_ary_fail: ' + str(X))
+    
+    X = jns.once('jns_test:anti_member(X,Y)',{'X':[1,2,3]})
+    print('am input input dict: ' + str(X))
+
+    X = jns.once('jns_test:anti_member([1,2,3],Y)',{})
+    print('am input empty dict: ' + str(X))
+
 
 test_once()
 
