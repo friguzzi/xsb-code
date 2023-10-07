@@ -34,6 +34,8 @@ enum prolog_term_type
 	PPYLIST = 10, 
 };
 
+extern void printPyObj(PyObject *obj); 
+
 int find_prolog_term_type(CTXTdeclc prolog_term term) {
   if(is_float(term))
     return PYFLOAT;
@@ -179,12 +181,6 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
   else if(PyDict_Check(pyObj)) {
     prolog_term head, tail, pkey, pval;
     prolog_term P = p2p_new(CTXT);
-    //    c2p_functor(PYDICT_C,1,P);
-    tail = p2p_arg(P, 1);
-    
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-
     int num_pairs = (int) PyDict_Size(pyObj);
     if (num_pairs > 0) {
       PyObject *key, *value;
