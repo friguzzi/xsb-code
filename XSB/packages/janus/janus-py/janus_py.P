@@ -3,11 +3,10 @@
 #include "table_status_defs.h"
 #include "../janus_defs.h"
 
-:- export jns_comp/3, eval_atom/3.
+:- export jns_comp/3.
 :- export test_pred/2.
 :- import table_status/5 from tables.
 :- import memberchk/2 from basics.
-
 jns_comp(Goal,Set,Flag):-
     (tables:is_tabled(Goal) ->
         jns_comp_tabled(Goal,Set,Flag)
@@ -69,13 +68,12 @@ strip_first_n(N,[_|Lin],Lout):-
 jns_table(X) :- call(X).
 
 %-------------------------
-
-eval_atom(-(Atom),Bindings):-
-    string:concat_atom([Atom,'.'],Term),
-    open(atom(Term),read,S),
-    read_term(S,T,[variable_names(Bindings)]),
-    close(S),
-    call(T).
+:- export eval_atom/4.
+eval_atom(Atom,InDict,DELAY_LISTS,RetVars):- !,
+    eval_nontabled_atom(Atom,InDict,RetVarsIn,DelayList),
+    RetVars = ['DelayList' = DelayList|RetVarsIn].
+eval_atom(Atom,InDict,_TV_TYPE,RetVars):-
+    eval_atom(Atom,InDict,RetVars).
 
 eval_atom(Atom,InDict,RetVars):-
     string:concat_atom([Atom,'.'],Term),
@@ -93,6 +91,7 @@ eval_atom(Atom,InDict,RetVars):-
 %    writeln(succeeded(T)).
 
 dict_to_list({}(),[]):- !.
+dict_to_list({},[]):- !.
 dict_to_list({D},List):-
     dict_to_list_1(D,List).
 
@@ -106,6 +105,24 @@ partition_vars([Varname = Var|RestVars],DictList,RetList):-
 	 Var = Bind,RetList_Mid = RetList
       ;  RetList = [Varname = Var | RetList_Mid]),
     partition_vars(RestVars,DictList,RetList_Mid).
+
+eval_nontabled_atom(Atom,InputDict,RetVars,DelayList):- 
+%    writeln(eval_nontabled_atom(Atom,InputDict,RetVars,DelayList)),
+    abolish_table_pred(jns_table(_)),
+    process_vars(Atom,Goal1,InputDict,RetVars1),
+%    writeln(process_vars(Atom,Goal1,InputDict,RetVars1)),
+    copy_term((Goal1,RetVars1),(Goal,RetVars)),
+    (jns_table(Goal1),fail ; true),
+    variant_get_residual(jns_table(Goal),DelayList).
+
+process_vars(Atom,Goal,InDict,RetVars):- 
+    string:concat_atom([Atom,'.'],Term),
+    open(atom(Term),read,S),
+    read_term(S,Goal,[variable_names(Bindings)]),
+    close(S),
+%    writeln((Goal,Bindings)),
+    dict_to_list(InDict,DictList),
+    partition_vars(Bindings,DictList,RetVars).
 
 end_of_file.
 
@@ -140,4 +157,11 @@ end_of_file.
 %     comma_to_list(In,Inlist),
 %     pythonize_list(Inlist,Outlist),
 %     Out =.. ['' |Outlist].
+
+%eval_atom(-(Atom),Bindings):-
+%    string:concat_atom([Atom,'.'],Term),
+%    open(atom(Term),read,S),
+%    read_term(S,T,[variable_names(Bindings)]),
+%    close(S),
+%    call(T).
 

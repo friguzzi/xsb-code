@@ -35,7 +35,7 @@ static PyObject *px_qdet(PyObject *self,PyObject *args);
 static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_first(PyObject *self,PyObject *args);
 static PyObject *px_next(PyObject *self);
-static PyObject *px_once(PyObject *self,PyObject *args,PyObject *kwargs);
+static PyObject *px_once(PyObject *self,PyObject *args);
 static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_string_next(PyObject *self);
 static PyObject *px_get_error_message();
@@ -84,7 +84,7 @@ static PyMethodDef XsbMethods[] = {
     {"cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
     {"qdet",px_qdet, METH_VARARGS, "Determiate XSB query execution using data structures"},
     {"comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
-    {"jns_once", px_once, METH_VARARGS | METH_KEYWORDS, "Determinate XSB execution via query/cmd string."},
+    {"jns_once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
     {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
     {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
@@ -387,9 +387,8 @@ static PyObject *px_string_next(PyObject *self) {
     return Py_None;
 }
 
-static PyObject *px_once(PyObject *self,PyObject *args,PyObject *kwargs) {
-  // args is a python string
-  size_t tuplesize = PyTuple_Size(args);
+static PyObject *px_once(PyObject *self,PyObject *args) {
+  // args is a python string + keywords
   size_t heap_offset;
   reset_ccall_error(CTXT);
   ensurePyXSBStackSpace(CTXTc args);
@@ -398,15 +397,15 @@ static PyObject *px_once(PyObject *self,PyObject *args,PyObject *kwargs) {
   convert_pyObj_prObj(args, &return_pr);
   prolog_term term_string = p2p_arg(return_pr,1);
   prolog_term bind_dict = p2p_arg(return_pr,2);
+  int tv_type = p2c_int(p2p_arg(return_pr,3));
   CPtr gl_bot = (CPtr)glstack.low;
   get_reg_offsets;
-
   prolog_term new_call = p2p_new();
-  c2p_functor_in_mod("janus_py","eval_atom",3,new_call);
+  c2p_functor_in_mod("janus_py","eval_atom",4,new_call);
   p2p_unify(p2p_arg(new_call,1),term_string);
   p2p_unify(p2p_arg(new_call,2),bind_dict);
-  //  printPlgTerm(new_call);
-  xsb_query_save(3);
+  p2p_unify(p2p_arg(new_call,3),p2p_arg(return_pr,3));
+  xsb_query_save(4);
   p2p_unify(reg_term(CTXTc 1),new_call);
   int rcode = xsb_query(CTXT);
   if (ccall_error_thrown(CTXT))  {
@@ -415,16 +414,20 @@ static PyObject *px_once(PyObject *self,PyObject *args,PyObject *kwargs) {
   } else {
     if (is_var(reg_term(CTXTc 1))) {
       PyObject *pydict = PyDict_New();
-      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+      if (tv_type == NO_TRUTHVALS)
+	return Py_None;
+      else 
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
       return pydict;
     }
     else {
       if (gl_bot != (CPtr)glstack.low) {
 	reset_local_heap_ptrs;
       }
-      PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,3));
+      PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,4));
       //      printPyObj(self,bindDict);
-      PyDict_SetItem(bindDict,PyUnicode_FromString("truth"),get_tv());
+      if (tv_type == PLAIN_TRUTHVALS)
+	PyDict_SetItem(bindDict,PyUnicode_FromString("truth"),get_tv());
       xsb_close_query();
       return bindDict;
     }
@@ -532,7 +535,6 @@ static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
   int flag_arg = PLAIN_TRUTHVALS;
   PyObject *dictval = NULL;
   if (kwargs) {
-    //    pPO(kwargs);
     dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("vars"));
     if (dictval) varnum = PyLong_AsSsize_t(dictval);
     dictval = NULL;

@@ -33,8 +33,8 @@ cmd('consult','consult','jns_test')
 ################################################################
 # Modified from SWI
 
-def once(TermString,Dict={}):
-    return(jns_once(TermString,Dict))
+def once(TermString,Dict={},truth_vals=PLAIN_TRUTHVALS):
+    return(jns_once(TermString,Dict,truth_vals))
 
 #def string_first(TermString,Dict={}):
 #    return(jns_string_first(TermString,Dict))
