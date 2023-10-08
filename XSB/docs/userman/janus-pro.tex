@@ -23,36 +23,45 @@
 %and efficient interface.  
 %
 
-he new Janus package provides an easy and highly efficient way for
+The new Janus package provides an easy and highly efficient way for
 Prolog to call Python3 functions and methods, and vice versa.  Janus
-packages are rewritings of the packages {\tt xsbpy} and {\tt px} with
-expanded functionalty~\footnote{The {\tt xsbpy} and {\tt px} packages
-were partly funded by BBN Technologies.} and are supported not only by
-XSB, but by SWI, Arriba and soon Ciao.  This chapter describes Prolog
-calling Python, while Chapter ~\ref{} describes Python calling Prolog.
+is originally based on the packages {\tt xsbpy} and {\tt px}
+\cite{SwiA23,AndS23} and has undergone a major rewrite with expanded
+functionalty~\footnote{The {\tt xsbpy} and {\tt px} packages were
+partly funded by BBN Technologies.} in close collaboration with the
+SWI Prolog and Ciao Prolog teams~\footnote{An earlier version of Janus
+is also supported by Arriba Prolog. The documentation in this
+chapter and the next is based mostly on previous {\tt xsbpy} and {\tt
+  px} documentation but also includes some material originally written
+for SWI.} This chapter describes Prolog calling Python, while Chapter
+~\ref{} describes Python calling Prolog.
 
 Janus leverages the fact that the reference C-Python is written in C
 (as are most Prologs), so that Prolog and Python can be readily loaded
 into the same process. The core interface routines are also written
-entirely in C, so the interface is very efficient and -- it is hoped
--- very robust within its known restrictions.
-
-%\input{jns-pro-config}
+almost entirely in C, so the interface is very efficient (hundreds of
+thousands to {\em millions} of round-trip calls between Prolog and
+Python can be made per second) and it is hoped -- very robust within
+its known restrictions.  In addition, due to the dynamic typing of
+both Prolog and Python, a simple bi-translation allows complex Python
+data structures to be mapped to and from Prolog terms.  All of this
+this makes using Python from Prolog as simple as consulting Janus from
+XSB and calling Python.  Calling Prolog from Python is as simple: just
+import janus from Prolog and start making calls.
 
 \begin{example} \rm {\bf Calling a Python Function (I)} \label{ex:xsbpy-json}
   %
 
   {{\em The translation of JSON through \janusplg{} in this example
-      works well, for most purposes we recommend using XSB's native
+      works well, but for most purposes we recommend using XSB's native
       JSON interface described in Chapter \ref{chap:json} of this
       manual.  }}
 
-  
-\noindent  
-Consider the following call:
+Suppose Janus has been loaded by the command {\tt ?- [janus].} and
+consider the call:
 
 \begin{verbatim}
-py_func(json,loads('{"name":"Demo term",
+py_func(json,prolog_loads('{"name":"Demo term"
                      "created": {"day":null,
                                  "month":"December",
                                  "year":2007  },
@@ -63,11 +72,11 @@ py_func(json,loads('{"name":"Demo term",
 %       Ret)
  
 \noindent 
-which, given the {\tt janus} module has been loaded, loads the Python
-{\tt jns\_json} module in {\tt packages/jason/starters} then calls the
-Python function
+loads the Python {\tt json} module
+%in {\tt  packages/jason/starters}
+and then calls the Python function
 
-{\tt jns\_json.prolog\_loads()}
+{\tt json.loads()}
 
 \noindent
 with the above JSON string as its argument.
@@ -88,27 +97,33 @@ printed as:
 %%
 The syntactic flexility of Prolog allows the Python dictionary to be
 represented as a logical term whose syntax is very close to that of
-both a Python dictionary and to a JSON object.  We call a term that
-maps to a Python dictionary a ``Janus dictionary term''.  Such a term
-is simply a Prolog term whose outer functor is \verb|'{}'|/1, whose
+both a Python dictionary and a JSON object.  We call a term that maps
+to a Python dictionary a ``Janus dictionary term''.  Such a term is
+simply a Prolog term whose outer functor is \verb|'{}'|/1, whose
 argument is a comma list, where the elements of the comma list are
-either attribute-value pairs using the predicate {\tt :/2} or other
-Janus dictionary terms.
+attribute-value pairs (sometimes called key-value pairs) using the
+predicate {\tt :/2}, where the attributes and values thenselves may
+contain nested dictionaries, lists, tuples or sets in accordance with
+the restrictions of Python dictionaries.\footnote{In Python,
+attributes may only contain mixtures of integers, strings and tuples.}
 \end{example}
 
 \begin{example} \rm {\bf Calling a Python Function (II): Where to Maintain Python Objects?} \label{xsbpy-examp:glue}
 
 \noindent
 A slightly more complex call to Python is to load a JSON object from a
-file as opposed to a string using the Python function {\tt
+file as opposed to a string.  For this, we may use the Python function
+{\tt
 
   {\tt json.load(Stream)}}
 
+\noindent
 which loads a JSON string from a file into a Python dictionary which
 can then be translated to Prolog.  A small problem arises in that the
 input to {\tt json.load()} is a Python input stream (sometimes called
 a file pointer {\tt fp} is Python docs).  Python input streams are of
-course different than Prolog input streams.
+course different than Prolog input streams.  This can be handled in
+several ways.
 
 \begin{itemize}
   \item {\bf Maintain The Stream Reference in Python}
@@ -141,9 +156,9 @@ py_dot(Stream,close(),Return).
 makes three calls to Python: one to obtain the Python stream as a
 Python object reference, a second to parse the JSON object from the
 file and load it into Prolog, and a third to close the stream.  Note
-that closing a stream requir es a method to be applied to a stream
+that closing a stream requires a method to be applied to a stream
 object rather than a function call, so the Janus predicate {\tt
-  py\_dot/3} is called instead of {\tt py\_func}.
+  py\_dot/[3,4]} is called instead of {\tt py\_func/[3,4]}.
 \end{itemize}
 
 Each of these approaches has advantages.  Maintaining the object in
@@ -160,18 +175,21 @@ matter of taste.
   
 \noindent
 Python library functions often make heavy use of keyword arguments.
-These are easily handled by {\tt py\_func/4}.  Suppose we want to call
-the Python function
+These are easily handled by {\tt py\_func/[3,4]} along with other Janus
+functions such as {\tt py\_dot/[3,4]} and {\tt py\_iter/[3,4]}.  Suppose we
+want to call the Python function
 
 {\tt json.dumps(Dict,indent=2)}
 
+\noindent
 where {\tt Dict} is a Python dictionary that is to be written out as a
 JSON string.  This can easily be called via
 
 {\tt py\_func(json,dumps(PlgDict,indent=2),Ret)}
 
+\noindent
 where {\tt PlgDict} is a Prolog dictionary that is to be converted to
-the Python dictionary {\tt Dict}. Note that {\tt py\_func/3} handles
+the Python dictionary {\tt Dict}. Note that {\tt py\_func/[3,4]} handles
 keyword arguments using the same syntax as Python: possitional
 arguments must occur first in a call followed by 0, 1 or more keyword
 arguments.
@@ -214,16 +232,19 @@ The call
 creates a new instance of the {\tt Person} class, and returns a
 reference to this instance that can later be used to call a method.
 We refer to this reference abstractly as $<obj>$ as the form of a
-Python object reference can differ between Prologs.
+Python object reference can differ between Prologs that support Janus.
 Using this reference, the goal
 
-  {\tt  py\_dot('Person',$<obj>$,hello(programmer),Ret2).}
+  {\tt  py\_dot($<obj>$,hello(programmer),Ret2).}
 
 \noindent
 returns the Prolog atom:
 
 {\tt 'Hello my name is john and I'm a programmer'}
 
+Note that unlike {\tt py\_func/[3,4]} which requires a module as its
+first argument, the module is not needed in {\tt py\_dot/[3,4]} as the
+module is implicit in the object reference.
 %\noindent
 %Although Python methods, like Python functions, can include keyword
 %arguments, {\tt xsbpy} does not support keyword arguments in {\tt
@@ -244,21 +265,21 @@ another {\tt Person} instance:
 \noindent
 and later want to find out all attributes of {\tt bob} both explicitly
 assigned, and default.  This is easily done by {\tt
-  janus:obj\_dict/2}.  Assuming that $<obj>$ is the object
-reference for {\tt bob} in Prolog, the call
+  janus:obj\_dict/2}:
 
-{\tt obj\_dict($<obj>$ ,ObjDict ).}
+{\tt obj\_dict(Obj ,ObjDict ).}
 
+\noindent
 returns
 \begin{verbatim}
     ObjD = {name:bob,age:34,favorite_ice_cream:chocolate}
 \end{verbatim}
 
 There are times when using the dictionary associated with a class is
-not appropriate.  For instance, not all Python classes have {\tt
-  \_\_dict\_\_} methods defined for them, or only a single attribute
-of an object might be required.  In these cases, {\tt py\_dot/4} can be
-used:
+eithr not possible or not appropriate.  For instance, not all Python
+classes have {\tt \_\_dict\_\_} methods defined for them, or only a
+single attribute of an object might be required.  In these cases, {\tt
+  py\_dot/4} can be used:
 
 {\tt    py\_dot('Person',$<obj>$,favorite\_ice\_cream,I)}
 
@@ -286,6 +307,10 @@ Python.
   [py\_iter(true)] 
 \end{example}
 
+\begin{example}
+{\tt py\_call}
+\end{example}
+
 A great deal of Python functionality is directly available via {\tt
   py\_func/[3,4]} and {\tt py\_dot/4}.  In our experience so far, many
 Python libraries can be called directly and will ``just work''
@@ -297,8 +322,9 @@ following.
   method or function like {\tt json.load()} requires a Python resource
   as input, a small amount of code might be useful to, say, open a
   file and perform an operation.  However as an alternative, the file
-  might be opened, the file pointer passed back to XSB, and the
-  function called directly from XSB using the file pointer.
+  might be opened, the file pointer passed back to XSB as an object
+  reference, and the function called directly from XSB using the
+  object reference.
 
 \item Suppose a class with several attributes is defined as a subclass
   of, say a string type.  Currently {\tt xsbpy} will simply pass back
@@ -312,7 +338,7 @@ following.
   critical for RDF I/O from Prolog.  An example of how to handle this
   is seen in {\tt xp\_rdflib.py}, where slightly more elaborate glue
   code is needed to marshal an object's attributes as elements of a
-  tuple, and passed back along with the object.\footnote{This behavior
+  tuple, and pass them back along with the object.\footnote{This behavior
   may change in future versions.}
 \end{itemize}
 
@@ -813,7 +839,7 @@ py_func(xp_fasttext, fasttext_predict(pyObj(p0x7faca3428510),
 returns the detected language and confidence value, which in this case
 
 \begin{verbatim}
-''('__label__en',0.93856)}.
+''('__label__en',0.93856)
 \end{verbatim}
 
 Note that loading the model can be done by calling the Python {\tt
