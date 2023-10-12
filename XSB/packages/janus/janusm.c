@@ -1015,12 +1015,13 @@ DllExport void  pyObj_next_int(CTXTdecl) {
   prolog_term indicator = extern_reg_term(3);
   int flag = p2c_int(reg_term(4));
   //  printf("flag %d\n",flag);
-  //  if(find_prolog_term_type(CTXTc prTerm) == PYITER)
-     if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
+  if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
     {
       prolog_term ref_pyobj = p2p_arg(prTerm, 1);
       char *node_pointer = p2c_string(ref_pyobj); 
       PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
+      if (!PyIter_Check(iterator)) 
+	xsb_abort("Non-itertor passed to px_next\n");
       PyObject *obj = PyIter_Next(iterator);
       //      printPyObj(obj);
       if(obj == NULL) {
