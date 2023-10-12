@@ -72,4 +72,13 @@ py_iter(test_janus_plg,squares(1,5),[1,4,9,16]) succeeded.
 py_iter(builtins,range(1,6),[1,2,3,4,5]) succeeded.
 py_iter(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(bar,1),-(baz,2)]) succeeded.
 py_iter(test_janus_plg,my_generation(5),[1,2,3,4]) succeeded.
+py_func(range,demo_yield(),[0,1,2,3,4,5,6,7,8,9],[do_iter(true)]) succeeded.
+py_func(range,demo_comp(),[0,1,2,3,4,5,6,7,8,9],[do_iter(true)]) succeeded.
+py_func(range,demo_set(),py_set([0,1,2,3,4,5,6,7,8,9]),[do_iter(true)]) succeeded.
+py_iter(range,demo_yield(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
+py_iter(range,demo_comp(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
+py_iter(range,demo_set(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
+setof(var,,(py_func(range,demo_yield(),pyObj),py_next(pyObj,var)),[0,1,2,3,4,5,6,7,8,9]) succeeded
+py_iter(range,demo_num(),ret) succeeded
+ Non-itertor passed to px_next (should error)
 collect(0)

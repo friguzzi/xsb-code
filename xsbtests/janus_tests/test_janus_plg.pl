@@ -22,6 +22,7 @@ test:-
     variadic_tests,
     pyc_tests,
     py_iter_tests,
+    more_iter_tests,  
     py_func(gc,collect(),Collect),
     writeln(collect(Collect)).
 
@@ -538,7 +539,57 @@ check_sort_call(py_func(Mod,MA,Res),Atom):-
       lazy_writeln([py_func(Mod,MA,SetSort),' succeeded.'])
     ; lazy_writeln(['!!! ',py_func(Mod,MA,SetSort),' failed.  Did not match ',Atom])).
 
-end_of_file.
+more_iter_tests:-
+    check_call(py_func(range,demo_yield(),_Res1,[do_iter(true)]),[0,1,2,3,4,5,6,7,8,9]),
+    fail.
+more_iter_tests:-
+    check_call(py_func(range,demo_comp(),_Res1,[do_iter(true)]),[0,1,2,3,4,5,6,7,8,9]),
+    fail.
+more_iter_tests:-
+    check_call(py_func(range,demo_set(),_Res1,[do_iter(true)]),py_set([0,1,2,3,4,5,6,7,8,9])),
+    fail.
+more_iter_tests:-
+    check_call(setof(Ret,py_iter(range,demo_yield(),Ret),_List),[0,1,2,3,4,5,6,7,8,9]),
+    fail.
+more_iter_tests:-
+    check_call(setof(Ret,py_iter(range,demo_comp(),Ret),_List),[0,1,2,3,4,5,6,7,8,9]),
+    fail.
+more_iter_tests:-
+    check_call(setof(Ret,py_iter(range,demo_set(),Ret),_List),[0,1,2,3,4,5,6,7,8,9]),
+    fail.
+more_iter_tests:-
+    setof(Ret,(py_func( range,demo_yield( ) ,F ),py_next(F,Ret)),List),
+    (List = [0,1,2,3,4,5,6,7,8,9] ->
+	 lazy_writeln([setof(var,(py_func(range,demo_yield(),pyObj),py_next(pyObj,var)),List),
+		       ' succeeded'])
+    ;   lazy_writeln(['!!!',setof(var,(py_func(range,demo_yield( ),pyObj),py_next(pyObj,var)),List),
+		      ' failed'])),
+    fail.
+%po2pi_tests:-
+%    catch( (py_func( range,demo_set( ) ,F ),py_object_py_iter(F,_G)),_E,
+%	  (xsb_error_get_message(_E,M),lazy_writeln([M,' (should error)']))),
+%    fail.
+%more_iter_tests:-
+%    catch( (py_func( range,demo_comp( ) ,F ),py_object_py_iter(F,_G)),_E,
+%	  (xsb_error_get_message(_E,M),lazy_writeln([M,' (should error)']))),
+%    fail.
+%more_iter_tests:-
+%    catch( (py_func( range,demo_set( ) ,F ),py_object_py_iter(F,_G)),_E,
+%%	  (xsb_error_get_message(_E,M),lazy_writeln([M,' (should error)']))),
+%    fail.
+more_iter_tests:-
+    py_iter(range,demo_num(),Ret),
+    (Ret = 1234 -> 
+	 lazy_writeln([py_iter(range,demo_num(),ret),' succeeded'])
+    ; 	 lazy_writeln(['!!!',py_iter(range,demo_num(),ret),' failed'])),
+    fail.
+more_iter_tests:-
+    catch((py_func(range,demo_comp( ) ,F , [py_object(true)]),py_next(F,_G)),E,
+	  (xsb_error_get_message(E,M),write(M),writeln(' (should error)'))),
+    fail.
+more_iter_tests.
+
+    end_of_file.
 
 %pytXSB :- py_func('test/testc', tester(),  X), pyList2prList(X, []).
 %pythonXSBTests :- (pytXSB->write('python to XSB tests successful\n'); write('python to XSB tests %failed\n')).
