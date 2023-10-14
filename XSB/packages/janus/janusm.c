@@ -242,8 +242,8 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       list = p2p_arg(prTerm, 1);
       pyset = PySet_New(NULL);
       if (!is_list(list)) {
-	xsb_abort("++Error[janus]: py_set/1 contains an improper argument. "
-		  "(The argument must be a list.)");
+	xsb_type_error_vargs(CTXTc "list",list,"(predicate not known)",
+			     "In Prolog to Python translation of py_set/1\n");
       }
       while (is_list(list)) {   
 	elt = p2p_car(list);
@@ -260,16 +260,21 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       comma_list = p2p_arg(prTerm, 1);
       //      printPlgTerm(comma_list);
       pydict = PyDict_New();
-      while (strcmp(p2c_functor(comma_list),",") == 0 ) {
+      while (isconstr(comma_list) && strcmp(p2c_functor(comma_list),",") == 0 ) {
 	elt = p2p_arg(comma_list,1);
 	if (!isconstr(elt)) {
-	  xsb_abort("++Error[janus]: Improper Prolog term inside Janus dictionary");
+	  xsb_type_error_vargs(CTXTc "dictionary pair",elt,"(predicate not known)",
+			       "In Prolog to Python translation of dictionary/1\n");
 	}
 	convert_prObj_pyObj(p2p_arg(elt,1),&pykey);
 	convert_prObj_pyObj(p2p_arg(elt,2),&pyval);
 	PyDict_SetItem(pydict,pykey,pyval);
 	comma_list = p2p_arg(comma_list,2);
       }
+      if (!isconstr(comma_list)) {
+	xsb_type_error_vargs(CTXTc "dictionary pair",comma_list,"(predicate not known)",
+			     "In Prolog to Python translation of dictionary/1\n");
+	}
       convert_prObj_pyObj(p2p_arg(comma_list,1),&pykey);
       convert_prObj_pyObj(p2p_arg(comma_list,2),&pyval);
       PyDict_SetItem(pydict,pykey,pyval);
@@ -663,12 +668,12 @@ char *set_path_name(char *module)
 
 void set_python_argument(CTXTdeclc prolog_term temp, PyObject *pArgs,int i, char *funct, int arity) {
   PyObject *pValue;
-  if(!convert_prObj_pyObj(CTXTc temp, &pValue))
+  if(!convert_prObj_pyObj(CTXTc temp, &pValue)) {
     xsb_abort("++Error[janus]: argument %d of %s/%d could not be translated to python"
 		"(arg 2 of py_func/[3,4,5])\n",i,funct,arity);
+  }
   //  if (is_functor(temp) && strcmp(p2c_functor(temp),PYOBJ_C) == 0 ) {
   //      Py_INCREF(pValue);
-  //    }
   PyTuple_SetItem(pArgs, i-1, pValue);
 }
 
@@ -695,49 +700,6 @@ DllExport int init_python() {
   PyInit_janusm();
   }
   return TRUE;
-}
-
-// There has to be some way to build a variadic function call
-PyObject *call_variadic_method(PyObject *pObjIn,PyObject *pyMeth,prolog_term prMethIn,
-			       int args_count) {
-  PyObject *pObjOut = NULL;
-  if (args_count == 0) {
-    pObjOut = PyObject_CallMethodNoArgs(pObjIn,pyMeth);
-  }
-  else if (args_count == 1) {
-    PyObject *pyArg1 = NULL;
-    prolog_term prArg1 = p2p_arg(prMethIn, 1);
-    convert_prObj_pyObj(CTXTc prArg1, &pyArg1);
-    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,pyArg1,NULL);
-    //    Py_DECREF(pyArg1);
-  }
-  else if (args_count == 2) {
-    PyObject *pyArg1 = NULL;    PyObject *pyArg2 = NULL;
-    prolog_term prArg1;
-    prArg1 = p2p_arg(prMethIn, 1);
-    convert_prObj_pyObj(CTXTc prArg1, &pyArg1);
-    prArg1 = p2p_arg(prMethIn, 2);
-    convert_prObj_pyObj(CTXTc prArg1, &pyArg2);
-    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,pyArg1,pyArg2,NULL);
-    //    Py_DECREF(pyArg1); Py_DECREF(pyArg2);
-  }
-  else if (args_count == 3) {
-    PyObject *pyArg1 = NULL;    PyObject *pyArg2 = NULL; PyObject *pyArg3 = NULL;
-    prolog_term prArg1;
-    prArg1 = p2p_arg(prMethIn, 1);
-    convert_prObj_pyObj(CTXTc prArg1, &pyArg1);
-    prArg1 = p2p_arg(prMethIn, 2);
-    convert_prObj_pyObj(CTXTc prArg1, &pyArg2);
-    prArg1 = p2p_arg(prMethIn, 3);
-    convert_prObj_pyObj(CTXTc prArg1, &pyArg3);
-    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,pyArg1,pyArg2,pyArg3,NULL);
-    //    Py_DECREF(pyArg1); Py_DECREF(pyArg2); Py_DECREF(pyArg3);
-  }
-  else {
-    xsb_abort("++Error[janus]: Cannot call py_dot/[3,4] with a method of arity greater than "
-	    "three: %s/%d\n",p2c_functor(prMethIn),args_count);
-  }
-  return pObjOut;
 }
 
 void xp_python_error() {
@@ -778,7 +740,6 @@ void xp_python_error() {
     //  PyErr_Print();
 }
 
-
 // Does not take dictionary values, as this doesn't seem to be supported
 // By the Python C-API
 // Tried to decref pObjIn but this didn't work. Not collecting pObjOut
@@ -798,15 +759,13 @@ DllExport int py_dot_int(CTXTdecl) {
     pModule = PyImport_ImportModule(module);
     if(pModule == NULL) {
       PyErr_Print();
-      xsb_abort("++Error[janus]: no Python module named \'%s\' could be found."
+      xsb_abort("++Error[janus]: (existence) no Python module named \'%s\' could be found."
 		"(in arg 1 of py_dot/4)\n",module);
     }
     pyObjIn = pModule;
   }
   else {
-    sprintTerm(forest_log_buffer_1, prObjIn);
-    xsb_abort("++Error[janus]: arg 1 of py_dot/4 is not a Python module or object: %s\n",
-	      forest_log_buffer_1->fl_buffer);
+    xsb_type_error_vargs(CTXTc "Python module or object",prObjIn,"py_dot/[3,4]","");
   }
   prMethIn = (Cell) extern_reg_term(2);
   XSB_Deref(prMethIn);
@@ -852,9 +811,7 @@ DllExport int py_dot_int(CTXTdecl) {
     //    printPyObj(pObjOut);
   }
   else {
-    sprintTerm(forest_log_buffer_1, prMethIn);
-    xsb_abort("++Error[janus]: arg 2 of py_dot/4 is not a Python function or attribute: %s\n",
-	      forest_log_buffer_1->fl_buffer);
+    xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
   }
   if (pObjOut == NULL) { // TES todo change to check for python error
     xp_python_error();
@@ -865,6 +822,7 @@ DllExport int py_dot_int(CTXTdecl) {
   prolog_term return_pr = p2p_new(CTXT);
   //  if(!convert_pyObj_prObj(CTXTc pObjOut, &return_pr, 1)) {
   if (!convert_pyObj_prObj_switch(CTXTc pObjOut, &return_pr, flag)) {
+    //  TES: can we get here?
     xsb_abort("++Error[janus]: The return of py_dot/4  could not be translated to Prolog");
   }
   if(!p2p_unify(CTXTc return_pr, reg_term(CTXTc 6)))
@@ -915,10 +873,9 @@ DllExport int py_func_int(CTXTdecl) {
 	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
       }
     }
-    else   // it isn't callable
-      xsb_abort("++Error[janus]: %s/%d is not a callable function in "
-		"the Python module \'%s\' (arg 2 of py_func/3)\n",get_name(get_str_psc(CallTerm)),
-		get_arity(get_str_psc(CallTerm)),mod_string);
+    else  { // it isn't callable
+      xsb_existence_error(CTXTc "Python module function",CallTerm, "py_func",3, 2) ;
+    }
     Dict = extern_reg_term(3);
     convert_prObj_pyObj(CTXTc Dict,&pyDefVarsDict);
     if(PyDict_Check(pyDefVarsDict)) {
@@ -947,12 +904,8 @@ DllExport int py_func_int(CTXTdecl) {
     return TRUE;
   } /* if is_functor(CallTerm) */
   else	{
-    if (isstring(CallTerm))
-      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of py_func/3)\n",
-		cs_val(CallTerm),mod_string);
-    else
-      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of py_func/3)\n",
-		CallTerm,mod_string);
+      xsb_type_error_vargs(CTXTc "callable",CallTerm,"py_func/[3,4]",
+			   "not a callable function in the Python module %s\n",mod_string);
   }
   //  Py_Finalize();
   return TRUE;
@@ -980,14 +933,10 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
 
 DllExport int jns_GetIter(CTXTdecl) {
 	prolog_term prTerm = extern_reg_term(1);
-	//	if(find_prolog_term_type(CTXTc prTerm) == PYREF 
-	//	|| find_prolog_term_type(CTXTc prTerm) == PYTUP 
-	//		|| find_prolog_term_type(CTXTc prTerm) == PPYLIST)
 	if  ( (strcmp(p2c_functor(prTerm),PYOBJ_C) == 0)
 	     || (strcmp(p2c_functor(prTerm),PYTUP_C) == 0)
 	     || islist(prTerm))
 	  {
-	  //	  int temp = find_prolog_term_type(CTXTc prTerm);
 	  prolog_term ref_pyobj = p2p_arg(prTerm, 1);
 	  char *node_pointer = p2c_string(ref_pyobj); 
 	  //long long temp2 = strtoll(node_pointer+1,NULL, 16);
@@ -1014,14 +963,14 @@ DllExport void  pyObj_next_int(CTXTdecl) {
   prolog_term prTerm = extern_reg_term(1);
   prolog_term indicator = extern_reg_term(3);
   int flag = p2c_int(reg_term(4));
-  //  printf("flag %d\n",flag);
   if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
     {
       prolog_term ref_pyobj = p2p_arg(prTerm, 1);
       char *node_pointer = p2c_string(ref_pyobj); 
       PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
-      if (!PyIter_Check(iterator)) 
+      if (!PyIter_Check(iterator)) {
 	xsb_abort("Non-itertor passed to px_next\n");
+      }
       PyObject *obj = PyIter_Next(iterator);
       //      printPyObj(obj);
       if(obj == NULL) {
@@ -1074,10 +1023,10 @@ DllExport int py_get_iter_int(CTXTdecl) {
 	set_python_argument(CTXTc temp, pArgs, i, function, args_count);
       }
     }
-    else   // it isn't callable
-      xsb_abort("++Error[janus]: %s/%d is not a callable function in "
-		"the Python module \'%s\' (arg 2 of py_iter/3)\n",get_name(get_str_psc(V)),
-		get_arity(get_str_psc(V)),module);
+    else {  // it isn't callable (may not get here -- set_python_argument may handle)
+      xsb_type_error_vargs(CTXTc "callable",V,"py_iter/[3,4]",
+    		   "not a callable function in the Python module %s\n",module);
+    }
     Dict = extern_reg_term(3);
     convert_prObj_pyObj(CTXTc Dict,&pDict);
     if(PyDict_Check(pDict)) {
@@ -1092,11 +1041,14 @@ DllExport int py_get_iter_int(CTXTdecl) {
     if (pValue == NULL) { // TES todo change to check for python error
       xp_python_error();
     }
-    //    printf("pvalue %p\n",pValue);
     PyObject *iterator = PyObject_GetIter(pValue); // TES: need to check for iterator type
-    //    printf("iterator %p\n",iterator);
-    if(iterator == NULL)  // TES: Change to return first value
-      return FALSE;
+    if(iterator == NULL) {
+      prolog_term prTerm = p2p_new(CTXT);
+      convert_pyObj_prObj(CTXTc pValue, &prTerm, 0);
+      if(!p2p_unify(CTXTc prTerm, reg_term(CTXTc 5)))
+	return FALSE;
+      return TRUE;
+    }
     char str[30];
     sprintf(str, "p%p", iterator);
     prolog_term ref = p2p_new(CTXT);
@@ -1107,15 +1059,9 @@ DllExport int py_get_iter_int(CTXTdecl) {
       return FALSE;
     return TRUE;
   }
-  else	{
-    if (isstring(V))
-      xsb_abort("++Error[janus]: \'%s\' is not a callable function (in arg 2 of py_func/3)\n",
-		cs_val(V),module);
-    else
-      xsb_abort("++Error[janus]: %p is not a callable function (in arg 2 of py_func/3)\n",
-		V,module);
+  else	{ // TES: may not get here
+    xsb_type_error_vargs(CTXTc "callable",V,"py_iter/[3,4]","");
   }
-  //  Py_Finalize();
   return TRUE;
 }
 
@@ -1150,4 +1096,46 @@ DllExport int py_get_iter_int(CTXTdecl) {
 //	return pyObj_Next();
 //}
 
+// There has to be some way to build a variadic function call
+//PyObject *call_variadic_method(PyObject *pObjIn,PyObject *pyMeth,prolog_term prMethIn,
+//			       int args_count) {
+//  PyObject *pObjOut = NULL;
+//  if (args_count == 0) {
+//    pObjOut = PyObject_CallMethodNoArgs(pObjIn,pyMeth);
+//  }
+//  else if (args_count == 1) {
+//    PyObject *pyArg1 = NULL;
+//    prolog_term prArg1 = p2p_arg(prMethIn, 1);
+//    convert_prObj_pyObj(CTXTc prArg1, &pyArg1);
+//    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,pyArg1,NULL);
+//    //    Py_DECREF(pyArg1);
+//  }
+//  else if (args_count == 2) {
+//    PyObject *pyArg1 = NULL;    PyObject *pyArg2 = NULL;
+//    prolog_term prArg1;
+//    prArg1 = p2p_arg(prMethIn, 1);
+//    convert_prObj_pyObj(CTXTc prArg1, &pyArg1);
+//    prArg1 = p2p_arg(prMethIn, 2);
+//    convert_prObj_pyObj(CTXTc prArg1, &pyArg2);
+//    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,pyArg1,pyArg2,NULL);
+//    //    Py_DECREF(pyArg1); Py_DECREF(pyArg2);
+//  }
+//  else if (args_count == 3) {
+//    PyObject *pyArg1 = NULL;    PyObject *pyArg2 = NULL; PyObject *pyArg3 = NULL;
+//    prolog_term prArg1;
+//    prArg1 = p2p_arg(prMethIn, 1);
+//    convert_prObj_pyObj(CTXTc prArg1, &pyArg1);
+//    prArg1 = p2p_arg(prMethIn, 2);
+//    convert_prObj_pyObj(CTXTc prArg1, &pyArg2);
+//    prArg1 = p2p_arg(prMethIn, 3);
+//    convert_prObj_pyObj(CTXTc prArg1, &pyArg3);
+//    pObjOut = PyObject_CallMethodObjArgs(pObjIn,pyMeth,pyArg1,pyArg2,pyArg3,NULL);
+//    //    Py_DECREF(pyArg1); Py_DECREF(pyArg2); Py_DECREF(pyArg3);
+//  }
+//  else {
+//    xsb_abort("++Error[janus]: Cannot call py_dot/[3,4] with a method of arity greater than "
+//	    "three: %s/%d\n",p2c_functor(prMethIn),args_count);
+//  }
+//  return pObjOut;
+//}
 
