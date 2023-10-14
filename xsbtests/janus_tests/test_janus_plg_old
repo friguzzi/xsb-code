@@ -1,7 +1,7 @@
 | ?- | ?- 
 py_func(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
 py_func(builtins,float(+1E6),1000000.0) succeeded.
-(should error) py_func set:  ++Error[janus]: Improper Prolog term inside Janus dictionary
+(should error) py_func set:  In Prolog to Python translation of dictionary/1
 py_func(test_janus_plg,return_empty_dict(),{}()) succeeded.
 py_func(test_janus_plg,return_empty_set(),py_set([])) succeeded.
 py_func(test_janus_plg,my_generation(5),pyObj) succeeded.
@@ -49,6 +49,9 @@ dict conversion_sizecheck tests successful
 json_loads_test successful
 json_2({glossary : {(title : example glossary,GlossDiv : {(title : S,GlossList : {GlossEntry : {(ID : SGML,SortAs : SGML,GlossTerm : Standard Generalized Markup Language,Acronym : SGML,Abbrev : ISO 8879:1986,GlossDef : {(para : A meta-markup language, used to create markup languages such as DocBook.,GlossSeeAlso : [GML,XML])},GlossSee : markup)}})})}})
 py_func(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(baz,2),-(bar,1)]) succeeded.
+error_test_succeeded((no_module,foo(1)))
+existence_error(Python module function,foo(1))
+error_test_succeeded((test_err,raise_err_1()))
 py_func(Person,Person(john,35),pyObj) succeeded.
 py_dot(pyObj,func0(),Hello my name is john) succeeded.
 py_dot(pyObj,func1(doofus),Hello my name is john and I'm a doofus) succeeded.
@@ -60,7 +63,7 @@ py_dot(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeede
 py_dot(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 dict({(name : mary,age : 34,favorite_ice_cream : chocolate)})
 dir([name,age,favorite_ice_cream,__module__,__init__,func0,func1,func2,func3,func4,__dict__,__weakref__,__doc__,__new__,__repr__,__hash__,__str__,__getattribute__,__setattr__,__delattr__,__lt__,__le__,__eq__,__ne__,__gt__,__ge__,__reduce_ex__,__reduce__,__getstate__,__subclasshook__,__init_subclass__,__format__,__sizeof__,__dir__,__class__])
-personErr1 (should err)( ++Error[janus]: arg 1 of py_dot/4 is not a Python module or object: 1)
+personErr1 (should err)(type_error(Python module or object,1))
 personErr2 (should err)(type_error(callable_term,1))
 caught error for path.append(Dir)
 caught error for path.append(Dir,Dor)
