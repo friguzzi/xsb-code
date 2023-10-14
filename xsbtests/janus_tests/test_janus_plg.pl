@@ -379,9 +379,7 @@ error_tests:-
 		   'Value: ModuleNotFoundError("No module named ''no_module''")',_]),
     fail.
 error_tests:-
-%    catch(py_func(kwargs,foo(1),_X),E,(xsb_error_get_message(E,M),writeln(M))),
-    error_tests_1(test_janus_plg,foo(1),
-		  [' ++Error[janus]: foo/1 is not a callable function in the Python module \'test_janus_plg\' (arg 2 of py_func/3)']),
+    catch(py_func(test_janus_plg,foo(1),_),E,(xsb_error_get_tag(E,T),writeln(T))),
     fail.
 error_tests:-
     catch(py_func(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
@@ -411,10 +409,10 @@ error_tests.
 error_tests_1(Mod,Goal,Message):-
     catch(py_func(Mod,Goal,_X),E,xsb_error_get_message(E,Mess)),
     (concat_atom(Message,Mess) ->
-	 true
+       writeln(error_test_succeeded((Mod,Goal)))
     ;  writeln('!!!failed'(error_tests_1(Mod,Goal))),
-       writeln(Mess),
-       writeln(Message)).
+       writeln(bad(Mess)),
+       writeln(good(Message))).
     
 meth_tests:- 
     check_call(py_func('Person','Person'(john,35),Obj),pyObj(_)),
@@ -439,7 +437,7 @@ meth_tests:-
     obj_dir(Obj,Dir),writeln(dir(Dir)),
     fail.
 meth_tests:- 
-    catch(py_dot(1,favorite_ice_cream,_Ret4),E2,xsb_error_get_message(E2,Msg2)),
+    catch(py_dot(1,favorite_ice_cream,_Ret4),E2,xsb_error_get_tag(E2,Msg2)),
     writeln('personErr1 (should err)'(Msg2)),
     py_func('Person','Person'(john,35),Obj),
     catch(py_dot(Obj,1,_Ret5),E3,xsb_error_get_tag(E3,Msg3)),

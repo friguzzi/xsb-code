@@ -193,3 +193,6 @@ from collections import namedtuple
 Author = namedtuple('author','journal volume year')
 
 John =  Author('TPLP',3,2021)
+
+def return_complex():
+        return(complex(3,2))
