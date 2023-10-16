@@ -626,6 +626,15 @@ Currently supported options are:
 {\bf Error Cases}
 
 \bi
+\item {\tt py\_func/4} is called with an uninstantiated option list
+\bi
+\item {\tt instantiation\_error}
+\ei
+\item The option list {\tt py\_func/4} contains an improper element,
+  or combination of elements.
+  \bi
+\item {\tt domain\_error}
+  \ei
 \item {\tt Module} is not a Prolog atom:
 \bi
 \item {\tt type\_error}
