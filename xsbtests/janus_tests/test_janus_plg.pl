@@ -50,6 +50,10 @@ func_tests :-
 func_tests :- 
     check_call(py_func(test_janus_plg,my_generation(5),_,[do_iter(true)]),[1,2,3,4]),
     fail.
+% Tests casting to an iterator 
+func_tests :- 
+    check_call(py_func(builtins, range(1,5),_F,[do_iter(true)]),[1,2,3,4]),
+    fail.
 func_tests:- 
     catch(py_func( test_janus_plg, returnVal(_),_),_E,
 	  (xsb_error_get_message(_E,M),numbervars(M),
@@ -403,6 +407,18 @@ error_tests:-
     error_tests_1(test_err,raise_err_1(),
 		  [' Python Error;',_,'Type: <class ''Exception''>',_,
 		   'Value: Exception(''spam'', ''eggs'')',_]),
+    fail.
+error_tests:-
+    catch(py_func(test_janus_plg,returnVal(py_set([q,{a:b}])),_F),E,
+	  (xsb_error_get_tag(E,Tag),lazy_writeln(['Should error: (unhashable set elt) ',Tag]))),
+    fail.
+error_tests:-
+    catch(py_func(test_janus_plg,returnVal({[1,2,3]:q}),_F),E,
+	  (xsb_error_get_tag(E,Tag),lazy_writeln(['Should error: (unhashable dict key) ',Tag]))),
+    fail.
+error_tests:-
+    catch(py_func(test_janus_plg,returnVal({[1,2,3]:q,a:b}),_F),E,
+	  (xsb_error_get_tag(E,Tag),lazy_writeln(['Should error: (unhashable dict key) ',Tag]))),
     fail.
 error_tests.
 
