@@ -248,8 +248,11 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
       while (is_list(list)) {   
 	elt = p2p_car(list);
 	convert_prObj_pyObj(CTXTc elt, &pyelt);
-	PySet_Add(pyset,pyelt); // probably need to check for unhashable errors here
-	list = p2p_cdr(list);
+	if (!PySet_Add(pyset,pyelt)) 
+	  list = p2p_cdr(list);
+	else 
+	  xsb_type_error_vargs(CTXTc "hashable term",elt,"(Predicate not known))",
+			       "In Prolog to Python translation of py_set/1\n");
       }
       *pyObj = pyset;
       return TRUE;
@@ -268,8 +271,12 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
 	}
 	convert_prObj_pyObj(p2p_arg(elt,1),&pykey);
 	convert_prObj_pyObj(p2p_arg(elt,2),&pyval);
-	PyDict_SetItem(pydict,pykey,pyval);
-	comma_list = p2p_arg(comma_list,2);
+	if (!PyDict_SetItem(pydict,pykey,pyval)) 
+	  comma_list = p2p_arg(comma_list,2);
+	else
+	  xsb_type_error_vargs(CTXTc "hashable term",elt,"(Predicate not known))",
+			       "In Prolog to Python translation of py_set/1\n");
+	  
       }
       if (!isconstr(comma_list)) {
 	xsb_type_error_vargs(CTXTc "dictionary pair",comma_list,"(predicate not known)",
@@ -277,9 +284,13 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
 	}
       convert_prObj_pyObj(p2p_arg(comma_list,1),&pykey);
       convert_prObj_pyObj(p2p_arg(comma_list,2),&pyval);
-      PyDict_SetItem(pydict,pykey,pyval);
-      *pyObj = pydict;
-      return TRUE;
+      if (!PyDict_SetItem(pydict,pykey,pyval)) {
+	*pyObj = pydict;
+	return TRUE;
+      }
+      else 
+	xsb_type_error_vargs(CTXTc "hashable term",p2p_arg(comma_list,1),"(Predicate not known))",
+			     "In Prolog to Python translation of py_set/1\n");
     }
     else if (strcmp(p2c_functor(prTerm),"@") == 0 ) {
       prolog_term arg = p2p_arg(prTerm,1);
@@ -534,7 +545,8 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
     c2p_string(PYNONE_C,arg);
     return TRUE;
   }
-  else if (PyIter_Check(pyObj) && (flag&MATERIALIZE_ITERS)) {
+  //  else if (PyIter_Check(pyObj) && (flag&MATERIALIZE_ITERS)) {
+  else if ((flag&MATERIALIZE_ITERS) && (pyObj = PyObject_GetIter(pyObj))) {
     prolog_term head, tail;
     prolog_term P = p2p_new(CTXT);
     PyObject *pyObjInner, *nextObj;
