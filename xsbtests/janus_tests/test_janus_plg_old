@@ -6,6 +6,7 @@ py_func(test_janus_plg,return_empty_dict(),{}()) succeeded.
 py_func(test_janus_plg,return_empty_set(),py_set([])) succeeded.
 py_func(test_janus_plg,my_generation(5),pyObj) succeeded.
 py_func(test_janus_plg,my_generation(5),[1,2,3,4],[do_iter(true)]) succeeded.
+py_func(builtins,range(1,5),[1,2,3,4],[do_iter(true)]) succeeded.
 (should error) py_func check_var top level: [All arguments of the Python goal ,returnVal($VAR(0)), in ,/(py_func,2), must be nonvar.]
 (should error) py_func check_var in term:  ++Error[janus]: argument 1 of returnVal/1 could not be translated to python(arg 2 of py_func/[3,4,5])
 py_func(builtins,float(+1E6),1000000.0,[py_object(true)]) succeeded.
@@ -52,6 +53,9 @@ py_func(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(baz,2),-(bar,
 error_test_succeeded((no_module,foo(1)))
 existence_error(Python module function,foo(1))
 error_test_succeeded((test_err,raise_err_1()))
+Should error: (unhashable set elt) type_error(hashable term,{}(:(a,b)))
+Should error: (unhashable dict key) type_error(hashable term,[1,2,3])
+Should error: (unhashable dict key) type_error(hashable term,:([1,2,3],q))
 py_func(Person,Person(john,35),pyObj) succeeded.
 py_dot(pyObj,func0(),Hello my name is john) succeeded.
 py_dot(pyObj,func1(doofus),Hello my name is john and I'm a doofus) succeeded.
@@ -81,7 +85,14 @@ py_func(range,demo_set(),py_set([0,1,2,3,4,5,6,7,8,9]),[do_iter(true)]) succeede
 py_iter(range,demo_yield(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
 py_iter(range,demo_comp(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
 py_iter(range,demo_set(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
-setof(var,,(py_func(range,demo_yield(),pyObj),py_next(pyObj,var)),[0,1,2,3,4,5,6,7,8,9]) succeeded
+setof(var,,(py_func(range,demo_yield(),pyObj),py_iter(pyObj,var)),[0,1,2,3,4,5,6,7,8,9]) succeeded
 py_iter(range,demo_num(),ret) succeeded
- Non-itertor passed to px_next (should error)
+demo set existence_error(predicate,:(usermod,/(py_obj_py_iter,2))) (should error)
+existence_error(predicate,:(usermod,/(py_obj_py_iter,2))) (should error)
+py_func(retVal([1,2,3,4]),F,[py_object(true)]),py_iter(F,H) succeeded
+py_func(retVal(-(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded
+py_func(retVal(py_set(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded
+py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) succeeded
+py_func(range(1,4)),F),py_iter(F,H) succeeded
+py_func(builtins,range(1,4),[1,2,3],[do_iter(true)]) succeeded.
 collect(0)

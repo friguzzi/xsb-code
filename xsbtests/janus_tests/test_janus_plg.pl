@@ -572,24 +572,20 @@ more_iter_tests:-
     check_call(setof(Ret,py_iter(range,demo_set(),Ret),_List),[0,1,2,3,4,5,6,7,8,9]),
     fail.
 more_iter_tests:-
-    setof(Ret,(py_func( range,demo_yield( ) ,F ),py_next(F,Ret)),List),
+    setof(Ret,(py_func( range,demo_yield( ) ,F ),py_iter(F,Ret)),List),
     (List = [0,1,2,3,4,5,6,7,8,9] ->
-	 lazy_writeln([setof(var,(py_func(range,demo_yield(),pyObj),py_next(pyObj,var)),List),
+	 lazy_writeln([setof(var,(py_func(range,demo_yield(),pyObj),py_iter(pyObj,var)),List),
 		       ' succeeded'])
-    ;   lazy_writeln(['!!!',setof(var,(py_func(range,demo_yield( ),pyObj),py_next(pyObj,var)),List),
+    ;   lazy_writeln(['!!!',setof(var,(py_func(range,demo_yield( ),pyObj),py_iter(pyObj,var)),List),
 		      ' failed'])),
     fail.
-%po2pi_tests:-
-%    catch( (py_func( range,demo_set( ) ,F ),py_object_py_iter(F,_G)),_E,
-%	  (xsb_error_get_message(_E,M),lazy_writeln([M,' (should error)']))),
-%    fail.
 %more_iter_tests:-
-%    catch( (py_func( range,demo_comp( ) ,F ),py_object_py_iter(F,_G)),_E,
-%	  (xsb_error_get_message(_E,M),lazy_writeln([M,' (should error)']))),
-%    fail.
-%more_iter_tests:-
-%    catch( (py_func( range,demo_set( ) ,F ),py_object_py_iter(F,_G)),_E,
-%%	  (xsb_error_get_message(_E,M),lazy_writeln([M,' (should error)']))),
+%    setof(Ret,(py_func( range,demo_yield( ) ,F ),py_next(F,Ret)),List),
+%    (List = [0,1,2,3,4,5,6,7,8,9] ->
+%	 lazy_writeln([setof(var,(py_func(range,demo_yield(),pyObj),py_next(pyObj,var)),List),
+%		       ' succeeded'])
+%    ;   lazy_writeln(['!!!',setof(var,(py_func(range,demo_yield( ),pyObj),py_next(pyObj,var)),List),
+%		      ' failed'])),
 %    fail.
 more_iter_tests:-
     py_iter(range,demo_num(),Ret),
@@ -597,13 +593,60 @@ more_iter_tests:-
 	 lazy_writeln([py_iter(range,demo_num(),ret),' succeeded'])
     ; 	 lazy_writeln(['!!!',py_iter(range,demo_num(),ret),' failed'])),
     fail.
+%more_iter_tests:-
+%    catch((py_func(range,demo_comp( ) ,F , [py_object(true)]),py_next(F,_G)),E,
+%	  (xsb_error_get_message(E,M),write(M),writeln(' (should error)'))),
+%    fail.
 more_iter_tests:-
-    catch((py_func(range,demo_comp( ) ,F , [py_object(true)]),py_next(F,_G)),E,
-	  (xsb_error_get_message(E,M),write(M),writeln(' (should error)'))),
+    catch((py_func(range,demo_comp( ) ,F , [py_object(true)]),py_iter(F,_G)),E,
+	  (xsb_error_get_message(E,M),write('demo comp '),write(M),writeln(' (should error)'))),
+    fail.
+more_iter_tests:-
+    catch( (py_func( range,demo_set( ) ,F ),py_obj_py_iter(F,_G)),_E,
+	  (xsb_error_get_tag(_E,M),lazy_writeln(['demo set ',M,' (should error)']))),
+    fail.
+more_iter_tests:-
+    catch( (py_func( range,demo_comp( ) ,F ),py_obj_py_iter(F,_G)),_E,
+	  (xsb_error_get_tag(_E,M),lazy_writeln([M,' (should error)']))),
+    fail.
+more_iter_tests:-
+    findall(H,(py_func(test_janus_plg,returnVal([1,2,3,4]),F,[py_object(true)]),py_iter(F,H)),AnsL),
+    (AnsL = [1,2,3,4] ->
+	 writeln('py_func(retVal([1,2,3,4]),F,[py_object(true)]),py_iter(F,H) succeeded')
+       ; writeln('py_func(retVal([1,2,3,4]),F,[py_object(true)]),py_iter(G,H) failed')),
+    fail.
+more_iter_tests:-
+    findall(H,(py_func(test_janus_plg,returnVal(-(1,2,3,4)),F,[py_object(true)]),py_iter(F,H)),AnsL),
+    (AnsL = [1,2,3,4] ->
+	 writeln('py_func(retVal(-(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded')
+       ; writeln('py_func(retVal(-(1,2,3,4)),F,[py_object(true)]),py_iter(G,H) failed')),
+    fail.
+more_iter_tests:-
+    findall(H,(py_func(test_janus_plg,returnVal(py_set([1,2,3,4])),F,[py_object(true)]),
+	       py_iter(F,H)),AnsL),
+    (AnsL = [1,2,3,4] ->
+	 writeln('py_func(retVal(py_set(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded')
+       ; writeln('py_func(retVal(py_set(1,2,3,4)),F,[py_object(true)]),py_iter(G,H) failed')),
+    fail.
+more_iter_tests:-
+    findall(H,(py_func(builtins,range(1,4),F,[py_object(true)]),
+	       py_iter(F,H)),AnsL),
+    (AnsL = [1,2,3] ->
+	 writeln('py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) succeeded')
+       ; writeln('py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) failed')),
+    fail.
+more_iter_tests:- 
+    findall(H,(py_func(builtins,range(1,4),F),py_iter(F,H)),AnsL),
+    (AnsL = [1,2,3] ->
+	 writeln('py_func(range(1,4)),F),py_iter(F,H) succeeded')
+    ; writeln('py_func(range(1,4)),F),py_iter(F,H) failed')),
+    fail.
+more_iter_tests:- 
+    check_call(py_func(builtins,range( 1,4 ),_F,[do_iter(true)]),[1,2,3]),
     fail.
 more_iter_tests.
 
-    end_of_file.
+end_of_file.
 
 %pytXSB :- py_func('test/testc', tester(),  X), pyList2prList(X, []).
 %pythonXSBTests :- (pytXSB->write('python to XSB tests successful\n'); write('python to XSB tests %failed\n')).
@@ -612,7 +655,7 @@ more_iter_tests.
 %object_tests:- 
 %    meth_tests,
 %    fail.
-%object_tests.
+%Object_Tests.
 
 %meth_tests:-
 %    Ret2 = 'Hello my name is john and I''m a doofus',
