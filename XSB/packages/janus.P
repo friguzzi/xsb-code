@@ -6,28 +6,27 @@
 :- export key/2, value/3.
 
 :- export add_py_lib_dir/1, py_lib_dirs/1.
-:- export py_dot/3,py_dot/4,py_func/3, py_func/4,py_iter/3,py_iter/4.
+:- export py_dot/3,py_dot/4,py_func/3, py_func/4,py_iter/3,py_iter/2.
 :- export py_next/2.
 :- export janus_python_version/1, py_free/1.
 :- export py_call/2, py_call/3.
 :- export py_is_object/1.
+%:- export py_obj_py_iter/2.
+:- import pyObj_get_iter_int/2 from janusm.
+
    
 :- import bootstrap_package/2, xsb_running_under/1 from packaging.
 :- bootstrap_package(janus, janus).
 
 %:- import term_to_atom/2 from string.
 :- import member/2,memberchk/2 from basics.
-:- import check_callable/3,check_nonvar/2,type_error/4 from error_handler.
+:- import check_callable/3,check_nonvar/2,domain_error/4,type_error/4 from error_handler.
 
 :- import init_janus/1 from init_janus.
 :- import py_func_int/6,py_dot_int/6, py_get_iter_int/5, pyObj_next_int/4 from janusm.
 :- import free_python_object_int/1 from janusm.
 :- import add_py_lib_dir/1 from init_janus as add_py_lib_dir/1.
 :- import py_lib_dirs/1 from init_janus as py_lib_dirs/1.
-
-% Never made it in.
-%:- export py_object_py_iter/2.
-%:- import py_object_py_iter_int/2 from janusm.
 
 %% CHANGE WHEN WINDOZE CONFIG IS INCORPORATED
 ?- \+xsb_running_under(windows),
@@ -38,6 +37,9 @@
 %---------
 
 % no options for py_iter.
+py_iter(pyObj(Obj),Return):-
+    pyObj_get_iter_int(pyObj(Obj),Iter),!,
+    py_iter_1(Iter,Return,0).
 py_iter(Mod,Call,Return):-
     get_def_vars(Call,py_iter,PosArgNbr,Dict),
     py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
@@ -45,11 +47,11 @@ py_iter(Mod,Call,Return):-
 	 py_iter_1(Iter,Return,0)
      ;   Return = Iter).    
 
-py_iter(Mod,Call,Return,Options):-
-    get_def_vars(Call,py_iter,PosArgNbr,Dict),
-    janus_opts(Options,0,Flags),
-    py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
-    py_iter_1(Iter,Return,Flags).
+%py_iter(Mod,Call,Return,Options):-
+%    get_def_vars(Call,py_iter,PosArgNbr,Dict),
+%    janus_opts(Options,0,Flags),
+%    py_get_iter_int(Mod,Call,Dict,PosArgNbr,Iter),
+%    py_iter_1(Iter,Return,Flags).
 
 %py_get_iter(Mod,Func,Def_vars,Ret):-
 %    (Def_vars == [] -> Dict = 0 ; def_vars_to_dict(Def_vars,Dict)),
@@ -86,12 +88,17 @@ py_dot(Obj,MethAttr,Ret,Opts):-
     janus_opts(Opts,0,Flags),
     py_dot_int(Obj,MethAttr,Dict,PosArgNbr,Flags,Ret).
 
-janus_opts([],_,0).
-janus_opts([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
-janus_opts([sizecheck(false)],In,In):- !.
-janus_opts([py_object(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
-janus_opts([do_iter(true)],In,Out):- !,Out is In \/ MATERIALIZE_ITERS.
-janus_opts(Opts,_,_):- abort(['Improper option in option list: [',Opts,']']).
+janus_opts(Opts,_,Flags):-
+    check_nonvar(Opts,['The list of options to a Janus call must be nonvar.']),
+    janus_opts_1(Opts,0,Flags).
+
+janus_opts_1([],_,0).
+janus_opts_1([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
+janus_opts_1([sizecheck(false)],In,In):- !.
+janus_opts_1([py_object(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
+janus_opts_1([do_iter(true)],In,Out):- !,Out is In \/ MATERIALIZE_ITERS.
+janus_opts_1(Opts,_,_):-
+   domain_error('janus option list',Opts,'',4).
 
 :- import term_psc/2, psc_arity/2, term_arg/3 from machine.
 
@@ -205,29 +212,30 @@ py_call(Mod:Call,Ret,Opts):-
 py_is_object(pyObj(_)).
 py_is_object(pyIter(_)).
 
+% py_next and py_object_py_iter are subsumed by py_iter.
 % used to backtrack though 'next' values of an iteration object
-py_next(ObjIn,Next):-
-   iterator_check(ObjIn,Obj),
-    py_next_1(Obj,Next).
+%py_next(ObjIn,Next):-
+%   iterator_check(ObjIn,Obj),
+%    py_next_1(Obj,Next).
+%
+%iterator_check(pyIter(O),pyIter(O)):- !.
+%iterator_check(pyObj(O),pyIter(O)):- !.
+%iterator_check(Input,_):-
+%    type_error('Python Iterator Object',Input,py_next,2).
+%
+%py_next_1(Iter,Next):- 
+%    pyObj_next_int(Iter,Ret,Indicator,0),
+%    (Indicator = 0 ->
+ %      fail
+%    ; (Ret = Next
+%      ; py_next_1(Iter,Next))).
 
-iterator_check(pyIter(O),pyIter(O)):- !.
-iterator_check(pyObj(O),pyIter(O)):- !.
-iterator_check(Input,_):-
-    type_error('Python Iterator Object',Input,py_next,2).
-
-py_next_1(Iter,Next):- 
-    pyObj_next_int(Iter,Ret,Indicator,0),
-    (Indicator = 0 ->
-       fail
-    ; (Ret = Next
-      ; py_next_1(Iter,Next))).
-
-%py_object_py_iter(pyObj(In),Out):- !,
-%    py_object_py_iter_int(In,Out).
-%py_object_py_iter(pyIter(In),pyIter(In)):- !.
-%py_object_py_iter(In,_Out):-
+%py_obj_py_iter(pyObj(In),Out):- !,
+%    py_obj_get_iter_int(pyObj(In),Out).
+%py_obj_py_iter(pyIter(In),pyIter(In)):- !.
+%py_obj_py_iter(In,_Out):-
 %    term_to_atom(In,Atom),
-%    abort(['Input of py_object_py_iter/2 must be a Python object reference: ',Atom]).
+%    abort(['Input of py_iter/2 must be a module and function, or a Python object reference: ',Atom]).
 
 end_of_file.
 

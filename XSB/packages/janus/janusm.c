@@ -59,14 +59,6 @@ void printPyObjType(CTXTdeclc PyObject *obj1);
 
 #define JANUS_MAX_BUFFER 500
 
-//char janus_err[500];
-//void janus_abort(char *fmt,...) {
-//  va_list args;
-//  va_start(args, fmt);
-//  vsnprintf(janus_err, 500, fmt, args);
-//  va_end(args);
-//}
-
 /* TES: these sizes are from sys.getsizeof() on 64-bit Lunux*/
 #define UTF8_SIZE         4     // usually an overestimate, but safe.
 #define PYLONG_SIZE      24
@@ -181,16 +173,6 @@ void free_python_object_int(CTXTdeclc prolog_term prTerm) {
   PyObject *pyObj;
   convert_prObj_pyObj(CTXTc prTerm, &pyObj);
   Py_CLEAR(pyObj);
-}
-
-prolog_term make_prolog_pyObj(PyObject *pyObj) {
-  char str[30];
-  sprintf(str, "p%p", pyObj);
-  prolog_term ref = p2p_new(CTXT);
-  c2p_functor(CTXTc PYOBJ_C, 1, ref);
-  prolog_term ref_inner = p2p_arg(ref, 1);
-  c2p_string(CTXTc str, ref_inner);
-  return ref;
 }
 
 int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
@@ -576,13 +558,6 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
 }
 
 //----------------------- Initialization and Callback support
-  // char *directory = malloc(strlen(getenv("PYTHONPATH")) + directory_len+2);
-  // memset(directory, '\0',strlen(getenv("PYTHONPATH")) + directory_len+2);
-  // strncpy(directory,getenv("PYTHONPATH"), strlen(getenv("PYTHONPATH")));
-  // strncpy(directory+strlen(getenv("PYTHONPATH")), ":", 1);
-  // strncpy(directory+strlen(getenv("PYTHONPATH"))+1,module, directory_len);
-  // setenv("PYTHONPATH", directory,1);
-
 void build_result(char *res, PyObject **lis)
 {
 	char * pch;
@@ -596,33 +571,13 @@ void build_result(char *res, PyObject **lis)
 	}
 }
 
-static PyObject *xsbp_querySingle(PyObject *self, PyObject *args)
-{
-	char *cmd;
-	if(!PyArg_ParseTuple(args, "s", &cmd))
-		return NULL;
-	int rcp;
-	XSB_StrDefine(p_return_string);
-	PyObject* resultList = PyList_New(0);
-	xsb_query_save(4);
-	rcp = xsb_query_string_string(cmd,&p_return_string,"|");
-	xsb_close_query();
-	xsb_query_restore();
-	PyObject *lis = PyList_New(0);
-	if(rcp == XSB_SUCCESS){
-	build_result(p_return_string.string, & lis);
-	PyList_Append(resultList,lis);
-	}
-	return resultList;
-}
-
 static PyMethodDef XsbMethods[] = {
-    {"querySingle",  xsbp_querySingle, METH_VARARGS,
-     "Query XSB from Python which returns the first response."},
+//    {"querySingle",  xsbp_querySingle, METH_VARARGS,
+//     "Query XSB from Python which returns the first response."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-static struct PyModuleDef moduledef = { \
+static struct PyModuleDef moduledef = {				\
             PyModuleDef_HEAD_INIT, "janusm", "prolog to python", -1, XsbMethods, \
             NULL,NULL,NULL,NULL };
 
@@ -636,9 +591,9 @@ static struct PyModuleDef moduledef = { \
 PyMODINIT_FUNC 
 PyInit_janusm(void)
 {
-    PyObject *module = PyModule_Create(&moduledef);
-    if (module == NULL)
-      return NULL;
+  PyObject *module = PyModule_Create(&moduledef);
+  if (module == NULL)
+    return NULL;
     //struct module_state *st = GETSTATE(module);
 
     //st->error = PyErr_NewException("myextension.Error", NULL, NULL);
@@ -943,70 +898,6 @@ void printPyObjType(CTXTdeclc PyObject *obj1) {
 	printf("python type: %s\n",ptype);
 }
 
-DllExport int jns_GetIter(CTXTdecl) {
-	prolog_term prTerm = extern_reg_term(1);
-	if  ( (strcmp(p2c_functor(prTerm),PYOBJ_C) == 0)
-	     || (strcmp(p2c_functor(prTerm),PYTUP_C) == 0)
-	     || islist(prTerm))
-	  {
-	  prolog_term ref_pyobj = p2p_arg(prTerm, 1);
-	  char *node_pointer = p2c_string(ref_pyobj); 
-	  //long long temp2 = strtoll(node_pointer+1,NULL, 16);
-	  PyObject *pValue = (PyObject *)strtoll(node_pointer+1,NULL, 16);
-	  PyObject *iterator; 
-	  iterator = PyObject_GetIter(pValue);
-	  if(iterator == NULL)
-	    return FALSE;
-	  char str[30];
-	  sprintf(str, "p%p", iterator);
-	  prolog_term ref = p2p_new(CTXT);
-	  c2p_functor(CTXTc "pyIter", 1, ref);
-	  prolog_term ref_inner = p2p_arg(ref, 1);
-	  c2p_string(CTXTc str, ref_inner);		
-	  if(!p2p_unify(CTXTc ref, reg_term(CTXTc 2)))
-	    return FALSE;
-	  return TRUE;
-	}
-	return FALSE;
-}
-
-
-DllExport void  pyObj_next_int(CTXTdecl) {
-  prolog_term prTerm = extern_reg_term(1);
-  prolog_term indicator = extern_reg_term(3);
-  int flag = p2c_int(reg_term(4));
-  if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
-    {
-      prolog_term ref_pyobj = p2p_arg(prTerm, 1);
-      char *node_pointer = p2c_string(ref_pyobj); 
-      PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
-      if (!PyIter_Check(iterator)) {
-	xsb_abort("Non-itertor passed to px_next\n");
-      }
-      PyObject *obj = PyIter_Next(iterator);
-      //      printPyObj(obj);
-      if(obj == NULL) {
-	c2p_int(CTXTc FALSE, indicator);
-	return;
-      }
-      prolog_term return_pr = p2p_new(CTXT);
-      if (!convert_pyObj_prObj_switch(CTXTc obj, &return_pr, flag)) {
-	c2p_int(CTXTc FALSE, indicator);
-	return;
-      }
-      //      printPlgTerm(return_pr);
-      prolog_term prRet = extern_reg_term(2);
-      if(!p2p_unify(CTXTc return_pr, prRet)) {
-	c2p_int(CTXTc FALSE, indicator);
-	return;
-      }
-      c2p_int(CTXTc TRUE, indicator);
-      return;
-    }
-  c2p_int(CTXTc FALSE, indicator);
-  return;
-}
-
 DllExport int py_get_iter_int(CTXTdecl) {
   PyObject *pyModule = NULL, *pFunc = NULL;
   PyObject *pArgs = NULL, *pValue = NULL, *pDict = NULL;
@@ -1053,7 +944,7 @@ DllExport int py_get_iter_int(CTXTdecl) {
     if (pValue == NULL) { // TES todo change to check for python error
       xp_python_error();
     }
-    PyObject *iterator = PyObject_GetIter(pValue); // TES: need to check for iterator type
+    PyObject *iterator = PyObject_GetIter(pValue); 
     if(iterator == NULL) {
       prolog_term prTerm = p2p_new(CTXT);
       convert_pyObj_prObj(CTXTc pValue, &prTerm, 0);
@@ -1075,6 +966,82 @@ DllExport int py_get_iter_int(CTXTdecl) {
     xsb_type_error_vargs(CTXTc "callable",V,"py_iter/[3,4]","");
   }
   return TRUE;
+}
+
+	      //	     || (strcmp(p2c_functor(prTerm),PYTUP_C) == 0)
+	      //	     || islist(prTerm))
+
+DllExport int pyObj_get_iter_int(CTXTdecl) {
+  prolog_term prTerm = extern_reg_term(1);
+  //  printPlgTerm(prTerm);
+  if  ( is_functor( prTerm) && (strcmp(p2c_functor(prTerm),PYOBJ_C) == 0))  {
+    prolog_term ref_pyobj = p2p_arg(prTerm, 1);
+	  char *node_pointer = p2c_string(ref_pyobj); 
+	  //long long temp2 = strtoll(node_pointer+1,NULL, 16);
+	  PyObject *pValue = (PyObject *)strtoll(node_pointer+1,NULL, 16);
+	  PyObject *iterator; 
+	  iterator = PyObject_GetIter(pValue);
+	  if(iterator == NULL)
+	    return FALSE;
+	  char str[30];
+	  sprintf(str, "p%p", iterator);
+	  prolog_term ref = p2p_new(CTXT);
+	  c2p_functor(CTXTc "pyIter", 1, ref);
+	  prolog_term ref_inner = p2p_arg(ref, 1);
+	  c2p_string(CTXTc str, ref_inner);		
+	  if(!p2p_unify(CTXTc ref, reg_term(CTXTc 2)))
+	    return FALSE;
+	  return TRUE;
+	}
+	return FALSE;
+}
+
+DllExport void  pyObj_next_int(CTXTdecl) {
+  prolog_term prTerm = extern_reg_term(1);
+  prolog_term indicator = extern_reg_term(3);
+  int flag = p2c_int(reg_term(4));
+  if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
+    {
+      prolog_term ref_pyobj = p2p_arg(prTerm, 1);
+      char *node_pointer = p2c_string(ref_pyobj); 
+      PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
+      if (!PyIter_Check(iterator)) {
+	xsb_abort("Non-itertor passed to px_next\n");
+      }
+      PyObject *obj = PyIter_Next(iterator);
+      //      printPyObj(obj);
+      if(obj == NULL) {
+	c2p_int(CTXTc FALSE, indicator);
+	return;
+      }
+      prolog_term return_pr = p2p_new(CTXT);
+      if (!convert_pyObj_prObj_switch(CTXTc obj, &return_pr, flag)) {
+	c2p_int(CTXTc FALSE, indicator);
+	return;
+      }
+      //      printPlgTerm(return_pr);
+      prolog_term prRet = extern_reg_term(2);
+      if(!p2p_unify(CTXTc return_pr, prRet)) {
+	c2p_int(CTXTc FALSE, indicator);
+	return;
+      }
+      c2p_int(CTXTc TRUE, indicator);
+      return;
+    }
+  c2p_int(CTXTc FALSE, indicator);
+  return;
+}
+
+//----------------------------------------------------------------------------------------
+// Not used
+prolog_term make_prolog_pyObj(PyObject *pyObj) {
+  char str[30];
+  sprintf(str, "p%p", pyObj);
+  prolog_term ref = p2p_new(CTXT);
+  c2p_functor(CTXTc PYOBJ_C, 1, ref);
+  prolog_term ref_inner = p2p_arg(ref, 1);
+  c2p_string(CTXTc str, ref_inner);
+  return ref;
 }
 
 //----------------------------------------------------------------------------------------
@@ -1149,5 +1116,41 @@ DllExport int py_get_iter_int(CTXTdecl) {
 //	    "three: %s/%d\n",p2c_functor(prMethIn),args_count);
 //  }
 //  return pObjOut;
+//}
+
+//char janus_err[500];
+//void janus_abort(char *fmt,...) {
+//  va_list args;
+//  va_start(args, fmt);
+//  vsnprintf(janus_err, 500, fmt, args);
+//  va_end(args);
+//}
+
+// Old initialization stuff.
+  // char *directory = malloc(strlen(getenv("PYTHONPATH")) + directory_len+2);
+  // memset(directory, '\0',strlen(getenv("PYTHONPATH")) + directory_len+2);
+  // strncpy(directory,getenv("PYTHONPATH"), strlen(getenv("PYTHONPATH")));
+  // strncpy(directory+strlen(getenv("PYTHONPATH")), ":", 1);
+  // strncpy(directory+strlen(getenv("PYTHONPATH"))+1,module, directory_len);
+  // setenv("PYTHONPATH", directory,1);
+
+//static PyObject *xsbp_querySingle(PyObject *self, PyObject *args)
+//{
+//	char *cmd;
+//	if(!PyArg_ParseTuple(args, "s", &cmd))
+//		return NULL;
+//	int rcp;
+//	XSB_StrDefine(p_return_string);
+//	PyObject* resultList = PyList_New(0);
+//	xsb_query_save(4);
+//	rcp = xsb_query_string_string(cmd,&p_return_string,"|");
+//	xsb_close_query();
+//	xsb_query_restore();
+//	PyObject *lis = PyList_New(0);
+//	if(rcp == XSB_SUCCESS){
+//	build_result(p_return_string.string, & lis);
+//	PyList_Append(resultList,lis);
+//	}
+//	return resultList;
 //}
 
