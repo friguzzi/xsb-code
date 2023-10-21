@@ -69,7 +69,7 @@
 
 \newcommand{\comment}[1]{}
 \newcommand{\smallourprolog}{xsb}
-\newcommand{\version}{Version 5.0}
+\newcommand{\version}{Version 5.1}
 \newcommand{\LRD}{LRD-stratified}
 
 \newcommand{\ourpredmodrptitem}[2]{
@@ -77,9 +77,6 @@
 	\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\
 	\vspace*{-.30in}  }
 
-\newcommand{\ourpredmoditem}[2]{
-	\index{CDF predicates!#1}
-	\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\}
 
 \newcommand{\demo}[1]{\hspace*{1.5cm}{\tt #1}}
 \newcommand{\desc}[1]{\item[{\tt #1}]\hspace*{1mm}\newline}
@@ -90,6 +87,10 @@
 \newcommand{\indourmoditem}[3]{\item[{\mbox{\tt #1}}]\index{\texttt{#3}!\texttt{#2}}\index[pred]{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
 \newcommand{\ourrepeatmoditem}[3]{\item[{\mbox{\tt #1}}]\index{\texttt{#3}!\texttt{#2}}\index[pred]{\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\ \vspace*{-.35in}}
 \newcommand{\ourrepeatnewitem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\ \vspace*{-.30in}}
+
+\newcommand{\indourjnsitem}[2]{\item[{\mbox{\tt #1}}]\index{Janus!\texttt{#2}}\index[pred]{\texttt{#2}}\hspace*{\fill}{\mbox{\sf Janus standard}}\ \\}
+\newcommand{\indourrepeatjnsitem}[2]{\item[{\mbox{\tt #1}}]\index{Janus!\texttt{#2}}\index[pred]{\texttt{#2}}\hspace*{\fill}{\mbox{\sf Janus standard}}\ \\\vspace*{-.30in}}
+
 
 \newcommand{\repeatpymoditem}[3]{\item[{\mbox{\tt #1}}]\index{Python functions!\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\ \vspace*{-.30in}} 
 \newcommand{\pymoditem}[3]{\item[{\mbox{\tt #1}}]\index{Python functions!\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
@@ -221,12 +222,14 @@ Interfaces and Packages}
 \input{pita}
 \input{minizinc}
 \input{janus-pro}
-\input{xsbpy}
 \input{px}
 \input{xasp}
 \input{pkg-json}
 %\input{cdf/cdf}
 %\input{otherpackages}
+
+\appendix
+\input{xsbpy}
 
 \bibliographystyle{abbrv}
 \bibliography{longstring,manual,pita}
@@ -247,3 +250,4 @@ Interfaces and Packages}
 %%% TeX-PDF-mode: t
 %%% End: 
 
+x5x5

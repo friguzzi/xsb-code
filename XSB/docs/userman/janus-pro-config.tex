@@ -24,9 +24,9 @@ for \janusplg.  To make use of them, simply activate your conda
 environment, (re)configure and (re)make XSB as described in the
 manual.  However, it is critical that the XSB configured for a
 particular anaconda environment is {\em always} used within that
-environmnet, and {\em only} within that environment.  If XSB is to be
-used outside of a given anaconda environmnet or in a different
-environment a separate copy of XSB should be downloaded and configured.
+environment, and {\em only} within that environment.  If XSB is to be
+used outside of a given anaconda environment or in a different
+environmen<t a separate copy of XSB should be downloaded and configured.
 
 \subsection{Configuring \janusplg{} for {\tt venv} or without a virtual environment} \label{sec:xsbpy-linux}
 
@@ -123,7 +123,7 @@ gcc compiler options that are appropriate for the version of {\tt
   libpython} used.\footnote{See {\tt get\_compiler\_options/2} in {\tt
   init\_janus.P}.}  When the  \janusplg{} module is consulted into XSB,
 the {\tt libpython} shared object file is loaded dynamically along
-with the {\tt janus} shared object file.
+with the \janus{} shared object file.
 
 %If installing {\tt xsbpy} on Ubuntu, the first step is to ensure that
 %the proper Python libraries and header files are present.  If using
@@ -157,9 +157,9 @@ with the {\tt janus} shared object file.
 \subsection{Installing a development version of Python under  macOS (if Anaconda is not used)}
 
 Most of the discussion in Section~\ref{sec:xsbpy-linux} pertains
-directly to macOS.  As with Linux, installation of {\tt janus} under
+directly to macOS.  As with Linux, installation of \janus{} under
 Anaconda will be easiest for most users, and it is worthwhile noting
-that whether or not Anaconda is used both XSB and {\tt janus} can be
+that whether or not Anaconda is used both XSB and \janus{} can be
 compiled using either {\tt clang} or {\tt gcc} on both macOS or Linux.
 %When XSB is configured on the Mac, the configuration script also tries
 %to configure {\tt xsbpy} so that it can be loaded and used like any
@@ -261,7 +261,7 @@ This should load the Python interface and run a few tests, printing
 out results.  If it succeeds without errors and without printing
 failed test notifications, the interface is available for use.
 
-It is possible that XSB will try to recomplile the interface, if the
+It is possible that XSB will try to recompile the interface, if the
 file times are inconsistent.  In this case, be sure that the file time
 of {\tt xsbpym.xwam} is later than that of {\tt xsbpym.H} in {\tt
   <XSB>/packages/xsbpy/} and try again.
@@ -286,15 +286,4 @@ command
   bash test.sh
 \end{verbatim}
 
-
-\section{Introductory Examples}
-
-We introduce some of the core functionality of {\tt xsbpy} via a
-series of simple examples.  As background, when {\tt xsbpy} is loaded,
-Python is also loaded and initialized within the XSB process, the core
-Prolog modules of {\tt xsbpy} are loaded into XSB, and paths to {\tt
-  xsbpy} and its sub-directories are added both to Prolog and to Python
-(the latter paths are added by modifying Python's {\tt
-  sys.path}). Later, XSB calls Python, Python will search for modules
-and packages in the same manner as if they were stand-alone.
 
