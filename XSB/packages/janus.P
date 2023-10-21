@@ -196,18 +196,12 @@ obj_dir(Obj,Dir):-
 py_call(pyObj(O):Call,Ret):- !,
     py_dot(pyObj(O),Call,Ret).
 py_call(Mod:Call,Ret):-
-    writeln(mod(Mod)),
-    (structure(Call) -> 
-	 py_func(Mod,Call,Ret)
-     ;   py_dot(Mod,Call,Ret)).
+    py_func(Mod,Call,Ret).
 
-py_call(pyObj(O):Call,Ret,Opts):- !,
-    writeln(found_structure),
-    py_dot(pyObj(O),Call,Ret,Opts).
-py_call(Mod:Call,Ret,Opts):- 
-    (structure(Call) -> 
-	 py_func(Mod,Call,Ret,Opts)
-     ;   py_dot(Mod,Call,Ret,Opts)).
+py_call(pyObj(O):Call,Ret,Opt):- !,
+    py_dot(pyObj(O),Call,Ret,Opt).
+py_call(Mod:Call,Ret,Opt):-
+    py_func(Mod,Call,Ret,Opt).
 
 py_is_object(pyObj(_)).
 py_is_object(pyIter(_)).
