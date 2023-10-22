@@ -33,19 +33,19 @@ cmd('consult','consult','jns_test')
 ################################################################
 # Modified from SWI
 
-def once(TermString,Dict={},truth_vals=PLAIN_TRUTHVALS):
-    return(jns_once(TermString,Dict,truth_vals))
+def query_once(TermString,Dict={},truth_vals=PLAIN_TRUTHVALS):
+    return(jns_query_once(TermString,Dict,truth_vals))
 
 #def string_first(TermString,Dict={}):
 #    return(jns_string_first(TermString,Dict))
 
-class Query:
+class Apply:
 
     first_time = True
     query_args = None
 
     def __init__(self, *args):
-        """Create from query and inputs as janus.once()"""
+        """Create from query and inputs as with janus.once()"""
         self.query_args = args
         self.first_time = True
 #        print(self.query_args)
@@ -53,7 +53,7 @@ class Query:
         """Implement iter protocol"""
         return self
     def __next__(self):
-        """Implement iter protocol. Returns a dict as janus.once()"""
+        """Implement iter protocol. Returns a dict as with janus.once()"""
         if (self.first_time):
             self.first_time = False
             return jns_first(*self.query_args)
@@ -75,14 +75,14 @@ class Query:
         """Explicitly close the query."""
 #        swipl.close_query(self.state)
 
-# ================ QueryString  ================
-class QueryString:
+# ================ Query  ================
+class Query:
     
     first_time = True
     query_args = None
 
     def __init__(self, *args,Dict={}):
-        """Create from query and inputs as janus.once()"""
+        """Create from query and inputs as with janus.once()"""
         self.query_args = args
         self.keyword_args = Dict
         self.first_time = True
@@ -90,7 +90,7 @@ class QueryString:
         """Implement iter protocol"""
         return self
     def __next__(self):
-        """Implement iter protocol. Returns a dict as janus.once()"""
+        """Implement iter protocol. Returns a dict as with janus.once()"""
         if (self.first_time):
             self.first_time = False
             #            return jns_string_first(*self.query_args)
@@ -136,7 +136,7 @@ def prolog_paths():
     """Convenience function to return a list of all current XSB library paths (XSB's equivalent of Python's sys.path).
     """
 
-    return qdet('jns_test','prolog_paths')
+    return apply_once('jns_test','prolog_paths')
     
 def add_prolog_path(List):
     """Convenience function to add one or more XSB library paths designated as a list of strings.  
@@ -150,8 +150,8 @@ def add_prolog_path(List):
 # ================ Pretty Printing  ================
 # Gives a Prolog-like echo to calls and writes answers in a Prolog-like manner
 
-def pp_jns_qdet(Module,Pred,*args):
-    """Pretty print qdet() and its return
+def pp_jns_apply_once(Module,Pred,*args):
+    """Pretty print apply_once() and its return
     """
 
     try: 
@@ -160,7 +160,7 @@ def pp_jns_qdet(Module,Pred,*args):
         else: 
             print('?- '+Module+':'+Pred+'('+str(args)+',Answer).')
         print('')
-        Dict = qdet(Module,Pred,*args)
+        Dict = apply_once(Module,Pred,*args)
         print('   TV = ' + _printable_tv(Dict['truth']))
         if (Dict['truth'] != 0):
             print('   Answer  = ' + str(Dict['return']))
