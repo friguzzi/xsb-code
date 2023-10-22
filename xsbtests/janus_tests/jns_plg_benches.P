@@ -74,8 +74,7 @@ func_kw_incr(Num):-
     func_kw_incr(Num1).
 
 py_func_get_list(N):-
-    py_func(jns_plg_benches,makelist_ret(N),_F),
-    writeln(also_done).
+    py_func(jns_plg_benches,makelist_ret(N),_F).
 
 py_func_send_list(N):-
     makelist(N,List),

@@ -7,13 +7,13 @@ jns.cmd('consult','ensure_loaded','jns_test')
 
 def test_iterations():
     pp_iteration(test_iteration_cmd,200000)
-    pp_iteration(test_iteration_qdet,200000)
-    pp_iteration(test_iteration_qdet_nd,200000)
+    pp_iteration(test_iteration_apply_once,200000)
+    pp_iteration(test_iteration_apply_once_nd,200000)
     pp_iteration(test_comp_no_tvs,50000)
     pp_iteration(test_comp_default_tvs,50000)
     pp_iteration(test_comp_delay_lists,50000)
-    bench_query_list(500000)
-    bench_querystring_list(500000)
+    bench_Apply_list(500000)
+    bench_Query_list(500000)
     py_to_xsb_list_xfer(1500000)        
     xsb_to_py_list_xfer(1500000)        
     pp_iteration(test_iteration_native,4000000)
@@ -32,13 +32,13 @@ def test_iteration_cmd(N):
         jns.cmd('jns_test','simple_cmd',N)
 
 # deterministic query        
-def test_iteration_qdet(N):
+def test_iteration_apply_once(N):
     for i in range(1,N):
-        jns.qdet('jns_test','simple_call',N)
+        jns.apply_once('jns_test','simple_call',N)
     
-def test_iteration_qdet_nd(N):
+def test_iteration_apply_once_nd(N):
     for i in range(1,N):
-        jns.qdet('jns_test','nondet_query')
+        jns.apply_once('jns_test','nondet_query')
 
 # Passes back 6 solutions of 2 vars w. default tv        
 def test_comp_default_tvs(N):
@@ -68,7 +68,7 @@ def py_to_xsb_list_xfer(N):
     mylist = makelist(N)
 #    print('getting the length of List = makelist(100000)')
     start = time.time()
-    jns.qdet('basics','length',mylist)
+    jns.apply_once('basics','length',mylist)
     end = time.time()
     PerSec = N/(end-start)
     print('py_to_xsb_list_xfer succeded: '+str(N))
@@ -78,7 +78,7 @@ def py_to_xsb_list_xfer(N):
 def xsb_to_py_list_xfer(N):
 #    print('calling prolog_makelist(1000000)')
     start = time.time()
-    jns.qdet('jns_test','prolog_makelist',N)    
+    jns.apply_once('jns_test','prolog_makelist',N)    
     end = time.time()
     PerSec = N/(end-start)
     print('xsb_to_py_list_xfer succeded: '+str(N))
@@ -91,20 +91,20 @@ def makelist(N):
         list.append(i)
     return list
 
-def bench_query_list(N):
+def bench_Apply_list(N):
     start = time.time()
-    for i in jns.Query('jns_test','backtrack_through_list',N):
+    for i in jns.Apply('jns_test','backtrack_through_list',N):
         pass
     end = time.time()
     PerSec = N/(end-start)
-    print('bench_query_list succeded: '+str(N))
+    print('bench_Apply_list succeded: '+str(N))
     print('# Time: {:.3f} secs; {:_.0f} per sec.'.format(end-start,PerSec))
     print('')
     
-def bench_querystring_list(N):
+def bench_Query_list(N):
     start = time.time()
 #    QSC = jns.QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)')
-    for i in jns.QueryString('jns_test:backtrack_through_list(' + str(N) + ',Elt)'):
+    for i in jns.Query('jns_test:backtrack_through_list(' + str(N) + ',Elt)'):
         pass
     end = time.time()
     PerSec = N/(end-start)

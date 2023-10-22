@@ -27,13 +27,13 @@ echo "-------------------------------------------------------"
 u=`uname`;
 #echo "uname for this system is $u";
 
-../pygentest.sh $python px_callbacks.py
-../pygentest.sh $python test_cmd_query.py
+../pygentest.sh $python jns_callbacks.py
+../pygentest.sh $python test_cmd_apply_once.py
 ../pygentest.sh $python test_interrupts.py
 ../pygentest.sh $python test_comps.py
-../pygentest.sh $python test_once.py
+../pygentest.sh $python test_query_once.py
+../pygentest.sh $python test_Apply.py
 ../pygentest.sh $python test_Query.py
-../pygentest.sh $python test_QueryString.py
 #../pygentest.sh $python test_returnval_py.py
 
 #========== the following are non-regression tests ==========
