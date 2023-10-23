@@ -35,6 +35,7 @@ enum prolog_term_type
 };
 
 extern void printPyObj(PyObject *obj); 
+extern void printPlgTerm(prolog_term term2);
 
 int find_prolog_term_type(CTXTdeclc prolog_term term) {
   if(is_float(term))
@@ -179,6 +180,7 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
     return TRUE;
   }
   else if(PyDict_Check(pyObj)) {
+    //    printPyObj(pyObj);
     prolog_term head, tail, pkey, pval;
     prolog_term P = p2p_new(CTXT);
     int num_pairs = (int) PyDict_Size(pyObj);
@@ -273,16 +275,15 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm) {
 }
 
 int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
-  //int type = find_prolog_term_type(CTXTc prTerm);
-  //printf("type %i\n",type);
-  //printPlgTerm(prTerm);
+  int type = find_prolog_term_type(CTXTc prTerm);
+  //  printf("type %i\n",type);
+  //  printPlgTerm(prTerm);
   if(is_int(CTXTc prTerm)) {
     prolog_term argument = prTerm;
     prolog_int argument_int = p2c_int(argument);
     *pyObj = PyLong_FromSsize_t(argument_int);
     return TRUE;
   }
-  //  else if(is_string(CTXTc prTerm)) {
   else if(isstring(CTXTc (Cell) prTerm)) {
     if (isnil(prTerm)) {
       *pyObj = PyList_New(0);
@@ -345,8 +346,12 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
     else if (strcmp(p2c_functor(prTerm),PYDICT_C) == 0 ) {
       PyObject *pydict, *pykey, *pyval;
       prolog_term elt, comma_list;
-      comma_list = p2p_arg(prTerm, 1);
       pydict = PyDict_New();
+      if (p2c_arity(prTerm) == 0) {
+	*pyObj = pydict;
+	return TRUE;
+      }
+      comma_list = p2p_arg(prTerm, 1);
       while (strcmp(p2c_functor(comma_list),",") == 0 ) {
 	elt = p2p_arg(comma_list,1);
 	convert_prObj_pyObj(p2p_arg(elt,1),&pykey);

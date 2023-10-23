@@ -288,7 +288,10 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
 	//	printf("#6 heap bot old %p new %p\n",gl_bot, glstack.low);
 	reset_local_heap_ptrs;
       }
+      //      printPlgTerm(p2p_arg(new_call,tuplesize-1));
+      //      printf("conveted\n");
       convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
+      //      printPyObj(self,newPyObj);
       PyObject *pydict = PyDict_New();
       PyDict_SetItem(pydict,PyUnicode_FromString("truth"),get_tv());
       PyDict_SetItem(pydict,PyUnicode_FromString("return"),newPyObj);
