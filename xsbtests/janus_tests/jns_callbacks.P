@@ -1,5 +1,5 @@
 
-:- export base_test/1, test_float/1,test_uni/2, test_json/1,
+:- export base_test/1, get_globals/1, test_float/1,test_uni/2, test_json/1,
    test_class/2, test_float0/0.
 
 :- import py_func/3 from janus.
@@ -24,3 +24,7 @@ test_json(Ret):-
 
 test_class(Name,Obj):-
     py_func('Person','Person'(Name,35),Obj).
+
+get_globals(X):-
+    py_func(builtins,globals(),X).
+
