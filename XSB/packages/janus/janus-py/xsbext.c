@@ -36,10 +36,12 @@ static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_first(PyObject *self,PyObject *args);
 static PyObject *px_next(PyObject *self);
 static PyObject *px_once(PyObject *self,PyObject *args);
-static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs);
+//static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs);
+static PyObject *px_string_first(PyObject *self,PyObject *args);
 static PyObject *px_string_next(PyObject *self);
 static PyObject *px_get_error_message();
 static PyObject *px_close_query();
+
 
 PyObject *printPyObj(PyObject *self,PyObject *obj1);
 
@@ -88,7 +90,8 @@ static PyMethodDef XsbMethods[] = {
     {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
     {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
-    {"jns_string_first", px_string_first, METH_VARARGS | METH_KEYWORDS, "XSB execution via string and iterator"},
+    //    {"jns_string_first", px_string_first, METH_VARARGS | METH_KEYWORDS, "XSB execution via string and iterator"},
+    {"jns_string_first", px_string_first, METH_VARARGS, "XSB execution via string and iterator"},
     {"jns_string_next", px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
     {"close_query", px_close_query, METH_VARARGS, "Close Query"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
@@ -315,24 +318,28 @@ static PyObject *var_bindings_to_dict(prolog_term pBind) {
   return pydict;
 }
 
-static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs) {
+//static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs) {
+static PyObject *px_string_first(PyObject *self,PyObject *args) {
   size_t tuplesize = PyTuple_Size(args);
   size_t heap_offset;
   reset_ccall_error(CTXT);
   ensurePyXSBStackSpace(CTXTc args);
   prolog_term return_pr = p2p_new();
+  //  printPyObj(self,args);
   convert_pyObj_prObj(args, &return_pr);
   prolog_term term_string = p2p_arg(return_pr,1);
   prolog_term bind_dict = p2p_arg(return_pr,2);
+  int tv_type = p2c_int(p2p_arg(return_pr,3));
   CPtr gl_bot = (CPtr)glstack.low;
   get_reg_offsets;
 
   prolog_term new_call = p2p_new();
-  c2p_functor_in_mod("janus_py","eval_atom",3,new_call);
+  c2p_functor_in_mod("janus_py","eval_atom",4,new_call);
   p2p_unify(p2p_arg(new_call,1),term_string);
   p2p_unify(p2p_arg(new_call,2),bind_dict);
-  //  printPlgTerm(bind_dict);
-  xsb_query_save(3);
+  p2p_unify(p2p_arg(new_call,3),p2p_arg(return_pr,3));
+  printPlgTerm(bind_dict);
+  xsb_query_save(4);
   p2p_unify(reg_term(CTXTc 1),new_call);
   int rcode = xsb_query(CTXT);
   if (ccall_error_thrown(CTXT))  {
@@ -348,14 +355,16 @@ static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs)
       if (gl_bot != (CPtr)glstack.low) {
 	reset_local_heap_ptrs;
       }
-      PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,3));
-      PyDict_SetItem(bindDict,PyUnicode_FromString("truth"),get_tv());
+      PyObject *bindDict = var_bindings_to_dict(p2p_arg(new_call,4));
+      //      printPyObj(self,bindDict);
+      if (tv_type == PLAIN_TRUTHVALS)
+	PyDict_SetItem(bindDict,PyUnicode_FromString("truth"),get_tv());
       return bindDict;
     }
   }
 }
 
-static PyObject *px_string_next(PyObject *self) {
+  static PyObject *px_string_next(PyObject *self) {
   size_t heap_offset;
   int rcode;
   reset_ccall_error(CTXT);
@@ -378,8 +387,10 @@ static PyObject *px_string_next(PyObject *self) {
 	return pydict;
       }
       else {
-	PyObject *bindDict = var_bindings_to_dict(p2p_arg(reg_term(1),3));
-	PyDict_SetItem(bindDict,PyUnicode_FromString("truth"),get_tv());
+	PyObject *bindDict = var_bindings_to_dict(p2p_arg(reg_term(1),4));
+	if (p2c_int(p2p_arg(reg_term(1),3)) == PLAIN_TRUTHVALS)
+	  PyDict_SetItem(bindDict,PyUnicode_FromString("truth"),get_tv());
+	//	if (tv_type == PLAIN_TRUTHVALS)
 	//      if (gl_bot != (CPtr)glstack.low) {
 	//	reset_local_heap_ptrs;
 	return bindDict;
@@ -387,6 +398,7 @@ static PyObject *px_string_next(PyObject *self) {
     }
   }
   else
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -408,6 +420,7 @@ static PyObject *px_once(PyObject *self,PyObject *args) {
   p2p_unify(p2p_arg(new_call,1),term_string);
   p2p_unify(p2p_arg(new_call,2),bind_dict);
   p2p_unify(p2p_arg(new_call,3),p2p_arg(return_pr,3));
+  //  p2p_unify(p2p_arg(new_call,3),tv_type);
   xsb_query_save(4);
   p2p_unify(reg_term(CTXTc 1),new_call);
   int rcode = xsb_query(CTXT);

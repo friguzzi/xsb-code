@@ -80,11 +80,13 @@ class Query:
     
     first_time = True
     query_args = None
-
-    def __init__(self, *args,Dict={}):
+    truthvals = None
+    
+    def __init__(self, *args,Dict={},truth_vals=PLAIN_TRUTHVALS):
         """Create from query and inputs as with janus.once()"""
         self.query_args = args
         self.keyword_args = Dict
+        self.truthvals = truth_vals
         self.first_time = True
     def __iter__(self):
         """Implement iter protocol"""
@@ -94,9 +96,10 @@ class Query:
         if (self.first_time):
             self.first_time = False
             #            return jns_string_first(*self.query_args)
-            return jns_string_first(*self.query_args,self.keyword_args)
+            return jns_string_first(*self.query_args,self.keyword_args,self.truthvals)
         else:
-            rc = jns_string_next(*self.query_args)
+            rc = jns_string_next(*self.query_args,self.keyword_args,self.truthvals)
+#            rc = jns_string_next(*self)
             if rc == None:
                 raise StopIteration()
             else:
