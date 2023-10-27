@@ -4,7 +4,7 @@ sys.path.insert(0,'../../XSB/packages/janus/janus-py')
 import janus as jns
 
 orig_output = sys.stdout 
-sys.stdout = open('./temp', 'w')
+#sys.stdout = open('./temp', 'w')
 
 jns.cmd('consult','consult','jns_test')
 
