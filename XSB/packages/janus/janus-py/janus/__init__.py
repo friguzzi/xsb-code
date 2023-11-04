@@ -38,7 +38,7 @@ UNDEFINED = 2
 def query_once(TermString,inputs={},truth_vals=PLAIN_TRUTHVALS):
     return(jns_query_once(TermString,inputs,truth_vals))
 
-class Apply:
+class apply:
 
     first_time = True
     query_args = None
@@ -75,7 +75,7 @@ class Apply:
 #        swipl.close_query(self.state)
 
 # ================ Query  ================
-class Query:
+class query:
     
     first_time = True
     query_args = None
