@@ -33,11 +33,10 @@ cmd('consult','consult','jns_test')
 ################################################################
 # Modified from SWI
 
-def query_once(TermString,Dict={},truth_vals=PLAIN_TRUTHVALS):
-    return(jns_query_once(TermString,Dict,truth_vals))
-
-#def string_first(TermString,Dict={}):
-#    return(jns_string_first(TermString,Dict))
+UNDEFINED = 2
+        
+def query_once(TermString,inputs={},truth_vals=PLAIN_TRUTHVALS):
+    return(jns_query_once(TermString,inputs,truth_vals))
 
 class Apply:
 
@@ -82,10 +81,10 @@ class Query:
     query_args = None
     truthvals = None
     
-    def __init__(self, *args,Dict={},truth_vals=PLAIN_TRUTHVALS):
+    def __init__(self, *args,inputs={},truth_vals=PLAIN_TRUTHVALS):
         """Create from query and inputs as with janus.once()"""
         self.query_args = args
-        self.keyword_args = Dict
+        self.keyword_args = inputs
         self.truthvals = truth_vals
         self.first_time = True
     def __iter__(self):
@@ -164,6 +163,7 @@ def pp_jns_apply_once(Module,Pred,*args):
             print('?- '+Module+':'+Pred+'('+str(args)+',Answer).')
         print('')
         Dict = apply_once(Module,Pred,*args)
+
         print('   TV = ' + _printable_tv(Dict['truth']))
         if (Dict['truth'] != 0):
             print('   Answer  = ' + str(Dict['return']))
@@ -293,3 +293,43 @@ def _printable_tv(TV):
         return('False')
     else:
         return('Undefined')
+
+# Copied from SWI    
+class Undefined:
+    """
+    Class `Undefined` represents undefined answers according to the
+    Well Founded Semantics.  Generic undefined answers are represented
+    by a unique instance of this class that is available as the property
+    `janus.undefined`.
+
+    Instances of this class are created by once() and Query() and should
+    never be created by the user.
+
+    Parameters
+    ----------
+    term: Term
+        Term representing the delay list or residual program.  Defaults
+        to `None` for the generic undefined truth.
+
+x    """
+    def __init__(self, term=None):
+        "Create from a Prolog term or `None` for _generic_ undefined"
+        self.term = term
+    def __str__(self):
+        """Either "Undefined" (generic) or __str__() of the `.term`"""
+        if self.term == None:
+            return "Undefined"
+        else:
+            return self.term.__str__()
+    def __repr__(self):
+        """Either "Undefined" (generic) or __repr__() of the `.term`"""
+        if self.term == None:
+            return "Undefined"
+        else:
+            return self.term.__repr__()
+
+# Truth value constants
+
+false = False
+true = True
+undefined = Undefined()

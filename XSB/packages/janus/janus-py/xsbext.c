@@ -97,6 +97,26 @@ static PyMethodDef XsbMethods[] = {
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+
+static PyObject * mod_janus(void) {
+  static PyObject *janus = NULL;
+
+  if ( !janus )
+  { PyObject *janus_name = NULL;
+
+    if ( (janus_name=PyUnicode_FromString("janus")) )
+      janus = PyImport_Import(janus_name);
+
+    Py_CLEAR(janus_name);
+  }
+
+  return janus;
+}
+
+//const PyObject *jns_undef = PyObject_GetAttrString(mod_janus(), "undefined");
+const PyObject *jns_undef = NULL;
+
+  
 PyObject *px_get_error_message() {
   return PyUnicode_FromString(xsb_get_error_message(CTXT));
 }
@@ -116,7 +136,6 @@ PyInit_xsbext(void)
     PyRun_SimpleString(
    "import sys\n"
    "sys.path.append('.')\n");
-    
     return module;
 }
 
@@ -143,47 +162,23 @@ static PyObject *px_close() {
 		
 }
 
-#define PYFALSE 0
-#define PYTRUE  1
-#define PYUNDEF 2
-
-//  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):		 
-//   (darwinDelayregHack?PyLong_FromLong(PYUNDEF):		 
-//    PyLong_FromLong(PYTRUE)))
-//#else
-//#define get_tv()							
-//  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):			
-
-#if defined(DARWIN) 
-#define get_tv()				\
-  (delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE))
-#else
-#define get_tv()				\
-   (delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE))
-#endif
-
-/* For returning booleans
-PyObject *get_tv() {
-#if defined(DARWIN)
-  if (is_var(reg_term(CTXTc 1))) {
-    Py_INCREF(Py_False);
-    Py_RETURN_FALSE;
-  }
-  else if (darwinDelayregHack) {
-    return PyLong_FromLong(PYUNDEF);
-  }
-  else {
-    Py_INCREF(Py_True);
-    Py_RETURN_TRUE;
-  }
-#else
-#define get_tv()							\
-  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):			\
-   (delayreg?:					\
-    PYTRUE))
-#endif
+PyObject *get_jns_undef() {
+  if (jns_undef == NULL)
+    jns_undef = PyObject_GetAttrString(mod_janus(), "undefined");
+  Py_INCREF(jns_undef);
+  return jns_undef;
 }
-*/
+
+PyObject *get_tv() {
+if (darwinDelayregHack) {
+  return get_jns_undef();
+  //    return PyLong_FromLong(PYUNDEF);
+ }
+ else {
+   Py_INCREF(Py_True);
+   Py_RETURN_TRUE;
+ }
+}
 
 void ensurePyXSBStackSpace(CTXTdeclc PyObject *pyObj) {
   PyObject * thirdArg;
@@ -280,10 +275,12 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
     return Py_None;
-  } else {
+  }
+  else {
     if (is_var(reg_term(CTXTc 1))) {
       PyObject *pydict = PyDict_New();
-      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+      Py_INCREF(Py_False);
+      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
       return pydict;
     }
     else {
@@ -292,8 +289,9 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
 	reset_local_heap_ptrs;
       }
       //      printPlgTerm(p2p_arg(new_call,tuplesize-1));
-      //      printf("conveted\n");
+      //      printf("abt to convet\n");
       convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
+      //      printf("conveted\n");
       //      printPyObj(self,newPyObj);
       PyObject *pydict = PyDict_New();
       PyDict_SetItem(pydict,PyUnicode_FromString("truth"),get_tv());
@@ -303,6 +301,7 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
     }
   }
 }
+//}
 
 static PyObject *var_bindings_to_dict(prolog_term pBind) {
   prolog_term temp = pBind;
@@ -338,7 +337,7 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
   p2p_unify(p2p_arg(new_call,1),term_string);
   p2p_unify(p2p_arg(new_call,2),bind_dict);
   p2p_unify(p2p_arg(new_call,3),p2p_arg(return_pr,3));
-  printPlgTerm(bind_dict);
+  //  printPlgTerm(bind_dict);
   xsb_query_save(4);
   p2p_unify(reg_term(CTXTc 1),new_call);
   int rcode = xsb_query(CTXT);
@@ -348,7 +347,9 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
   } else {
     if (is_var(reg_term(CTXTc 1))) {
 	PyObject *pydict = PyDict_New();
-	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+	//	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+	Py_INCREF(Py_False);
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
 	return pydict;
     }
     else {
@@ -382,7 +383,9 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
       if (is_var(reg_term(CTXTc 1))) {
 	query_arity = 0;
 	PyObject *pydict = PyDict_New();
-	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+	Py_INCREF(Py_False);
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
+	//	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
 	reset_regs;
 	return pydict;
       }
@@ -432,8 +435,11 @@ static PyObject *px_once(PyObject *self,PyObject *args) {
       PyObject *pydict = PyDict_New();
       if (tv_type == NO_TRUTHVALS)
 	return Py_None;
-      else 
-	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+      else {
+	Py_INCREF(Py_False);
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
+	//	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+      }
       return pydict;
     }
     else {
@@ -489,7 +495,9 @@ if (gl_bot != (CPtr)glstack.low) {
   } else {
     if (is_var(reg_term(CTXTc 1))) {
       PyObject *pydict = PyDict_New();
-      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+	Py_INCREF(Py_False);
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
+	//      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
       return pydict;
     }
     else {
@@ -526,7 +534,9 @@ static PyObject *px_next(PyObject *self) {
     } else {
       if (is_var(reg_term(CTXTc 1))) {
 	PyObject *pydict = PyDict_New();
-	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
+	Py_INCREF(Py_False);
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
+	//	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),PyLong_FromLong(PYFALSE));
 	reset_regs;
 	return pydict;
       }
@@ -601,7 +611,11 @@ static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
     return Py_None;
   } else {
-    if (is_var(reg_term(CTXTc 1))) return PyLong_FromLong(PYFALSE);
+    if (is_var(reg_term(CTXTc 1))) {
+      //      return PyLong_FromLong(PYFALSE);
+      Py_INCREF(Py_False);
+      Py_RETURN_FALSE;
+    }
     else {
       if (gl_bot != (CPtr)glstack.low) {
 	reset_local_heap_ptrs;
@@ -658,7 +672,9 @@ static PyObject *px_cmd(PyObject *self,PyObject *args) {
     } else {
     PyObject *tv;
     if (is_var(reg_term(CTXTc 1))) {  
-      tv = PyLong_FromLong(PYFALSE);
+      //      tv = PyLong_FromLong(PYFALSE);
+      Py_INCREF(Py_False);
+      Py_RETURN_FALSE;
     } else {
       tv = get_tv();
     }
@@ -701,5 +717,24 @@ void printPlgTerm( prolog_term term) {
   printf("printPlgTerm: %s\n", StrArgBuf.string);
 }
 
+//  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):		 
+//   (darwinDelayregHack?PyLong_FromLong(PYUNDEF):		 
+//    PyLong_FromLong(PYTRUE)))
+//#else
+//#define get_tv()							
+//  (is_var(reg_term(CTXTc 1))?PyLong_FromLong(PYFALSE):			
 
+//#if defined(DARWIN) 
+//#define get_tv()				\
+//  (delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE))
+//#else
+//#define get_tv()				\
+//   (delayreg?PyLong_FromLong(PYUNDEF):PyLong_FromLong(PYTRUE))
+//#endif
+
+/* For returning booleans */
+
+//#define PYFALSE 0
+//#define PYTRUE  1
+//#define PYUNDEF 2
 
