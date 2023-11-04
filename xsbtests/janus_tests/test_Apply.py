@@ -3,7 +3,7 @@
 
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-import janus_xsb as jns
+import janus as jns
 
 orig_output = sys.stdout 
 sys.stdout = open('./temp', 'w')

@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-import janus_xsb as jns
+import janus as jns
 import time
 
 jns.consult('jns_test')

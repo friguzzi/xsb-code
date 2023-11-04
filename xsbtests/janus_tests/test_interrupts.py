@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-import janus_xsb as jns
+import janus as jns
 
 # probably good to add more interrupt tests to make sure they don't
 # get confused by Python.  Not likely that they will, but...

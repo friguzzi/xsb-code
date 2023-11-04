@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-import janus_xsb as jns
-from janus_xsb import pp_jns_cmd, pp_jns_apply_once
+import janus as jns
+from janus import pp_jns_cmd, pp_jns_apply_once
 
 orig_output = sys.stdout 
 sys.stdout = open('./temp', 'w')
