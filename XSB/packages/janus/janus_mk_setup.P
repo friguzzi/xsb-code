@@ -28,11 +28,11 @@ mk_setup(PythonIncludeDir) :-
         write('                    library_dirs = [\''), write(ConfigBinDir), writeln('\'],'),
         writeln('                    sources = [\'xsbext.c\', \'janus_common.c\'])'),
         writeln('
-setup (name = \'janus\',
+setup (name = \'janus_xsb\',
        version = \'0.1\',
        description = \'Embedding XSB in Python\',
        author = \'Theresa Swift\',
-       packages = [\'janus\'],
+       packages = [\'janus_xsb\'],
        ext_modules = [module1])
 ').
 

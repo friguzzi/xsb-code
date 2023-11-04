@@ -7,7 +7,7 @@ dnl  here.
 
 
 AC_PREREQ(2.12)
-AC_INIT([janus],[1.0])
+AC_INIT([janus_xsb],[1.0])
 
 AC_CONFIG_MACRO_DIR([./m4])
 
@@ -50,15 +50,15 @@ rm -f *.xwam *.so *.dylib
 
 support1=no
 if test -z "$PYTHON_BIN" ; then
-   message1="  Janus:       Python not found"
+   message1="  Janus_xsb:       Python not found"
 elif test -z "$PYTHON_LIB" ; then
-   message1="  Janus:       Python shared library (libpython3.so) not found"
+   message1="  Janus_xsb:       Python shared library (libpython3.so) not found"
 elif test -z "$PYTHON_INCLUDE_DIR" ; then
-   message1="  Janus:       Python include directory not found"
+   message1="  Janus_xsb:       Python include directory not found"
 elif test -z "$PYTHON_CONFLIB" ; then
-   message1="  Janus:       Python development libraries are likely missing (eg. the package python3.XX-dev not installed)"
+   message1="  Janus_xsb:       Python development libraries are likely missing (eg. the package python3.XX-dev not installed)"
 elif test "$pip_not_installed" = "1" ; then
-   message1="  Janus:       pip is not installed"
+   message1="  Janus_xsb:       pip is not installed"
 else
    support1=yes
 fi
@@ -69,7 +69,7 @@ if test -n "$PYTHON_INCLUDE_DIR" ; then
    CFLAGS="-I$PYTHON_INCLUDE_DIR ${CFLAGS}"
    CPPFLAGS="-I$PYTHON_INCLUDE_DIR ${CPPFLAGS}"
 fi
-AC_CHECK_HEADERS([Python.h] , [support0=yes], [message0="       Janus: Python.h not found"], [])
+AC_CHECK_HEADERS([Python.h] , [support0=yes], [message0="       Janus_xsb: Python.h not found"], [])
 CFLAGS="${CFLAGS_backup}"
 
 # these are likely useless
@@ -103,7 +103,7 @@ AC_SUBST(XSB_ROOTDIR)
 #echo ldflags=$LDFLAGS
 #
 #support2=no
-#AC_SEARCH_LIBS([Py_Initialize], [], [support2=yes], [message2="       JANUS: Py_Initialize not found"], [])
+#AC_SEARCH_LIBS([Py_Initialize], [], [support2=yes], [message2="       JANUS_XSB: Py_Initialize not found"], [])
 
 AC_OUTPUT([ janus_connect_defs.h:janus_connect_defs.in ])
 
@@ -114,12 +114,12 @@ else
 fi
 
 (
-echo "  JANUS support (XSB to Python connector):        $support"
+echo "  JANUS_XSB support (XSB to Python connector):        $support"
 if test "$support" = "yes"; then
    cat <<EOT
   Python:             $PYTHON_BIN
-  Janus C flags:      $ccflags
-  Janus loader flags: $ldflags
+  Janus_Xsb C flags:      $ccflags
+  Janus_Xsb loader flags: $ldflags
 
 EOT
 else
@@ -128,7 +128,7 @@ else
 fi
 ) | tee Installation_summary
 
-# set up janus Python package
+# set up janus_xsb Python package
 setupfile_name=".tmp_janussetup.py"
 setupfile_path="'janus-py/$setupfile_name'"
 py_includedir="'$PYTHON_INCLUDE_DIR'"
