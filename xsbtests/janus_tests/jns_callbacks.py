@@ -1,6 +1,5 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-#from janus import *
 import janus as jns
 
 orig_output = sys.stdout 
@@ -14,7 +13,7 @@ print('jns_callbacks:test_json: ' + str(jns.apply_once('jns_callbacks','test_jso
 #NewClass,TV = jns.qdet('jns_callbacks','test_class','joe')
 Dict = jns.apply_once('jns_callbacks','test_class','joe')
 print('jns_callbacks','test_class: ' + str(Dict['return'].name))
-globs = jns.apply_once('jns_callbacks','get_globals')
-print('get_globals ' + 'got globals')
+#globs = jns.apply_once('jns_callbacks','get_globals')
+#print('get_globals ' + 'got globals')
 
 sys.stdout = orig_output

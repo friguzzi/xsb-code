@@ -3,12 +3,12 @@
 
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-import janus as jns
+import janus_xsb as jns
 
 orig_output = sys.stdout 
 sys.stdout = open('./temp', 'w')
 
-jns.cmd('consult','consult','jns_test')
+jns.consult('jns_test')
 
 def test_q():
     for i in jns.Apply('jns_test','bt2'):

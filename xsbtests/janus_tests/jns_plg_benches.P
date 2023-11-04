@@ -1,4 +1,3 @@
-
 :- ensure_loaded(janus).
 :- import py_func_int/6,py_dot_int/6 from janusm.
 :- import reverse/2 from basics.
@@ -18,10 +17,10 @@ bench:-
     bench_call(dot_incr_kw(500000)),
     writeln('--------- py_iter_list(2,000,000) ---------'),
     bench_call(py_iter_list(2000000)),
-    writeln('--------- py_func_get_list(1,500,000) ---------'),
-    bench_call(py_func_get_list(1500000)),
     writeln('--------- py_func_send_list(2,000,000) ---------'),
     bench_call(py_func_send_list(2000000)),
+    writeln('--------- py_func_get_list(1,000,000) ---------'),
+    bench_call(py_func_get_list(1000000)),
     writeln('--------- plg_incr(4,000,000) ---------'),
     bench_call(plg_incr(4000000)).
 

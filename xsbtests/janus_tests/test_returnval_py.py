@@ -6,7 +6,7 @@ import janus as jns
 #orig_output = sys.stdout 
 #sys.stdout = open('./temp', 'w')
 
-jns.cmd('consult','ensure_loaded','test_returnval_py')
+jns.consult('test_returnval_py')
 
 def test_returnval():
     print('--------------------------')

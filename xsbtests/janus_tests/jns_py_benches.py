@@ -1,9 +1,9 @@
 import sys
 sys.path.insert(0,'../../XSB/packages/janus/janus-py')
-import janus as jns
+import janus_xsb as jns
 import time
 
-jns.cmd('consult','ensure_loaded','jns_test')
+jns.consult('jns_test')
 
 def test_iterations():
     pp_iteration(test_iteration_cmd,200000)

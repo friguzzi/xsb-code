@@ -1,9 +1,9 @@
-am: {'X': 1, 'truth': 1}
-bind_test: {'A': 'foo', 'B': 1, 'C': 3.14, 'D': ['foo', 1, 3.14], 'E': ('t1', 't2'), 'F': {'foo': 'bar', 'bar': 'baz'}, 'G': {1, 2, 3}, 'truth': 1}
-one_ary_fail: {'truth': 0}
-am input input dict: {'Y': 1, 'truth': 1}
-am input empty dict: {'Y': 1, 'truth': 1}
-one_ary_undef: {'X': 'b', 'truth': 2}
+am: {'X': 1, 'truth': True}
+bind_test: {'A': 'foo', 'B': 1, 'C': 3.14, 'D': ['foo', 1, 3.14], 'E': ('t1', 't2'), 'F': {'foo': 'bar', 'bar': 'baz'}, 'G': {1, 2, 3}, 'truth': True}
+one_ary_fail: {'truth': False}
+am input input dict: {'Y': 1, 'truth': True}
+am input empty dict: {'Y': 1, 'truth': True}
+one_ary_undef: {'X': 'b', 'truth': Undefined}
 am-ntv: {'X': 1}
 bind_test-ntv: {'A': 'foo', 'B': 1, 'C': 3.14, 'D': ['foo', 1, 3.14], 'E': ('t1', 't2'), 'F': {'foo': 'bar', 'bar': 'baz'}, 'G': {1, 2, 3}}
 one_ary_fail-ntv: None
