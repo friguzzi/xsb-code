@@ -39,6 +39,7 @@
 #define AtmDBGLOG         '_$_$_dbg_log'
 #define TRACELOGPRED      xsb_tracelog
 #define TRACEGOALSTACK    '_$_$xsb_backtrace_stack'
+#define TRACECALLSTACK    '_$_$xsb_callstack'
 #define INITIALGOALSTACK  []
 #define INITIALCALLSTACK  []
 
@@ -402,7 +403,7 @@ debugging :-
 	    ;	Call = '_$load_undef'(Ncall)
 	    ->	'_$deb_trace'(Ncall)
 		; 	must_load(PSC,Call)
-		-> 	(test_loaded(PSC,Call) -> 
+		-> 	(test_loaded(PSC) -> 
 				'_$deb_trace'(Call)
 			;
 				notrace,
@@ -458,7 +459,7 @@ must_load(PSC,Call) :-
 	).
 
 
-test_loaded(PSC,Call) :-
+test_loaded(PSC) :-
 	psc_type(PSC, T),
 	( T =:= 2 -> true
 	; T =:= 1 -> true
@@ -820,8 +821,8 @@ deb_ug(CH_S) :- !,     	       	       	       % like skip, but print the trace
 	stat_set_flag(TRACE, 1).
 
 deb_printstacks() :-
-	trace_goalstack(Depth,Goals),
-	trace_callstack(Depth2,Calls),
+	trace_goalstack(_Depth,Goals),
+	trace_callstack(_Depth2,Calls),
 	(Goals = [] ->
 		ll_write('Goal stack is empty'), ll_nl
 	;
@@ -833,8 +834,8 @@ deb_printstacks([G|Goals],[C|Calls]) :-
 deb_printstacks([],[]) .
 
 deb_debugprintstacks() :-
-	trace_goalstack(Depth,Goals),
-	trace_callstack(Depth2,Calls),
+	trace_goalstack(_Depth,Goals),
+	trace_callstack(_Depth2,Calls),
 	ll_write([Goals,Calls]),
 	ll_nl .
 
