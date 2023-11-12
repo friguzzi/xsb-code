@@ -25,7 +25,7 @@
 \januspy{} is the half of \janus{} that allows XSB to be used as an
 embedded subprocess within a Python process. Using \januspy()
 virtually all XSB functionality is directly accessible from Python, with
-various \januspy{} functions providing diffent tradeoffs in terms of
+various \januspy{} functions providing different trade-offs in terms of
 speed, ease of use and generality.  At the same time, \januspy{} is
 nearly as fast as \janusplg : nearly half a million calls to,
 and returns from a simple XSB predicate can be made per second.  Data
@@ -44,7 +44,7 @@ the statement
 import janus_xsb as jns
 \end{verbatim}
 
-%\input{janus-py-config}
+\input{janus-py-config}
 
 \section{Using \januspy }
 
@@ -88,7 +88,7 @@ the deterministic string-based call {\tt jns.query\_once()}.
 
 \subsubsection{Variadic Deterministic Queries and Commands}
 
-\begin{example} \rm
+\begin{example} \rm \label{ex:apply-once-reverse}
 {\em Calling a deterministic query via {\tt jns.apply\_once()}} \label{ex:apply-once}
   
   As described in Section~\ref{jns-py:config} \janus{} is loaded like
@@ -113,7 +113,7 @@ the deterministic string-based call {\tt jns.query\_once()}.
 For learning \janus{} or for tutorials, a family of pretty printing
 calls can be useful.
 
-\begin{example} Viewing \januspy{} in Prolog Syntax \rm
+\begin{example} Viewing \januspy{} in Prolog Syntax \rm \label{ex:janus-py-pp}
   
 The {\tt pp\_jns\_apply\_once()} function calls {\tt
   jns\_apply\_once()} and upon return pretty prints both the call and return
@@ -150,7 +150,7 @@ last argument in the query so that the query had two arguments.
 The variadic {\tt jns.cmd()} provides a convenient way manage the
 Prolog session from Python.  
 
-\begin{example} \rm {\it Session management in \januspy{} using {\tt jns.cmd()}}
+\begin{example} \rm {\it Session management in \januspy{} using {\tt jns.cmd()}} \label{ex:jns-cmd}
 
   Once \januspy{} has been imported (initializing XSB), any user XSB
   code can be loaded easily.  One can execute
@@ -185,7 +185,7 @@ the XSB interpreter is recommended for most XSB development tasks).
 The following example shows how Python can handle errors thrown by
 Prolog.
 
-\begin{example} \rm {\it Error handling in \januspy}
+\begin{example} \rm {\it Error handling in \januspy} \label{ex:janus-py-errors}
 
 If an exception occurs when XSB is executing a goal, the error can be
 caught in XSB by {\tt catch/3} in the usual manner.  If the error is
@@ -239,12 +239,12 @@ and other pretty-printing calls.
 %\end{verbatim}
 \end{example}
 
-Although the string-based queries are the most general wway for Python
+Although the string-based queries are the most general way for Python
 to query Prolog, the variadic functions {\tt jns.apply\_once()} and
 {\tt jns.cmd()} and {\tt jns.comp()} (to be introduced) can all make
 queries with different numbers of input arguments.
 
-\begin{example} \rm {\it Varying the number of arguments in {\tt jns.apply\_once()} and {\tt jns.cmd()} }
+\begin{example} \rm {\it Varying the number of arguments in {\tt jns.apply\_once()} and {\tt jns.cmd()} } \label{ex:variadic-examples}
 %  {\sc The {\tt vars} keyword is not yet implemented.}
 
 Suppose you wanted to make a ground XSB query, say {\tt ?- p(a)}: the
@@ -312,8 +312,8 @@ functions -- either the deterministic {\tt jns.query\_once()} or the
 non-deterministic {\tt jns.query()}.  These functions support logical
 variables so that each argument of the call can be ground,
 uninstantiated or partially ground.  To support this generality, a
-slightly more sophsiticated setup is required, and the invocations are
-somewhat slower.
+slightly more sophiticated setup is required, and the invocations are
+somewhat slower. (See Section~\ref{sec:jns-perf} for timings.)
 
 \begin{example} \rm {\em Calling a deterministic query via {\tt jns.query\_once()}}
   \label{ex:query-once}
@@ -357,7 +357,7 @@ By default, {\tt jns.query\_once()}, {\tt jns.query()}, and {\tt
 \begin{itemize}
 \item {\tt True} representing the truth value {\em true}.  This means
   the XSB query succeeded and that the answer with bindings ({\tt
-    AnsDict['RevLit']}) is true in the Well-Founded Model of the
+    AnsDict['RevList']}) is true in the Well-Founded Model of the
   program.\footnote{See Volume 1 Chapter 5 of this manual for an
   explanation of the Well-Founded Model and XSB's three-valued logic.}
 \item {\tt False} representing the truth value {\em false}.  This
@@ -436,7 +436,7 @@ backtracks through Prolog answers.  Alternately, the Prolog answers
 can be comprehended into a list or set and returned to Python.  We
 consider each of these cases in turn.
 
-\subsubsection{Variadic Non-Determinstic Queries} \label{sec:var-nd}
+\subsubsection{Variadic Non-Deterministic Queries} \label{sec:var-nd}
 
 Consider the predicate {\tt test\_nd/2} in the Prolog module {\tt jns\_test}.
 {\small  
@@ -483,7 +483,7 @@ will iterate through all answers to the Prolog goal {\tt
 
 \subsubsection{String-Based Non-Deterministic Queries} \label{sec:nd-query}
 
-String-based non-determinstic queries are similar to {\tt
+String-based non-deterministic queries are similar to {\tt
   jns.apply()}.  For the program {\tt jns\_test} of
 Section~\ref{sec:var-nd} the goal
 \begin{verbatim}
@@ -502,7 +502,7 @@ The handling of input and output variable bindings is exactly as in
 The next example shows different ways in which \januspy{} can express
 truth values.
 
-\begin{example} Expressing Truth Values \rm
+\begin{example} Expressing Truth Values \rm \label{ex:truth-vals}
 
   In {\tt jns.query\_once()}, {\tt jns.query()} and {\tt jns.comp()}
   truth values can be expressed in different ways.  Consider the fragment:
@@ -520,7 +520,7 @@ While this default behavior is the best choice for most purposes,
 there are cases where the delay list of answers needs to be accessed
 (cf. Volume 1, chapter 5) for instance if the answers are to be
 displayed in a UI or sent to an ASP solver.  In such a case, the
-keyword argument {\tt truth\_vals} can be set to {\tt DELAy\_LISTS},
+keyword argument {\tt truth\_vals} can be set to {\tt DELAY\_LISTS},
 so that the fragment
 \begin{verbatim}
 for ans in jns.query('jns_test','test_nd(d,Y)',truth_vals=DELAY_LISTS) 
@@ -570,9 +570,9 @@ queries into this paradigm with {\em query comprehension}: calls to
 XSB that return all solutions to an XSB query as a Python list or all
 unique solutions as a set.
 
-\begin{example} \rm {\it List and Set Comprehension in \januspy{}} \label{ex:list-comp-1}
+\begin{example} \rm {\it List and Set Comprehension in \januspy{}} \label{ex:jns-list-comp-1}
 
-Consider agiin the program {\tt jns\_test} introduced in
+Consider again the program {\tt jns\_test} introduced in
 Section~\ref{sec:var-nd}.  The Python function
 
 %\begin{verbatim}  
@@ -753,21 +753,22 @@ test_json(Ret):-
 \end{verbatim}
 
 \noindent
-that calls the Python Json loader as in Example~\ref{ex:jns-json}, returning the tuple
+that calls the Python JSON loader as in Example~\ref{ex:janus-json}, returning the tuple
 \begin{verbatim}
 ({'name': 'Bob', 'languages': ['English', 'Fench', 'GERMAN']}, 1)
 \end{verbatim}
 to Python.  This example shows how easy it can be for XSB and Python
 to work together: the Python call
-\verb|jns.apply\_once('jns_callbacks','test_json')| causes the Json structure
+\verb|jns.apply_once('jns_callbacks','test_json')| causes the JSON structure
 to be read from a string into a Python dictionary, translated to a
 Prolog dictionary term, and then back to a Python dictionary
 associated with its truth value.
 
 As another example of callbacks consider the goal:
 
+%NewClass,TV = jns.apply_once('jns_callbacks','test_class','joe')
 \begin{verbatim}
-NewClass,TV = jns.apply\_once('jns_callbacks','test_class','joe')
+TV = jns.apply_once('jns_callbacks','test_class','joe')
 \end{verbatim}
 \noindent
 that calls the XSB rule:
@@ -799,34 +800,33 @@ and semantically transparent; micro-computations can be shifted between
 XSB and Python depending on which language is more useful for a given
 purpose.
 
-\subsection{Constraints and Residual Programs} 
+\subsection{Constraints} 
 
 The material in this section is not necessary to understand for a
 basic use of \januspy{}, but shows how \januspy{} can be used for
-constraint-based reasoning, and how it can interface to the results of
-non-monotonic reasoning.
+constraint-based reasoning.
 
 \begin{example} \rm {\it Evaluating queries with constraints} \label{ex:connstraints}
 
   XSB provides support for constraint-based reasoning via
-  CLPR~\cite{Holz95} and other packages, both for Prolog-style and for
-  tabled resolution.  However, using constraint-based reasoners like
-  CLPR requires explicit use of logical variables
+  CLP(R)~\cite{Holz95} both for Prolog-style (non-tabled) and for tabled
+  resolution.  However, using constraint-based reasoners like CLP(R)
+  requires explicit use of logical variables
   (cf. Chapter~\ref{chap:constraints}), and as mentioned in
-  Section~\ref{sec:jnsdet}, \januspy{} does not provide a direct way to
-  represent logical variables since logical variables do not naturally
-  correspond to a Python type.  Fortunately, it is not difficult to
-  pass constraint expressions containing logical variables to XSB
-  within Python strings.
+  Section~\ref{sec:jnsdet}, \januspy{} does not provide a direct way
+  to represent logical variables since logical variables do not
+  naturally correspond to a Python type.  Fortunately, it is not
+  difficult to pass constraint expressions containing logical
+  variables to XSB within Python strings.
 
   Consider a query to find whether 
 
   \[X  > 3*Y + 2,Y>0 \models X > Y\]
 
 \noindent  
-  In CLPR this is done by writing a clause to assert the two
+  In CLP(R) this is done by writing a clause to assert the two
   constraints -- in Prolog syntax as calls to the literals {\tt \{X
-    $>$ 3*Y + 2\}} and {\tt \{Y$>$0\}} -- and then calling the CLPR
+    $>$ 3*Y + 2\}} and {\tt \{Y$>$0\}} -- and then calling the CLP(R)
   goal {\tt entailed(Y$>$0)}.  Within XSB, one way to generalize the
   entailment relation into a predicate would be to see if one set of
   constraints, represented as a list, implies a given constraint:
@@ -946,56 +946,64 @@ Many of the examples from this chapter have been saved into Jupyter
 notebooks in {\tt \$XSB\_ROOT/XSB/examples}, with associated PDF files in
 {\tt \$XSB\_ROOT/docs/JupyterNotebooks}.
 
-In addition, the directory {\tt \$XSB\_ROOT/xsbtests/python\_tests}
-contains a series of tests for the examples in this chapter and many
-others.  It is invoked by {\tt test.sh} and makes use of several
-different Python and XSB files.
-
+In addition, as mentioned earlier the directory {\tt
+  \$XSB\_ROOT/xsbtests/janus\_tests} contains a series of tests for
+most of the examples in this chapter and many others.
 %----------------------------------------------------------------------
 \section{The \januspy{} API}
 
 \begin{description}
 
-  \pymoditem{jns.cmd(module,pred,*args)}{jns.cmd()}{jns}
+  \pymoditem{cmd(module,pred,*args)}{jns.cmd()}{janus\_xsb}
 %
   Allows Python to execute a Prolog goal {\tt Goal} containing no
-  variables.  Each argument in {\tt Goal} corresponds to an element
-  in {\tt args}, i.e., the input is translated to
-  $module.pred(\vec{args})$, where $\vec{args}$ is an argument vector.
-  For instance the Python call
+  variables.  Each argument in {\tt Goal} corresponds to an element in
+  {\tt args}, i.e., the input is translated to
+  $module.pred(\overrightarrow{args})$, where $\overrightarrow{args}$ is an
+  argument vector.  For instance the Python call
 
   {\tt jns.cmd('consult','ensure\_loaded','jns\_test')}
 
   calls {\tt consult:ensure\_loaded(jns\_test)}.  Calls to XSB
   predicates that are not in a module may be made with {\tt module}
-  set to {\tt usermod}.
+  set to {\tt usermod}. (Also cf. Example \ref{ex:variadic-examples}
+  and Example \ref{ex:jns-cmd}.)
 
   {\tt jns.cmd()} returns the truth value of the goal as explained
   above, or {\tt None} if an error occurred.
   
-  \pymoditem{jns.apply\_once(module,pred,*args)}{jns.apply\_once()}{jns}
+  \pymoditem{apply\_once(module,pred,*args)}{jns.apply\_once()}{janus\_xsb}
 %
   Allows Python to execute a Prolog query, the last argument of which
   is a variable.  If the number of {\tt args} is {\tt n}, a call will
-  be made to {\tt pred/(n+1)} in which the first {\tt n} arguments
-  correspond to the arguments in {\tt args} and the binding of the 
-  final argument is returned to Python as a Python object along with
-  its truth value, i.e. a call $module.pred(\vec{args},Ret)$ is
-  created, where the binding of $Ret$ forms part of the return.  For
-  example: the call
+  be made to {\tt module:pred/(n+1)} in which the first {\tt n}
+  arguments correspond to the arguments in {\tt args} and the binding
+  of the final argument is returned to Python as a Python object along
+  with its truth value, i.e. a call
+  $module.pred(\overrightarrow{args},Ret)$ is created, where the
+  binding of $Ret$ is returned.
+  %forms part of the return.
+  For example: the call
 
   {\tt jns.apply\_once('basics','reverse',[1,2,3,{'a':{'b':'c'}}]))}
 
   \noindent
-  executes the prolog goal {\tt
-    basics.reverse([1,2,3,{'a':{'b':'c'}}],Ret} and passes back the tuple
+  executes the Prolog goal
 
-  {\tt ( [{'a':{'b':'c'}},3,2,1], 1)}
+  `{\tt basics.reverse([1,2,3,{'a':{'b':'c'}}],Ret}
 
   \noindent
-  to Python, where the first argument of the {\em return tuple} is the
-  {\em answer} and the second is the truth value of that answer.  See
-  Section~\ref{sec:jnsdet} for precise information on truth values.
+  and passes back
+
+%  {\tt ( [{'a':{'b':'c'}},3,2,1], 1)}
+  {\tt [{'a':{'b':'c'}},3,2,1]}
+
+  \noindent
+  to Python.  (Also cf. Example\ref{ex:variadic-examples}.)
+
+%  where the first argument of the {\em return tuple} is the
+%  {\em answer} and the second is the truth value of that answer.  See
+%  Section~\ref{sec:jnsdet} for precise information on truth values.
 
 %  \bi
 %  \item If {\tt truthValue} is {\tt 1} (true) or {\tt 2} (undefined),
@@ -1008,9 +1016,85 @@ different Python and XSB files.
 %   \item If the execution of {\tt Goal} caused a Prolog error the
 %     Python {\tt None} object is returned.
 %     \ei
+
+  \pymoditem{query\_once(query\_string,**kwargs)}{query\_once()}{janus\_xsb}
+  %
+  Calls the Prolog goal {\tt query\_string} which must be a
+  well-formed Prolog atom {\tt Atom} or {\tt Module:Atom} where {\tt
+    Module} is an XSB module name.  (No ending period should be a part
+  of {\tt query\_string}.)  As discussed in
+  Example~\ref{ex:query-once}, {\tt query\_string} is parsed by XSB.
+  If there is a dictionary {\tt Dict} associated with an {\tt inputs}
+  keyword argument, then any logical variable {\tt V$_l$} whose name
+  is a key in {\tt Dict} is bound to the value associated with {\tt
+    V$_l$} (which has been translated to Prolog syntax).  All other
+  logical variables in {\tt query\_string} are taken to be output
+  variables, and upon the sucess of {\tt query\_string} their bindings
+  are represented in the return dictionary, which also by default
+  contains the truth value of the answer to {\tt query\_string}.
+
+      {\tt kwargs} allows the following types of keyword arguments.
+      \begin{itemize}
+      \item {\tt truth\_vals} determines whether and how each answer
+        in the collection is associated with its truth value.
+        (Cf. Example~\ref{ex:truth-vals} for examples of how the {\tt
+            truth\_vals} options affects returns.)
+
+        Values can be:
+        \begin{itemize}
+        \item {\tt PLAIN\_TRUTHVALS} which associates each answer with
+          its truth value {\em true} (represented as {\tt True} or
+          {\em undefined} represented as {\tt
+            janus\_xsb.Undefined}. (Unlike {\tt jns.cmd()}
+        % or {\tt jns.apply\_once()},
+        {\em false} answers are never returned.  This is the default
+        behavior for {\tt query\_once()} and {\tt query()}.
+      \item {\tt DELAY\_LISTS} which associates each answer with its
+        SLG delay list. (See Example~\ref{ex:truth-vals} or for more
+        information, the chapter {\em Using Tabling in XSB: A Tutorial
+          Introduction} in Volume 1 of this manual.)
+        % {\tt
+        % DELAY\_LISTS} is specified, each element of the collection
+        % is a 2-ary tuple consisting of an answer and its delay list.
+
+      \item {\tt NO\_TRUTHVALS} does not associate an answer with any
+        truth value.  This option is the default for {\tt
+          jns.apply\_once} and {\tt jns.apply()} which should only be
+        used in situations where it is know that no answers will be
+        {\em undefined}.
+        \end{itemize}
+      \item {\tt Inputs} which contains input bindings (in Python
+        syntax) to one or more logical variables in {\tt
+          query\_string} as esplained in Example~\ref{ex:query-once}.
+      \end{itemize}
+
+\pymoditem{apply(module,pred,*args)}{apply()}{janus\_xsb}
 %
-  \pymoditem{comp(module,pred,*args,**kwargs)}{comp()}{janus}
+{\tt apply()} is invoked as {\tt apply\_once()} but creates an
+instance of an iterator class that is used to backtrack through all
+solutions to the constructed goal.  The Prolog goal invoked is
+automatically closed after iterating through all solutions, or when an
+explict {\tt jns.close\_prolog\_goal()} is called.  See
+Section~\ref{sec:var-nd} for examples of its use.
+
+\pymoditem{query(query\_string,**kwargs)}{query()}{janus\_xsb}
 %
+The string-based {\tt query()} is invoked as {\tt query\_once()} but
+creates an instance of an iterator class that is used to backtrack
+through all solutions to the constructed goal.  The Prolog goal
+invoked is automatically closed after iterating through all solutions,
+or when an explict {\tt jns.close\_prolog\_goal()} is called.  See
+Section~\ref{sec:nd-query} for examples of its use.
+
+\pymoditem{close\_prolog\_goal()}{close\_prolog\_goal()}{janus\_xsb}
+Closes a Prolog goal that was opened by {\tt apply()} or {\tt
+  query()}.  {\sc TES: The name close\_query() is arguably misleading}
+
+  \pymoditem{comp(module,pred,*args,**kwargs)}{comp()}{janus\_xsb}
+  %
+            {\sc TES: documentation for {\tt comp()} has not been
+              updated for PIP-janus}
+            
   Allows Python to call XSB to perform the equivalent of list or set
   comprehension.  {\tt jns\_comp()} allows zero or more input arguments
   each containing a Python term ($\overrightarrow{input}$) and zero or
@@ -1020,9 +1104,8 @@ different Python and XSB files.
 
 It then returns to Python a list or set of tuples representing all
 bindings (or all unique bindings) to $\overrightarrow{outputs}$ for
-which the above goal is true.  See Examples \ref{ex:list-comp-1},
-\ref{ex:simple-comp} and \ref{ex:jns-comp-undef} for elaboration on
-this.
+which the above goal is true.  See Examples \ref{ex:jns-list-comp-1}
+and \ref{ex:variadic-examples} for elaboration on this.
 
 The actual behavior of {\tt jns\_comp()} depends on the keyword
 arguments passed to it.
@@ -1070,12 +1153,9 @@ arguments passed to it.
         the default behavior for {\tt jns\_comp()}.
       
       \item {\tt DELAY\_LISTS} which associates each answer with its
-        SLG delay list (cf. Example~\ref{ex:jns-comp-undef} or for more
-        information, \cite{ChWa96} or the chapter {\em Using Tabling
-          in XSB: A Tutorial Introduction} in Volume 1 of this
-        manual).  {\tt DELAY\_LISTS} is specified, each element of the
-        collection is a 2-ary tuple consisting of an answer and its
-        delay list.
+        SLG delay list. (See Example~\ref{ex:truth-vals} or for more
+        information, the chapter {\em Using Tabling in XSB: A Tutorial
+          Introduction} in Volume 1 of this manual.)
 
       \item {\tt NO\_TRUTHVALS} does not associate an answer with any
         truth value.  This option should only be used in situations
@@ -1083,14 +1163,11 @@ arguments passed to it.
         \ei
   \end{itemize}
 
-  \pymoditem{get\_error\_message()}{get\_error\_message()}{janus}
+  \pymoditem{get\_error\_message()}{get\_error\_message()}{janus\_xsb}
   If an XSB exception was raised by the previous call to XSB, {\tt
     get\_error\_message()} returns the XSB exception message as a
-  Python Unicode string.
-  
-\repeatpymoditem{pp\_jns\_cmd(Module,Pred,*args)}{pp\_jns\_cmd()}{janus}
-  \repeatpymoditem{pp\_jns\_apply\_once(Module,Pred,*args)}{pp\_jns\_apply\_once()}{janus}
-  \pymoditem{pp\_jns\_comp(Module,Pred,*args,**kwargs)}{pp\_jns\_comp()}{janus}
+  Python Unicode string.  See Example~\ref{ex:janus-py-errors} for an
+  example of how errors can be caught and displayed.
   
 \end{description}
 
@@ -1102,31 +1179,43 @@ convenience.
 
 \begin{description}
 
-  \repeatpymoditem{consult(File)}{consult()}{janus}
-  \pymoditem{ensure\_loaded(File)}{ensure\_loaded()}{janus}
+  \repeatpymoditem{consult(File)}{consult()}{janus\_xsb}
+  \pymoditem{ensure\_loaded(File)}{ensure\_loaded()}{janus\_xsb}
 %
-  Convenience functions for loading and/or compiling Prolog files.
-  They are defined as {\tt jns.cmd('consult','consult',File)} and {\tt
-    jns.cmd('consult','ensure\_loaded',File)}.\footnote{On-demand
-    loading, available in XSB, is not yet available within \januspy{}.}
+  Convenience functions for loading and/or compiling Prolog files.  In
+  XSB, they are defined as
+
+  {\tt jns.cmd('consult','consult',File)}
+
+\noindent
+and
+
+  {\tt jns.cmd('consult','ensure\_loaded',File)}.\footnote{On-demand
+  loading, available in XSB, is not yet available within \januspy{}.}
 
   Note that a given XSB file can be compiled and/or loaded into the
   running Python-XSB session (via {\tt consult()} or {\tt
     ensure\_loaded()}), edited and then repeatedly recompiled and
     reloaded without problems.
 
-  \pymoditem{prolog\_paths()}{prolog\_paths()}{janus}
+  \pymoditem{prolog\_paths()}{prolog\_paths()}{janus\_xsb}
 %  
   Convenience function to return a list of all current XSB library
   paths (XSB's equivalent of Python's {\tt sys.path}).
 
-  \pymoditem{add\_prolog\_path(Paths)}{add\_prolog\_path()}{janus}
+  \pymoditem{add\_prolog\_path(Paths)}{add\_prolog\_path()}{janus\_xsb}
 %  
     Convenience function to add one or more XSB library paths
     designated as a list of strings.  This function calls XSB's
     equivalent of Python's {\tt sys.path.append()}) and is defined as:
     {\tt jns.cmd('consult','add\_lib\_dir',Paths)}.
   
+\repeatpymoditem{pp\_jns\_cmd(Module,Pred,*args)}{pp\_jns\_cmd()}{janus\_xsb}
+  \repeatpymoditem{pp\_jns\_apply\_once(Module,Pred,*args)}{pp\_jns\_apply\_once()}{janus\_xsb}
+  \pymoditem{pp\_jns\_comp(Module,Pred,*args,**kwargs)}{pp\_jns\_comp()}{janus\_xsb}
+  %
+  Convenience predicate to tutorials or to help in learning
+  \januspy{}, see Example~\ref{ex:janus-py-pp}
 \end{description}
 
 \section{Performance} \label{sec:jns-perf}
@@ -1141,7 +1230,7 @@ were used.  All benchmark tests are available in {\tt
   \$XSB\_ROOT/xsbbtests/janus\_tests/janus\_py\_benches.py}}
 
 \subsection{Tests of Latency of Function Calls}
-By ``latency'' we mean the amout of time required for Python to call
+By ``latency'' we mean the amount of time required for Python to call
 XSB and return from that call when little or no data is transferred.
 For the predicate
 \begin{verbatim}
@@ -1159,11 +1248,11 @@ jns.cmd(jns_test,'simple_call',N,1,2)
 jns.apply_once('jns_test','simple_call',N)
 \end{verbatim}
 for different values of {\tt N}
-\item {\tt jns\_query\_once()} (ground) tsts iterations of 
+\item {\tt jns\_query\_once()} (ground) tests iterations of 
 \begin{verbatim}
 jns.query_once('jns_test:simple_call(1,2)')
 \end{verbatim}
-\item {\tt jns\_query\_once()} (non-ground) tsts iterations of 
+\item {\tt jns\_query\_once()} (non-ground) tests iterations of 
 \begin{verbatim}
 jns.query_once('jns_test:simple_call(1,Num1)')
 \end{verbatim}
@@ -1304,7 +1393,7 @@ return a large list in a single call                 & 9,091,000\\\hline
 %the same data transfer code.)  A simple call to {\tt jns.comp} take
 %roughly 5-6 times that of a similar call to {\tt jns.apply\_once}.
 
-FInally, the directory {\tt \$XSB\_ROOT/xsbtests/janus\_tests} contains the
+Finally, the directory {\tt \$XSB\_ROOT/xsbtests/janus\_tests} contains the
 `script {\tt memtest.py} that can be run to provide benchmark times
 for on a given platform.  The script includes a variety of benchmarks.
 %including those summarized above.
@@ -1324,9 +1413,9 @@ script on recent version of Python show that \januspy{} calling and
 \item \januspy{} has not currently work on Windows.
 \item XSB's heap garbage collection is currently disabled when XSB is
   called from Python, although expansion is allowed for all stacks.
-\item \jnsversion{} of \januspy{} the Python session that calls \januspy{} must
-  not be itself embedded in another process.
-\ei  
+\item In the current version of \januspy{} the Python session that
+  calls \januspy{} must not be itself embedded in another process.
+  \ei
   
 %\item Python sometimes core dumps on exit (via {\tt quit()} or {\tt
 %  ctrl-D} after using \januspy.
