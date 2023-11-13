@@ -26,5 +26,5 @@
 
 xsbpy_info(support, 'yes').
 xsbpy_info(ccflags, '').
-xsbpy_info(ldflags, '').
-xsbpy_info(libdir,  '/usr/lib').
+xsbpy_info(ldflags, '-L/usr/local/opt/cbc/lib').
+xsbpy_info(libdir,  '/usr/local/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/lib').

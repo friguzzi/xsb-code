@@ -564,7 +564,8 @@ static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
     dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("vars"));
     if (dictval) varnum = PyLong_AsSsize_t(dictval);
     dictval = NULL;
-    dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth_vals"));
+    //    dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth_vals"));
+    dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth"));
     if (dictval) {
       if (PyLong_AsSsize_t(dictval) == NO_TRUTHVALS) flag_arg = NO_TRUTHVALS;
       else if (PyLong_AsSsize_t(dictval) == DELAY_LISTS) flag_arg = DELAY_LISTS;

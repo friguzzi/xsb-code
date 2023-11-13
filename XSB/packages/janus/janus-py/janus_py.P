@@ -1,12 +1,19 @@
-:- compiler_options([xpp_on]).
+:- compiler_options([xpp_on,optimize]).
 
 #include "table_status_defs.h"
 #include "../janus_defs.h"
+#include "io_defs_xsb.h"
 
 :- export jns_comp/3.
 :- export test_pred/2.
+
 :- import table_status/5 from tables.
 :- import memberchk/2 from basics.
+:- import call_c/1 from standard.
+:- import str_cat/3 from string.
+:- import file_open/3,file_close/2 from file_io.
+:- import file_read/3 from xsb_read.
+
 jns_comp(Goal,Set,Flag):-
     (tables:is_tabled(Goal) ->
         jns_comp_tabled(Goal,Set,Flag)
@@ -75,19 +82,29 @@ eval_atom(Atom,InDict,DELAY_LISTS,RetVars):- !,
 eval_atom(Atom,InDict,_TV_TYPE,RetVars):-
     eval_atom(Atom,InDict,RetVars).
 
+:- table parse_query_string/3.
+parse_query_string(Term,T,Bindings):- 
+    %    open(atom(Term),read,S),
+    file_open(Term, sr, S),
+%    writeln(file_open(Term, sr, S)),
+    jns_read_term(S,T,[variable_names(Bindings)]),
+%    read_term(S,T,[variable_names(Bindings)]),
+%    writeln(jns_read_term(S,T,Bindings)),
+%    close(S),
+    file_close(S,NOFORCE_FILE_CLOSE).
+
+:- import jns_read_term/3 from standard.
 eval_atom(Atom,InDict,RetVars):-
     string:concat_atom([Atom,'.'],Term),
+    str_cat(Atom,'.',Term),
 %    writeq((Term,InDict)),nl,
-    open(atom(Term),read,S),
-    read_term(S,T,[variable_names(Bindings)]),
-    close(S),
-%    writeln(to_call(T,Bindings)),
+    parse_query_string(Term,T,Bindings),
     dict_to_list(InDict,DictList),
     partition_vars(Bindings,DictList,RetVars),
-    %    writeln(partition_vars(Bindings,DictList,RetVars)),
-    %    partially_instantiate_call(InDict,T,Bindings),
-    % writeln(abt_to_call(T)),
-    call(T).
+%    writeln(partition_vars(Bindings,DictList,RetVars)),
+%        partially_instantiate_call(InDict,T,Bindings),
+%     writeln(abt_to_call(T)),
+    call_c(T).
 %    writeln(succeeded(T)).
 
 dict_to_list({}(),[]):- !.
@@ -123,6 +140,19 @@ process_vars(Atom,Goal,InDict,RetVars):-
 %    writeln((Goal,Bindings)),
     dict_to_list(InDict,DictList),
     partition_vars(Bindings,DictList,RetVars).
+
+end_of_file.
+
+:- import stat_set_flag/2, stat_flag/2 from machine.
+:- import member/2 from basics.
+:- import check_open_stream_or_alias/5 from file_io.
+
+isoify([],[]) :- !.
+isoify([vv(A,V)|R],[A = V|R1]):- 
+	A \== '_', !,
+	isoify(R,R1).
+isoify([_|R],R1):- 
+	isoify(R,R1).
 
 end_of_file.
 
