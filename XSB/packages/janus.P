@@ -96,7 +96,8 @@ janus_opts_1([],_,0).
 janus_opts_1([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
 janus_opts_1([sizecheck(false)],In,In):- !.
 janus_opts_1([py_object(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
-janus_opts_1([do_iter(true)],In,Out):- !,Out is In \/ MATERIALIZE_ITERS.
+% keeping around for test suite.
+janus_opts_1([iter(true)],In,Out):- !,Out is In \/ MATERIALIZE_ITERS.
 janus_opts_1(Opts,_,_):-
    domain_error('janus option list',Opts,'',4).
 
