@@ -580,6 +580,26 @@ read_term(S_or_A,T,List):-
 	stat_set_flag(TOKENIZE_VARIABLES_AS_ATOMS,OLDVAA),
 	process_variable_list(List,T,Vlist).
 
+:- export jns_read_term/3.
+jns_read_term(Istr,T,List):- 
+%	check_open_stream_or_alias(S_or_A,read_term/3,1,input,Istr),
+%	read_term_check(List,read_term/3),
+%	stat_flag(TOKENIZE_DQ_AS_ATOM,OLDDQA),
+%	stat_flag(TOKENIZE_VARIABLES_AS_ATOMS,OLDVAA),
+%	(member(double_quoted_as_atoms,List)
+%	 -> stat_set_flag(TOKENIZE_DQ_AS_ATOM,1)
+%	 ;  true
+%	),
+%	(member(variables_as_atoms,List)
+%	 -> stat_set_flag(TOKENIZE_VARIABLES_AS_ATOMS,1)
+%	 ;  true
+%	),
+%	catch(file_read(Istr, T,Vlist),Ball,reset_read_flags_throw(OLDDQA,OLDVAA,Ball)),
+	file_read(Istr, T,Vlist),
+%	stat_set_flag(TOKENIZE_DQ_AS_ATOM,OLDDQA),
+%	stat_set_flag(TOKENIZE_VARIABLES_AS_ATOMS,OLDVAA),
+	jns_process_variable_list(List,Vlist).
+
 reset_read_flags_throw(OLDDQA,OLDVAA,Ball) :-
 	stat_set_flag(TOKENIZE_DQ_AS_ATOM,OLDDQA),
 	stat_set_flag(TOKENIZE_VARIABLES_AS_ATOMS,OLDVAA),
@@ -602,6 +622,11 @@ process_variable_list(List,T,Vlist):-
 		    isoify(Vlist,Names)
 		 ;  true)
 	).
+
+jns_process_variable_list(List,Vlist):- 
+    (member(variable_names(Names),List) -> 
+	 isoify(Vlist,Names)
+    ;  true). 
 
 % TLS: keeping the following predicate here, 
 % as read_options check affects only these two predicates.

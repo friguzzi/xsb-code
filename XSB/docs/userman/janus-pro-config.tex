@@ -6,27 +6,31 @@ further examples.
 
 \section{Configuration and Loading}
 
-Configuration processes of \janusplg{} have been written for Linux,
-Mac and Windows.  On these platforms, \janusplg{} has been tested
-using versions 3.5 -- 3.11 of Python and its libraries.\footnote{The
+XSB's configure/make processes will also confgure and make \janus{}
+for Linux, Mac and Windows.  On these platforms, \janusplg{} has been
+tested using versions 3.5 -- 3.11 of Python and its
+libraries.\footnote{The
 \janusplg{} configuration script was written by Michael Kifer.  It has
 been tested on Windows 10; on Ubuntu, Fedora and CentOs Linuxes; and
-on on Intel-based Mac.}  The \janusplg configuration script is
-called by the main XSB configuration script, and can be found in {\tt
-  XSB/packages/janus}.  \janusplg configuration can be run
+on MacOs.}  The \janusplg configuration script can be found in {\tt
+XSB/packages/janus}.  \janusplg configuration also can be run
 separately from the main configuration script if desired.
 
 \subsection{Installing \janusplg{} to work with Anaconda}
 
-For most users, installing \janusplg under Anaconda is recommended.
-Anaconda comes with all of the Python development extensions needed
-for \janusplg.  To make use of them, simply activate your conda
-environment, (re)configure and (re)make XSB as described in the
-manual.  However, it is critical that the XSB configured for a
-particular anaconda environment is {\em always} used within that
-environment, and {\em only} within that environment.  If XSB is to be
-used outside of a given anaconda environment or in a different
-environmen<t a separate copy of XSB should be downloaded and configured.
+Installing \janusplg under Anaconda has been tested under a few
+versions of Anaconda.  Anaconda has the advantage that it includes all
+of the Python development extensions needed for \janusplg.  To make
+use of them, simply activate your conda environment, (re)configure and
+(re)make XSB as described in the manual.  However, there are numerours
+configurations for Anaconda, and some configurations include separate
+compilers and library files than are found in the main operating
+system.  As a result it is {\em {\bf critical}} that the XSB
+configured for a particular anaconda environment is {\em always} used
+within that environment, and {\em only} within that environment.  If
+XSB is to be used outside of a given anaconda environment or in a
+different environmen<t a separate copy of XSB should be downloaded and
+configured.
 
 \subsection{Configuring \janusplg{} for {\tt venv} or without a virtual environment} \label{sec:xsbpy-linux}
 
