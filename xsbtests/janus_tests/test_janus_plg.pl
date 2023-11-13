@@ -48,11 +48,11 @@ func_tests :-
     check_call(py_func(test_janus_plg,my_generation(5),_),pyObj(_)),
     fail.
 func_tests :- 
-    check_call(py_func(test_janus_plg,my_generation(5),_,[do_iter(true)]),[1,2,3,4]),
+    check_call(py_func(test_janus_plg,my_generation(5),_,[iter(true)]),[1,2,3,4]),
     fail.
 % Tests casting to an iterator 
 func_tests :- 
-    check_call(py_func(builtins, range(1,5),_F,[do_iter(true)]),[1,2,3,4]),
+    check_call(py_func(builtins, range(1,5),_F,[iter(true)]),[1,2,3,4]),
     fail.
 func_tests:- 
     catch(py_func( test_janus_plg, returnVal(_),_),_E,
@@ -554,13 +554,13 @@ check_sort_call(py_func(Mod,MA,Res),Atom):-
     ; lazy_writeln(['!!! ',py_func(Mod,MA,SetSort),' failed.  Did not match ',Atom])).
 
 more_iter_tests:-
-    check_call(py_func(range,demo_yield(),_Res1,[do_iter(true)]),[0,1,2,3,4,5,6,7,8,9]),
+    check_call(py_func(range,demo_yield(),_Res1,[iter(true)]),[0,1,2,3,4,5,6,7,8,9]),
     fail.
 more_iter_tests:-
-    check_call(py_func(range,demo_comp(),_Res1,[do_iter(true)]),[0,1,2,3,4,5,6,7,8,9]),
+    check_call(py_func(range,demo_comp(),_Res1,[iter(true)]),[0,1,2,3,4,5,6,7,8,9]),
     fail.
 more_iter_tests:-
-    check_call(py_func(range,demo_set(),_Res1,[do_iter(true)]),py_set([0,1,2,3,4,5,6,7,8,9])),
+    check_call(py_func(range,demo_set(),_Res1,[iter(true)]),py_set([0,1,2,3,4,5,6,7,8,9])),
     fail.
 more_iter_tests:-
     check_call(setof(Ret,py_iter(range,demo_yield(),Ret),_List),[0,1,2,3,4,5,6,7,8,9]),
@@ -642,7 +642,7 @@ more_iter_tests:-
     ; writeln('py_func(range(1,4)),F),py_iter(F,H) failed')),
     fail.
 more_iter_tests:- 
-    check_call(py_func(builtins,range( 1,4 ),_F,[do_iter(true)]),[1,2,3]),
+    check_call(py_func(builtins,range( 1,4 ),_F,[iter(true)]),[1,2,3]),
     fail.
 more_iter_tests.
 

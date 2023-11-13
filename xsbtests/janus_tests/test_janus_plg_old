@@ -5,8 +5,8 @@ py_func(builtins,float(+1E6),1000000.0) succeeded.
 py_func(test_janus_plg,return_empty_dict(),{}()) succeeded.
 py_func(test_janus_plg,return_empty_set(),py_set([])) succeeded.
 py_func(test_janus_plg,my_generation(5),pyObj) succeeded.
-py_func(test_janus_plg,my_generation(5),[1,2,3,4],[do_iter(true)]) succeeded.
-py_func(builtins,range(1,5),[1,2,3,4],[do_iter(true)]) succeeded.
+py_func(test_janus_plg,my_generation(5),[1,2,3,4],[iter(true)]) succeeded.
+py_func(builtins,range(1,5),[1,2,3,4],[iter(true)]) succeeded.
 (should error) py_func check_var top level: [All arguments of the Python goal ,returnVal($VAR(0)), in ,/(py_func,2), must be nonvar.]
 (should error) py_func check_var in term:  ++Error[janus]: argument 1 of returnVal/1 could not be translated to python(arg 2 of py_func/[3,4,5])
 py_func(builtins,float(+1E6),1000000.0,[py_object(true)]) succeeded.
@@ -79,9 +79,9 @@ py_iter(test_janus_plg,squares(1,5),[1,4,9,16]) succeeded.
 py_iter(builtins,range(1,6),[1,2,3,4,5]) succeeded.
 py_iter(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(bar,1),-(baz,2)]) succeeded.
 py_iter(test_janus_plg,my_generation(5),[1,2,3,4]) succeeded.
-py_func(range,demo_yield(),[0,1,2,3,4,5,6,7,8,9],[do_iter(true)]) succeeded.
-py_func(range,demo_comp(),[0,1,2,3,4,5,6,7,8,9],[do_iter(true)]) succeeded.
-py_func(range,demo_set(),py_set([0,1,2,3,4,5,6,7,8,9]),[do_iter(true)]) succeeded.
+py_func(range,demo_yield(),[0,1,2,3,4,5,6,7,8,9],[iter(true)]) succeeded.
+py_func(range,demo_comp(),[0,1,2,3,4,5,6,7,8,9],[iter(true)]) succeeded.
+py_func(range,demo_set(),py_set([0,1,2,3,4,5,6,7,8,9]),[iter(true)]) succeeded.
 py_iter(range,demo_yield(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
 py_iter(range,demo_comp(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
 py_iter(range,demo_set(),[0,1,2,3,4,5,6,7,8,9]) succeeded.
@@ -94,5 +94,5 @@ py_func(retVal(-(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(retVal(py_set(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(range(1,4)),F),py_iter(F,H) succeeded
-py_func(builtins,range(1,4),[1,2,3],[do_iter(true)]) succeeded.
+py_func(builtins,range(1,4),[1,2,3],[iter(true)]) succeeded.
 collect(0)
