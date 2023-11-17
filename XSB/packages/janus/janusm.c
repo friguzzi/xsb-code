@@ -372,6 +372,7 @@ int convert_only_base_noniter(CTXTc PyObject *pyObj, prolog_term *prTerm) {
 }
 
 int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag) {
+  PyObject *pyObj1;
   if(PyLong_CheckExact(pyObj)) {
     prolog_int result = PyLong_AsSsize_t(pyObj);
     c2p_int(CTXTc result, *prTerm);
@@ -528,7 +529,8 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
     return TRUE;
   }
   //  else if (PyIter_Check(pyObj) && (flag&MATERIALIZE_ITERS)) {
-  else if ((flag&MATERIALIZE_ITERS) && (pyObj = PyObject_GetIter(pyObj))) {
+  else if ((flag&MATERIALIZE_ITERS) && ((pyObj1 = PyObject_GetIter(pyObj)) != NULL)) {
+    pyObj = pyObj1;
     prolog_term head, tail;
     prolog_term P = p2p_new(CTXT);
     PyObject *pyObjInner, *nextObj;

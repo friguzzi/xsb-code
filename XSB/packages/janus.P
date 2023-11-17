@@ -20,7 +20,9 @@
 
 %:- import term_to_atom/2 from string.
 :- import member/2,memberchk/2 from basics.
-:- import check_callable/3,check_nonvar/2,domain_error/4,type_error/4 from error_handler.
+:- import check_callable/3,check_nonvar/2,domain_error/4
+   %,type_error/4
+   from error_handler.
 
 :- import init_janus/1 from init_janus.
 :- import py_func_int/6,py_dot_int/6, py_get_iter_int/5, pyObj_next_int/4 from janusm.
@@ -75,7 +77,7 @@ py_func(Mod,Call,Ret,Opts):-
 py_func(Mod,Call,Ret):-
     get_def_vars(Call,py_func,PosArgNbr,Dict),
 %    writeln(py_func_int(Mod,Call,Dict,PosArgNbr,0,Ret)),
-    py_func_int(Mod,Call,Dict,PosArgNbr,0,Ret).
+    py_func_int(Mod,Call,Dict,PosArgNbr,MATERIALIZE_ITERS,Ret).
 
 %---------
 
@@ -92,7 +94,7 @@ janus_opts(Opts,_,Flags):-
     check_nonvar(Opts,['The list of options to a Janus call must be nonvar.']),
     janus_opts_1(Opts,0,Flags).
 
-janus_opts_1([],_,0).
+janus_opts_1([],_,MATERIALIZE_ITERS).
 janus_opts_1([sizecheck(true)],In,Out):- !, Out is In \/ SIZECHECK.
 janus_opts_1([sizecheck(false)],In,In):- !.
 janus_opts_1([py_object(true)],In,Out):- !,Out is In \/ RETURN_PYOBJ.
