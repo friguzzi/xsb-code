@@ -45,7 +45,7 @@ func_tests :-
     check_call(py_func(test_janus_plg,return_empty_set(),_F),py_set([])),
     fail.
 func_tests :- 
-    check_call(py_func(test_janus_plg,my_generation(5),_),pyObj(_)),
+    check_call(py_func(test_janus_plg,my_generation(5),_,[py_object(true)]),pyObj(_)),
     fail.
 func_tests :- 
     check_call(py_func(test_janus_plg,my_generation(5),_,[iter(true)]),[1,2,3,4]),
@@ -59,7 +59,7 @@ func_tests:-
 	  (xsb_error_get_message(_E,M),numbervars(M),
 	   lazy_writeln(['(should error) py_func check_var top level: ',M]))),
     fail.
-func_tests:- 
+func_tests:-
     catch(py_func(test_janus_plg, returnVal([a,b,_]),_MinValue),_E,
 	  (xsb_error_get_message(_E,M),numbervars(M),
 	   lazy_writeln(['(should error) py_func check_var in term: ',M]))),
@@ -87,7 +87,7 @@ py_object_tests :-
 py_object_tests :- 
     check_call(py_func(test_janus_plg, returnVal([1,2,3,4]),_,[py_object(true)]),pyObj(_)),
     fail.
-py_object_tests :- 
+py_object_tests :-
     check_call(py_func(test_janus_plg, returnVal(-(1,2,3,4)),_,[py_object(true)]),pyObj(_)),
     fail.
 py_object_tests :- 
@@ -100,7 +100,7 @@ py_object_tests:-
        writeln(succeeded(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4])))
      ; writeln('!!!failed'(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4]))) ),
     fail.
-py_object_tests :- 
+py_object_tests :-
     py_dot_py_object_tests.
 py_object_tests.
 
@@ -572,7 +572,7 @@ more_iter_tests:-
     check_call(setof(Ret,py_iter(range,demo_set(),Ret),_List),[0,1,2,3,4,5,6,7,8,9]),
     fail.
 more_iter_tests:-
-    setof(Ret,(py_func( range,demo_yield( ) ,F ),py_iter(F,Ret)),List),
+    setof(Ret,(py_func( range,demo_yield( ) ,F ,[py_object(true)]),py_iter(F,Ret)),List),
     (List = [0,1,2,3,4,5,6,7,8,9] ->
 	 lazy_writeln([setof(var,(py_func(range,demo_yield(),pyObj),py_iter(pyObj,var)),List),
 		       ' succeeded'])
@@ -636,7 +636,7 @@ more_iter_tests:-
        ; writeln('py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) failed')),
     fail.
 more_iter_tests:- 
-    findall(H,(py_func(builtins,range(1,4),F),py_iter(F,H)),AnsL),
+    findall(H,(py_func(builtins,range(1,4),F,[py_object(true)]),py_iter(F,H)),AnsL),
     (AnsL = [1,2,3] ->
 	 writeln('py_func(range(1,4)),F),py_iter(F,H) succeeded')
     ; writeln('py_func(range(1,4)),F),py_iter(F,H) failed')),

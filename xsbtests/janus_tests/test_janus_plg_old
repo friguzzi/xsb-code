@@ -4,7 +4,7 @@ py_func(builtins,float(+1E6),1000000.0) succeeded.
 (should error) py_func set:  In Prolog to Python translation of dictionary/1
 py_func(test_janus_plg,return_empty_dict(),{}()) succeeded.
 py_func(test_janus_plg,return_empty_set(),py_set([])) succeeded.
-py_func(test_janus_plg,my_generation(5),pyObj) succeeded.
+py_func(test_janus_plg,my_generation(5),pyObj,[py_object(true)]) succeeded.
 py_func(test_janus_plg,my_generation(5),[1,2,3,4],[iter(true)]) succeeded.
 py_func(builtins,range(1,5),[1,2,3,4],[iter(true)]) succeeded.
 (should error) py_func check_var top level: [All arguments of the Python goal ,returnVal($VAR(0)), in ,/(py_func,2), must be nonvar.]
