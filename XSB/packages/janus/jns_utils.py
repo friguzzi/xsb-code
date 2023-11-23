@@ -4,6 +4,9 @@ import sys
 def add_python_path(Dir):
     sys.path.append(Dir)
 
+def insert_python_path(Dir):
+    sys.path.insert(0,Dir)
+
 def obj_ref_py(inp):
     return('p' + str(hex(id(inp))))
 

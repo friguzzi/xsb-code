@@ -14,7 +14,8 @@ If these are successful the console output should looks fairly similar
 to that included at the end of this file.
  */
 
-:- export init_janus/1, test_janus/0, py_add_lib_dir/1,py_lib_dirs/1.
+:- export init_janus/1, test_janus/0, py_add_lib_dir/1,
+   py_add_lib_dir/2,py_lib_dirs/1.
 :- export add_py_lib_dir/1.    % for backwards compatability.
 :- export objref/2.
 
@@ -103,6 +104,11 @@ compile_janusm_for_windows :-
 add_py_lib_dir(Dir):- 
     py_func(add_python_path,add_python_path(Dir),_).
 
+py_add_lib_dir(Dir,first):-
+    py_func(jns_utils,insert_python_path(Dir),_).
+py_add_lib_dir(Dir,last):-
+    py_func(jns_utils,add_python_path(Dir),_).
+    
 py_add_lib_dir(Dir):- 
     py_func(add_python_path,add_python_path(Dir),_).
 
