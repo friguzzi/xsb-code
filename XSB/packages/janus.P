@@ -199,9 +199,34 @@ obj_dir(Obj,Dir):-
 
 :- import pyObj/1 from usermod.
 py_call(pyObj(O):Call,Ret):- !,
-    py_dot(pyObj(O),Call,Ret).
+    (Call = _C1:_C2 ->
+	 pcpo(pyObj(O),Call,Ret)
+      ;  py_dot(pyObj(O),Call,Ret) ).
 py_call(Mod:Call,Ret):-
-    py_func(Mod,Call,Ret).
+    (atom(Call) -> 
+	 py_dot(Mod,Call,Ret)
+    ;    pc_eval(Call,NewCall),
+         py_func(Mod,NewCall,Ret) ).
+
+pcpo(pyObj(O),Call:Rest,Ret):- !,
+    py_dot(pyObj(O),Call,O1),
+    pcpo(O1,Rest,Ret).
+pcpo(pyObj(O),Call,Ret):- !,
+    py_dot(pyObj(O),Call,Ret).
+
+pc_eval(Call,NewCall):-
+    Call =.. [Func|L],
+    (L = [] ->
+	 NewCall = Call
+     ;   pc_eval_1(L,NL),
+         NewCall =..[Func|NL]).
+
+pc_eval_1([],[]).
+pc_eval_1([eval(Goal)|T],[Res|NT]):- !,
+    py_call(Goal,Res),
+    pc_eval_1(T,NT).
+pc_eval_1([Arg|T],[Arg|NT]):-
+    pc_eval_1(T,NT).
 
 py_call(pyObj(O):Call,Ret,Opt):- !,
     py_dot(pyObj(O),Call,Ret,Opt).
