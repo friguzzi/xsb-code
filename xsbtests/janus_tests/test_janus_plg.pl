@@ -22,7 +22,8 @@ test:-
     variadic_tests,
     pyc_tests,
     py_iter_tests,
-    more_iter_tests,  
+    more_iter_tests,
+    py_call_tests,
     py_func(gc,collect(),Collect),
     writeln(collect(Collect)).
 
@@ -441,6 +442,7 @@ meth_tests:-
 	       'Hello my name is john and I''m a real big doofus'),
     check_call(py_call(Obj:func3(eager,janus,programmer),_Ret6),
 	       'Hello my name is john and I''m a eager janus programmer'),
+    check_call(py_func(builtins,float('+1E6'),_Res2),1000000.0),
     fail.
 meth_tests:-
     check_call(py_dot(sys,flags,_Res),
@@ -496,6 +498,35 @@ py_call_tests :-
 %py_call_tests :- 
 %    check_call(py_call(Obj,favorite_ice_cream,_Ret3),chocolate),
 %    fail.
+py_call_tests :- 
+    check_call(py_call(builtins:float('1.E6'),_F),1000000.0),
+    fail.
+ py_call_tests :- 
+     py_call(test_janus_plg:'ReturnVal'(),PyObj),
+     py_call(PyObj:returnVal([1,2,3,4]),E),
+     (E = [1,2,3,4] ->
+	  writeln(success('py_call(PyObj:returnVal([1,2,3,4]),E)'))
+      ;	  writeln('!!!failure'('py_call(PyObj:returnVal([1,2,3,4]),E)')) ),
+     fail.
+py_call_tests :-
+    py_call('Person':'Person'(john,35),Obj),py_call(Obj:favorite_ice_cream,I),
+    (I = chocolate ->
+	 writeln(success('py_call(Obj:favorite_ice_cream,I)'))
+    ;    writeln('!!!failed'('py_call(Obj:favorite_ice_cream,I)')) ),
+    fail.
+py_call_tests :-
+    py_call(returnVal:return_dictionary(),F,[py_object(true)]),
+    py_call(F:'__class__':'__name__', Class),
+    (Class = dict ->
+	 writeln(success('py_call(F:__class__:__name__, Class)'))
+    ;	 writeln('!!!failure'('py_call(F:__class__:__name__, Class)')) ),
+    fail.
+py_call_tests :-
+    py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F),
+    (F = {'Name' : 'Geeks',1 : [1,2,3,4]} ->
+	 writeln(success('py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F)'))
+    ;	 writeln('!!!failure'('py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F)')) ),
+    fail.
 py_call_tests.
 
 check_call(py_dot(Obj,MA,Res),Atom):-

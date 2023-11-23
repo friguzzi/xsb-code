@@ -63,6 +63,7 @@ py_dot(pyObj,favorite_ice_cream,chocolate) succeeded.
 py_dot(pyObj,func2(real,doofus),Hello my name is john and I'm a real doofus) succeeded.
 py_dot(pyObj,func3(real,big,doofus),Hello my name is john and I'm a real big doofus) succeeded.
 py_call(pyObj,func3(eager,janus,programmer),Hello my name is john and I'm a eager janus programmer) succeeded.
+py_func(builtins,float(+1E6),1000000.0) succeeded.
 py_dot(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeeded.
 py_dot(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 dict({(name : mary,age : 34,favorite_ice_cream : chocolate)})
@@ -95,4 +96,12 @@ py_func(retVal(py_set(1,2,3,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(range(1,4)),F),py_iter(F,H) succeeded
 py_func(builtins,range(1,4),[1,2,3],[iter(true)]) succeeded.
+py_call(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
+py_call(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeeded.
+py_call(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
+py_call(builtins,float(1.E6),1000000.0) succeeded.
+success(py_call(PyObj:returnVal([1,2,3,4]),E))
+success(py_call(Obj:favorite_ice_cream,I))
+success(py_call(F:__class__:__name__, Class))
+success(py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F))
 collect(0)
