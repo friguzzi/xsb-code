@@ -25,17 +25,17 @@
 %
 
 The new \janus{} package provides an easy and highly efficient way for
-Prolog to call Python3 functions and methods, and vice versa.  \janus{}
-is originally based on the packages {\tt xsbpy} and {\tt px}
+Prolog to call Python3 functions and methods, and vice versa.
+\janus{} is originally based on the packages {\tt xsbpy} and {\tt px}
 \cite{SwiA23,AndS23} and has undergone a major rewrite with expanded
-functionality~\footnote{The {\tt xsbpy} and {\tt px} packages were
-partly funded by BBN Technologies.} in close collaboration with the
-SWI Prolog and Ciao Prolog teams~\footnote{An earlier version of \janus{}
-is also supported by Arriba Prolog. The documentation in this
-chapter and the next is based mostly on previous {\tt xsbpy} and {\tt
-  px} documentation but also includes some material originally written
-for SWI.} This chapter describes Prolog calling Python, while Chapter
-~\ref{chap:janus-py}  describes Python calling Prolog.
+functionality in close collaboration with the SWI Prolog and Ciao
+Prolog teams.\footnote{The {\tt xsbpy} and {\tt px} packages were
+partly funded by BBN Technologies. An earlier version of \janus{} is
+also supported by Arriba Prolog. The documentation in this chapter and
+the next is based mostly on previous {\tt xsbpy} and {\tt px}
+documentation but also includes some material originally written for
+SWI.} This chapter describes Prolog calling Python, while Chapter
+~\ref{chap:janus-py} describes Python calling Prolog.
 
 \janus{} leverages the fact that the reference C-Python is written in
 C (as are most Prologs), so that Prolog and Python can be readily
@@ -44,25 +44,32 @@ written almost entirely in C, so the interface is very efficient
 (hundreds of thousands to {\em millions} of round-trip calls between
 Prolog and Python can be made per second) and it is hoped -- very
 robust within its known restrictions.  In addition, due to the dynamic
-typing of both Prolog and Python, a simple bi-translation allows
-complex Python data structures to be mapped to and from Prolog terms.
-All of this this makes using Python from Prolog as simple as
-consulting \janus{} from XSB and calling Python.  Calling Prolog from
-Python is as simple: just import \janus{} from Prolog and start making
-calls.
+typing of both Prolog and Python, a simple bi-translation maps complex
+Python data structures to and from Prolog terms.  All of this this
+makes using Python from Prolog as simple as consulting \janus{} from
+XSB and calling Python.  Calling Prolog from Python is as simple: just add
+\begin{verbatim}
+import janus_xsb
+\end{verbatim}
+to a Python file or session, and start making calls.
 
-\input{janus-pro-config.tex}
+This chapter first describes how to configure \janusplg , followed by
+introductory examples.  Next is a more precise description of its
+functions and its current limitations followed by applications and
+further examples.
+
+%\input{janus-plg-config.tex}
 
 \section{Introductory Examples}
 
 We introduce some of the core functionality of \janusplg{} via a
-series of simple examples.  As background, when \janus{} is loaded,
-Python is also loaded and initialized within the XSB process, the core
-Prolog modules of \janus{} are loaded into XSB, and paths to \janus{}
-and its sub-directories are added both to Prolog and to Python (the
-latter paths are added by modifying Python's {\tt sys.path}). Later,
-XSB calls Python, Python will search for modules and packages in the
-same manner as if they were stand-alone.
+series of examples.  As background, when \janus{} is loaded, Python is
+also loaded and initialized within the XSB process, the core Prolog
+modules of \janus{} are loaded into XSB, and paths to \janus{} and its
+sub-directories are added both to Prolog and to Python (the latter
+paths are added by modifying Python's {\tt sys.path}). Later, XSB
+calls Python, Python will search for modules and packages in the same
+manner as if they were stand-alone.
 
 \begin{example} \rm {\bf Calling a Python Function (I)} \label{ex:janus-json}
   %
@@ -77,11 +84,11 @@ consider the call:
 
 \begin{verbatim}
 py_func(json,prolog_loads('{"name":"Demo term"
-                     "created": {"day":null,
-                                 "month":"December",
-                                 "year":2007  },
-                     "confirmed":true,
-                     "members":[1,2,3]}'
+                            "created": {"day":null,
+                                        "month":"December",
+                                        "year":2007  },
+                            "confirmed":true,
+                            "members":[1,2,3]}'
 \end{verbatim}
 %'{"name": "Bob", "languages": ["English","French","GERMAN"]}'),
 %       Ret)
@@ -113,14 +120,14 @@ printed as:
 The syntactic flexibility of Prolog allows the Python dictionary to be
 represented as a logical term whose syntax is very close to that of
 both a Python dictionary and a JSON object.  We call a term that maps
-to a Python dictionary a ``Janus dictionary term''.  Such a term is
+to a Python dictionary a {\em (Janus) dictionary term}.  Such a term is
 simply a Prolog term whose outer functor is \verb|'{}'|/1, whose
 argument is a comma list, where the elements of the comma list are
 attribute-value pairs (sometimes called key-value pairs) using the
 predicate {\tt :/2}, where the attributes and values themselves may
 contain nested dictionaries, lists, tuples or sets in accordance with
 the restrictions of Python dictionaries.\footnote{In Python,
-attributes may only contain mixtures of integers, strings and tuples.}
+attributes/keys may only contain mixtures of integers, strings and tuples.}
 \end{example}
 
 \begin{example} \rm {\bf Calling a Python Function (II): Where to Maintain Python Objects?} \label{jns-examp:glue}
@@ -136,9 +143,9 @@ file as opposed to a string.  For this, we may use the Python function
 which loads a JSON string from a file into a Python dictionary which
 can then be translated to Prolog.  A small problem arises in that the
 input to {\tt json.load()} is a Python input stream (sometimes called
-a file pointer {\tt fp} is Python docs).  Python input streams are of
-course different than Prolog input streams.  This can be handled in
-several ways.
+a file pointer {\tt fp} is Python documentation).  Python input
+streams are of course different than Prolog input streams.  This can
+be handled in several ways.
 
 \begin{itemize}
   \item {\bf Maintain The Stream Reference in Python}
@@ -176,14 +183,13 @@ object rather than a function call, so the \janus{} predicate {\tt
   py\_dot/[3,4]} is called instead of {\tt py\_func/[3,4]}.
 \end{itemize}
 
-Each of these approaches has advantages.  Maintaining the object in
-Prolog requires no glue code, but does require explicitly opening and
-closing the file.  Either works well from the viewpoint of
+Each of these approaches has advantages.  Maintaining the stream
+reference in Prolog requires no glue code, but does require explicitly
+opening and closing the file.  Either works well from the viewpoint of
 performance: the \janus{} interface is so fast that making one call
-vs. three calls to Python make no measurable difference in most cases
-(see Section~\ref{janus-pro:performance}).  In general, the decision of
-whether to maintain object references in Python or Prolog is largely a
-matter of taste.
+vs. three calls to Python make no measurable difference (see
+Section~\ref{sec:jns-perf}).  of whether to maintain object references in
+Python or Prolog is a matter of taste.
 \end{example}
 
 \begin{example} \rm {\bf Calling a Python Function (III): Keyword Arguments} \label{ex:jns-kewords}
@@ -287,7 +293,7 @@ assigned, and default.  This is easily done by {\tt
 \noindent
 returns
 \begin{verbatim}
-    ObjD = {name:bob,age:34,favorite_ice_cream:chocolate}
+    ObjDict = {name:bob,age:34,favorite_ice_cream:chocolate}
 \end{verbatim}
 
 There are times when using the dictionary associated with a class is
@@ -296,7 +302,7 @@ classes have {\tt \_\_dict\_\_} methods defined for them, or only a
 single attribute of an object might be required.  In these cases, {\tt
   py\_dot/4} can be used:
 
-{\tt    py\_dot('Person',$<obj>$,favorite\_ice\_cream,I)}
+{\tt    py\_dot($<obj>$,favorite\_ice\_cream,I)}
 
 \noindent
 returns {\tt I = chocolate}.
@@ -327,43 +333,86 @@ Python.
   Consider a file {\tt range.py} that contains the following functions:
 \begin{verbatim}
   def demo_yield(): 
-    for i in range(1000000):
+    for i in range(10):
         yield i
 
   def demo_comp():
-    return [i for i in range(1000000)]
+    return [i for i in range(10)]
 \end{verbatim}
 %
 To improve performance, many Python libraries, such as SpaCy and the
 RDF-HDT interface to Wikidata, use {\tt yield} to return generators
-rather than lists or other data structures.  In this example, we
-consider accessing each of {\tt yield} and large Python data
-structures both eagerly and lazily.  These two cases are abstractly
-represented by {\tt demo\_yield()} and {\tt demo\_comp()}.
+rather than returning lists or other data structures.  {\tt
+  demo\_yield()} may be considered a function with lazy returns. while {\tt
+  demo\_comp()} may be considered a function with eager returns.
 
-We first address the case of {\tt demo\_yield()}.  The goal 
+We first address the case of {\tt demo\_yield()}.
+
+\noindent
+{\bf Eager return to Prolog of a eager Python function} This case
+reflects the usual behavior of \janus{} with most Python functions.  An
+example is
+
+{\tt py\_func(range,demo\_comp(),Ret).}
+
+\noindent
+which unifies {\tt Ret} with the list {\tt [0,1,2,3,4,5,6,7,8,9]}.
+Such goals can be extremely efficient in \janus{} due to its
+high-speed translation of Python data structures.
+
+\noindent
+{\bf Eager return to Prolog of a lazy Python function}
+The goal 
 
 {\tt py\_func(range,demo\_yield(),YieldObj).}
 
 \noindent
-returns a reference to a Python object.  This is because at the Python
-level {\tt demo\_yield()} actually returns a generator object, which
-is not one of the object types bi-translated by \janus{}
-(Section~\ref{sec:jns-bi-translation}).  \janus{} provides several ways
-to handle the return of an object through which we would like to
-iterate.  For instance to goal:
+in fact returns the same ten element list as in the previous case that
+used {\tt demo\_comp()}.  The default behavior of {\tt py\_func/[3,4]}
+is that if a function returns a Python object $O$ that is not of a
+type directly handled by bi-translation, $O$ is checked to see whether
+it is a generator or has an associated iterator $I_O$.  If so the
+generator or iterator traversed to return all answers eagerly to
+Prolog.
 
-{\tt py\_iter(RangeObject,Return).}
-
-Will backtrack through all solutions yielded by the generator object
-produced by {\tt demo\_yield()}.  An even simpler approach is to
-directly call:
+\noindent
+{\bf Lazy return to Prolog of an lazy Python function} If, rather than
+using {\tt py\_func()} with its default behavior, the goal
 
 {\tt py\_iter(range,demo\_yield(),Return).}
 
 \noindent
-which will also backtrack through all the returns generated by {\tt
-  demo\_yield()}.
+is set, {\tt Return} will be unified with the first list element,{\tt
+  0}, while the rest of its answers can be returned via backtracking.
+
+An alternate approach is to call 
+
+{\tt py\_func(range,demo\_yield(),Return,[py\_object(true)]).}
+
+\noindent In this case, {\tt Return} will be unified with a Python
+object if the Python function returns any non-base Python data type.
+Returning an explicit object through which to iterate may be useful of
+the object is needed in Prolog for other purposes.  Otherwise it is
+better to use {\tt py\_iter()} which does not create an explicit Python
+object reference that should be freed.
+
+\noindent
+{\bf Lazy return to Prolog of a eager Python function} 
+If the goal
+
+{\tt py\_iter(range,demo\_comp(),Return).}
+
+\noindent
+were called, {\tt py\_iter/3} would lazily backtrack through the list
+returned by {\tt demo\_comp()}, rather than eagerly returning the
+list.  Similarly
+
+{\tt py\_func(range,demo\_comp(),Return,[py\_object(true)]).}
+
+\noindent
+will return a Python object reference as in the immediately previous
+case.  
+\end{example}
 
 %\noindent
 %Another approach is to call 
@@ -377,75 +426,74 @@ which will also backtrack through all the returns generated by {\tt
 %`vbacktrack through objects that are iterators and so won't backtrack
 %through the returns of {\tt demo\_comp()}.
 
-In contrast to backtracking through the returns, \janus{} can also access
-{\em eagerly} access lazy returns from Python.  The call
-
-{\tt py\_func(range,demo\_yield(),[do\_iter(true)]).}
-
-\noindent
-immediately returns as a list all 1,000,000 elements produced by the
-generator.  Although eagerly returning the output of generator is easy
-to do in \janus , it should be cautiously used, as Python generators can
-iterate though a large number of solutions.\footnote{This is
-particularly true when using the RDFLIB-HDT package.}  For instance
-the interface to a database cursor may be a function that uses a {\tt
-  yield} statement.
-
+%In contrast to backtracking through the returns, \janus{} can also access
+%{\em eagerly} access lazy returns from Python.  The call
+%
+%{\tt py\_func(range,demo\_yield(),[do\_iter(true)]).}
+%
 %\noindent
-Beyond the {\tt yield} statement, \janus{} can also return data
-structures lazily from Python.  Consider the function {\tt
-  demo\_comp()} introduced above, which returns a list of 1,000,000
-elements. The call
+%immediately returns as a list all 1,000,000 elements produced by the
+%%generator.  Although eagerly returning the output of generator is easy
+%to do in \janus , it should be cautiously used, as Python generators can
+%iterate though a large number of solutions.\footnote{This is
+%particularly true when using the RDFLIB-HDT package.}  For instance
+%the interface to a database cursor may be a function that uses a {\tt
+%  yield} statement.
 
-{\tt py\_iter(range,demo\_comp(),Return).}
+%%\noindent
+%Beyond the {\tt yield} statement, \janus{} can also return data
+%structures lazily from Python.  Consider the function {\tt
+%  demo\_comp()} introduced above, which returns a list of 1,000,000
+%elements. The call
+%
+%{\tt py\_iter(range,demo\_comp(),Return).}
+%
+%\noindent
+%will backtrack through the million elements of the list returned by
+%{\tt demo\_comp()} one by one.\footnote{The code for {\tt py\_iter()}
+%accesses the iterator for the Python return if one is available, in
+%which case the sequence is returned lazily from Python to Prolog. If
+%no iterator is available, the entire data structure is returned.}
+%
+%Alternately, if an object reference to the list of 1,000,000 is
+%%desired, a user could also call 
+%
+%{\tt py\_func(range,demo\_comp(),CompObj,[py\_object(true)]).}
+%
+%which will unify {\tt CompObj} with a Python object reference.  This
+%can be followed by:
+%
+%{\tt py\_iter(CompObj,Return)}
+%
+%which will produce the same answers as the goal {\tt
+%  py\_iter(range,demo\_comp(),Return)} mentioned above.
 
-\noindent
-will backtrack through the million elements of the list returned by
-{\tt demo\_comp()} one by one.\footnote{The code for {\tt py\_iter()}
-accesses the iterator for the Python return if one is available, in
-which case the sequence is returned lazily from Python to Prolog. If
-no iterator is available, the entire data structure is returned.}
+%To summarize Example~\ref{jns-examp:lazy-ret}:
 
-Alternately, if an object reference to the list of 1,000,000 is
-desired, a user could also call 
-
-{\tt py\_func(range,demo\_comp(),CompObj,[py\_object(true)]).}
-
-which will unify {\tt CompObj} with a Python object reference.  This
-can be followed by:
-
-{\tt py\_iter(CompObj,Return)}
-
-which will produce the same answers as the goal {\tt
-  py\_iter(range,demo\_comp(),Return)} mentioned above.
-
-\end{example}
-
-To summarize Example~\ref{jns-examp:lazy-ret}:
-
-\begin{itemize}
-  \item {\tt py\_iter/3} can backtrack through Python returns based on
-    the {\tt yield} statement, an idiom that is commonly used in
-    Python libraries.  In fact, if {\tt py\_iter/3} is given {\em any}
-    reference to a Python object belonging to an iterator class, it
-    can backtrack through all returns produced by iteration.
-  \item In a similar manner, {\tt py\_iter/3} can also backtrack
-    through a large data structure, $D_{large}$ such as one returned
-    by a Python library such as Elasticsearch.  Alternately, a
-    reference to $D_{large}$ can be returned via the {\tt
-      py\_object(true)} option and used by {\tt py\_iter/2} to return
-    its elements one by one.
-    \item {\tt py\_func/4} (or {\tt py\_dot/4}) with the {\tt
-      do\_iter(true)} option can be used to return at once all answers
-      from a call to Python that uses a {\tt yield} statement, or that
-      returns any other iterator object.
-\end{itemize}
+%\begin{itemize}
+%  \item {\tt py\_iter/3} can backtrack through Python returns based on
+%    the {\tt yield} statement, an idiom that is commonly used in
+%    Python libraries.  In fact, if {\tt py\_iter/3} is given {\em any}
+%    reference to a Python object belonging to an iterator class, it
+%    can backtrack through all returns produced by iteration.
+%  \item In a similar manner, {\tt py\_iter/3} can also backtrack
+%    through a large data structure, $D_{large}$ such as one returned
+%    by a Python library such as Elasticsearch.  Alternately, a
+%    reference to $D_{large}$ can be returned via the {\tt
+%      py\_object(true)} option and used by {\tt py\_iter/2} to return
+%    its elements one by one.
+%    \item {\tt py\_func/4} (or {\tt py\_dot/4}) with the {\tt
+%      do\_iter(true)} option can be used to return at once all answers
+%      from a call to Python that uses a {\tt yield} statement, or that
+%      returns any other iterator object.
+%%\end{itemize}
 
 \begin{example} {\bf py\_call/[2,3]} \rm \label{jns-examp:pycall}
 
 \noindent
-    {\tt py\_call/[2,3]} provides an alternate syntax for
-    {\tt py\_dot/[3,4]} and {\tt py\_func/[3,4]}.  Rather than calling
+    {\tt py\_call/[2,3]} provides an alternate syntax for {\tt
+      py\_dot/[3,4]} and {\tt py\_func/[3,4]} (and vice-versa).
+    Rather than calling
 
 {\tt py\_func(Module,Function,Return)}
 
@@ -524,12 +572,12 @@ the reverse.  Which form to use is a matter of taste.
 
 \janus{} takes advantage of a C-level bi-translation of a large
 portion of Prolog terms and Python data structures: i.e., Python
-lists, tuples, dictionaries, sets and other data structures are
-translated to their Prolog term forms, and Prolog terms of restricted
-syntax are translated to lists, tuples, dictionaries, sets and so on.
+lists, tuples, dictionaries, sets and other data types are translated
+to their Prolog term forms, and Prolog terms of restricted syntax are
+translated to lists, tuples, dictionaries, sets and so on.
 Bi-translation is recursive in that any of these data structures can
 be nested in any other data structures (subject to limitations on
-mutables in Python).
+the occurrence of mutables in Python data structures).
      
 Due to syntactic similarities between Prolog terms and Python data
 structures, the Prolog term forms are easy to translate and use -- and
@@ -539,12 +587,12 @@ sometimes appear syntactically identical.
 \index{jns\_term}
 \index{term form (of a structure}
 %
-As terminology, when a Python data structure $D$, say a dictionary, is
-translated into a Prolog term $T$, $T$ is sometimes called the {\em
-  term form} of $D$.  The type representing any Python structure that
-can be translated to Prolog is called {\em jns\_struct} while the type
-representing a Prolog term that can be translated into a Python data
-structure is called a {\em jns\_term}
+As terminology, when a Python data structure $D$ is translated into a
+Prolog term $T$, $T$ is called a {\em (Janus) D term} e.g., a
+dictionary term or a set term.  he type representing any Python
+structure that can be translated to Prolog is called {\em jns\_struct}
+while {\em jns\_term} is the pseudo-type representing all Prolog terms
+that can be translated into a Python data structure.
 
 \subsection{The Bi-translation Specification} \label{sec-bi-translation}
 
@@ -554,17 +602,17 @@ viewpoint of Python types as follows:
 \begin{itemize}
        \item {\em Numeric Types}: Python integers and floats are
          bi-translated to Prolog integers and floats.  Python complex
-         numbers are not (yet) translated, and integers are only
+         numbers are not (yet) translated, and in XSB translation is only
          supported for integers between XSB's minimum and maximum
          integer~\footnote{These integers can be obtained by querying
-           {\tt current\_prolog\_flag/2}.}
+         {\tt current\_prolog\_flag/2}.}
          \begin{itemize}
            \item {\em Boolean Types} in Python are translated to the
              special Prolog structures {\tt @(true)} and {\tt
                @(false)}.
          \end{itemize}
        \item {\em String Types}: Python string types are bi-translated
-         to Prolog atoms.  This translation assumes UTF-8 encoding on
+         to Prolog atoms.  XSB's translation assumes UTF-8 encoding on
          both sides.
 
          Note that a Python string can be enclosed in either double
@@ -602,13 +650,13 @@ viewpoint of Python types as follows:
          data structures that are both allowable as a dictionary key
          or value, and supported by \janus .  For instance, {\tt
            Value} can be (the term form of) a list, a set, a tuple or
-         another dictionary.  For instance the Python dictionary:
+         another dictionary as with
 
          {\tt \{'K1':[1,2,3], 'k2':(4,5,6)]\}}
 
-         has a nearly identical term form
+         which has a nearly identical term form as
 
-         {\tt \{'K1':[1,2,3], k2:-(4,5,6)]\}}
+         {\tt \{'K1':[1,2,3], k2: -(4,5,6)]\}}
 
          \item {\em Set Types}: A Python set {\em S} is translated to
          the term form
@@ -622,15 +670,15 @@ viewpoint of Python types as follows:
        \item {\em None Types.} The Python keyword {\tt None} is
          translated to the Prolog term {\tt @(none)}. 
        \item {\em Binary Types:} are not yet supported.  There are no
-         current plans to support this type.
-     \item Any Python object {\tt Obj} that is a non-primitive type,
-       or of a type that is not translated to a specific Prolog term
-       as indicated above, is translated to the Prolog object
-       reference, which can be passed back to Python for an object
-       call or other purposes.  In XSB, object references have the
-       form {\tt pyObj(Obj)}, but this form is system dependent, and
-       will differ in other Prologs that support \janus{} such as
-       SWI.
+         current plans to support this type in XSB.
+     \item Any Python object {\tt Obj} of a type that is not
+       translated to a Prolog term as indicated above, and
+       that does not have an associated iterator is translated to the
+       Python object reference, which can be passed back to Python for
+       an object call or other purposes.  In XSB, object references
+       have the form {\tt pyObj(Obj)}, but this form is system
+       dependent, and will differ in other Prologs that support
+       \janus{} such as SWI.
 \end{itemize}
 
 %Additionally, a user with a minimal knowledge of C can change parts of
@@ -658,7 +706,7 @@ py_func(jns_rdflib,rdflib_write_file(Triples,'out.ttl',format=turtle),Ret).
 
 calls the Python function {\tt jns\_rdflib.rdflib\_write\_file()} to
 write {\tt Triples}, a list of triples in Prolog format, to the file
-{\tt new\_sample.ttl} using the {\tt turtle} format.
+{\tt new\_sample.ttl} using the RDF {\tt turtle} format.
 %This format is
 %specified as a keyword argument to {\tt rdflib\_write\_file()} in the
 %third argument of {\tt py\_func/4}.
@@ -683,7 +731,8 @@ If {\tt Module} has not already been
      
 {\tt Function} is the invocation of a Python function in {\tt Module},
 where {\tt Function} is a compound Prolog structure in which arguments
-with the outer functor {\tt =/2} are treated as keyword arguments.
+with the outer functor {\tt =/2} are treated as Python keyword
+arguments.
 %Optional keyword arguments are passed
 %in the third argument as lists of {\tt Key = Value} terms; if no such
 %arguments are needed, {\tt Kwargs} can be an empty list -- or {\tt
@@ -703,13 +752,13 @@ Currently supported options are:
       string}.  Objects that are proper subclasses of these types are
       returned as object references.
     \end{itemize}
-  \item {\tt do\_iter(true)} has close to the opposite effect of {\tt
-    py\_object(true)}.  For a Python object {\tt Obj} that is not a
-    list, tuple, set or dictionary, but that implements the iterator
-    protocol, all iterated values of {\tt Obj} are returned in a list.
-    Such objects include Python generators as well as instances of any
-    Python class that supports the iterator protocol, such as {\tt
-      range()}.
+%  \item {\tt do\_iter(true)} has close to the opposite effect of {\tt
+%    py\_object(true)}.  For a Python object {\tt Obj} that is not a
+%    list, tuple, set or dictionary, but that implements the iterator
+%    protocol, all iterated values of {\tt Obj} are returned in a list.
+%    Such objects include Python generators as well as instances of any
+%    Python class that supports the iterator protocol, such as {\tt
+%      range()}.
 \end{itemize}
 %The only Prolog bjeopttion currently allowed is {\tt sizecheck(trbue)},
 %which traverses the tPython data structure to determine its size before
@@ -825,13 +874,13 @@ paths is as with {\tt py\_func/[3,4]}.
 \bi
 \item {\tt type\_error}
 \ei
-`\item {\tt MethAttr} is not a callable term or atom.
+\item {\tt MethAttr} is not a callable term or atom.
 \bi
 \item {\tt type\_error}
-  \ei
+\ei
 \item {\tt MethAttr} does not correspond to a Python method or
   attribute for {\tt PyObj}
-  \bi
+\bi
 \item {\tt misc\_error}
   \ei
 \item If an error occurs when translating an argument of {\tt
@@ -843,29 +892,11 @@ paths is as with {\tt py\_func/[3,4]}.
 In addition, errors thrown by Python are
   caught by XSB and re-thrown as {\tt misc\_error} errors.
 
-  %\bi
-%\item {\tt ObMod} is neither a Python Object reference, nor a module string
-%\bi
-%\item {\tt type\_error}
-%\ei
-%\item {\tt ObjRef} is not a Python object reference in Prolog term form:
-`%\bi
-%\item {\tt misc\_error}
-%\ei
-%\item {\tt MethAttr} is neither a Prolog compound term nor a Prolog atom:
-%\bi
-%\item {\tt misc\_error}
-%\item {\tt MethAttr} has arity greater than 3.
-%\bi
-%\item {\tt misc\_error}
-%  \ei
-%  \ei \ei 
-
 \indourjnsitem{py\_iter(+ModObj,+FuncMethAttr,Ret)}{py\_iter/3}
 %\indourjnsitem{py\_iter(+ObjRef)}{py\_iter/4}
 %
 {\tt py\_iter/2} takes as input to its first argument either a module
-in which the function {\tt FuncMethAttr} will be called; a Python
+in which the function {\tt FuncMethAttr} will be called; or a Python
 object reference to which either the method {\tt FuncMethAttr} will be
 applied or the attribute {\tt FuncMethAttr} will be accessed.  Just as
 with {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]} the arguments of
@@ -873,7 +904,7 @@ with {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]} the arguments of
 occur before keywords.  However, if the Python function, method or
 attribute returns an iterator object {\tt Obj}, the iterator for {\tt
   Obj} will be accessed and values of the iterator will be returned
-via backtracking (cf. Example~\ref{jns-examp:lazy-ret}.
+via backtracking (cf. Example~\ref{jns-examp:lazy-ret}).
 
 If the size of a return from Python is expected to be very large, say
 over 1MB or so the use of {\tt py\_iter()} is recommended.
@@ -890,7 +921,7 @@ reference.
 \indourjnsitem{py\_call(+Form,Ret)}{py\_call/2}
 %
 {\tt py\_call/[2,3]} is alternate syntax for {\tt py\_func/[3,4]} and
-{\tt py\_dot/[3,4]}.
+{\tt py\_dot/[3,4]}.  Or perhaps it is the other way around.
 
 {\tt py\_call(Mod:Func,Ret,Opts)}
 
@@ -900,7 +931,9 @@ emulates {\tt py\_func(Mod,Func,Ret,Opts)}, while
 {\tt py\_call(Obj:Func,Ret,Opts)}
 
 \noindent
-emulates {\tt py\_dot(Obj,Func,Ret,Opts)}.  Options and Error cases
+emulates {\tt py\_dot(Obj,Func,Ret,Opts)}.
+
+Options and Error cases
 are the same as for {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]}.
 
 \indourjnsitem{py\_free(+ObjRef)}{py\_free/1}
@@ -924,11 +957,11 @@ are the same as for {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]}.
   \ei
   \ei
   
-\ourrepeatmoditem{py\_pp(+Stream,+Options)}{py\_pp/2}{py\_pp}
-\ourrepeatmoditem{py\_pp(+Stream,+Term)}{py\_pp/2}{py\_pp}
-\indourmoditem{py\_pp(Term)}{py\_pp/1}{py\_pp}
+\ourrepeatmoditem{py\_pp(+Stream,+Term,+Options)}{py\_pp/3}{py\_pp}
+\ourrepeatmoditem{py\_pp(+Stream,+Term)}{py\_pp/2}{py\_pp (\mbox{\sf Janus standard})}
+\indourmoditem{py\_pp(Term)}{py\_pp/1}{py\_pp (\mbox{\sf Janus standard})}
 %
-Pretty prints the Prolog translation of a \janus{} Python term.  By
+Pretty prints a \janus{} Python term.  By
 default, the term is translated to Python and makes use of Python's
 {\tt pprint.pformat()}, which produces a string that is then returned
 to Prolog and written out.  If the option {\tt prolog\_pp(true)} is
@@ -952,23 +985,30 @@ is pretty-printed as
 \end{verbatim}
 
 Such pretty printing can be useful for developing applications such as
-with {\tt jns\_elastic}, the \janus{} Elasticsearch interface.
+with {\tt jns\_elastic}, the \janus{} Elasticsearch interface which
+communicates with Elasticsearch via (sometimes large) JSON terms.
 
+\indourrepeatjnsitem{py\_add\_lib\_dir(+Path,+FirstLast)}{py\_add\_lib\_dir/2}
 \indourjnsitem{py\_add\_lib\_dir(+Path)}{py\_add\_lib\_dir/1}
 %
-This convenience predicate allows the user to add a path to the Python
-library directories in a manner similar to {\tt add\_lib\_dir/1},
-which adds Prolog library directories.
+The convenience and compatability predicate {\tt py\_add\_lib\_dir/2}
+allows the user to add a path to the end of {\tt sys.path} (if {\tt
+  FirstLast = last} or the beginning (if {\tt FirstLast = fiast}.
+{\tt py\_add\_li\_dir/1} acts as {\tt py\_add\_li\_dir/2} where {\tt
+  FirstLast = last}.
+
+When adding to the end {\tt sys.path} this predicate acts similarly to
+XSB's {\tt add\_lib\_dir/1}, which adds Prolog library directories.
 
 \indourjnsitem{py\_lib\_dirs(?Path)}{py\_lib\_dirs/1}
 %
-This convenience predicate returns the current Python library
+This convenience and compatibility predicate returns the current Python library
 directories as a Prolog list.
 
 \indourjnsitem{values(+Dict,+Path,?Val)}{values/3}
 %
-  Convenience predicate to obtain a value from a (possibly nested)
-  Prolog dictionary.  The goal
+  Convenience predicate and compatibility to obtain a value from a
+  (possibly nested) Prolog dictionary.  The goal
 
   {\tt values(D,key1,V)}
 
@@ -981,9 +1021,16 @@ v
 \noindent
 is equivalent to the Python expression
 
-{\tt D[key1][key2][key3]}.
+{\tt D[key1][key2][key3]}
 
 There are no error conditions associated with this predicate.
+
+\indourjnsitem{py\_is\_object(+Obj)}{py\_is\_object/1}
+%
+Succeeds if {\tt Obj} is a Python object reference and fails
+otherwise.  Different Prologs that implement Janus will have different
+representations of Python objects, so this predicate should be used
+to determine whether a term is a Python Object.
 
 \indourrepeatjnsitem{keys(+Dict,?Keys)}{keys/2}
 \indourrepeatjnsitem{key(+Dict,?Keys)}{key/2}
@@ -1004,90 +1051,32 @@ If no {\tt \_\_dict\_\_} attribute is associated with {\tt ObjRef} the
 predicate fails.
 
 {\tt obj\_dict/2} is a convenience predicate, and could be written
-using {\tt py\_dot/4} as:
+using {\tt py\_dot/3} as:
 
 \begin{verbatim}
-  py_dot('__main__',Obj,'__dict__',Dict).
+  py_dot(Obj,'__dict__',Dict).
 \end{verbatim}
 
 \indourmoditem{obj\_dir(+ObjRef,-Dir)}{obj\_dir/2}{janus}
 %
 Given a reference to a Python object as {\tt ObjRef}, this predicate
 returns the list of attributes of {\tt ObjRef} in {\tt Dir}.  If no
-\_\_dir\_\_ attribute is associated with {\tt ObjRef} the predicate
+{\tt \_\_dir\_\_} attribute is associated with {\tt ObjRef} the predicate
 fails.
 
 {\tt obj\_dir/2} is a convenience predicate, and could be written
-using {\tt py\_dot/4} as:
+using {\tt py\_dot/3} as:
 
 \begin{verbatim}
-  py_dot('__main__',Obj,'__dir__'(),Dir).
+  py_dot(Obj,'__dir__'(),Dir).
 \end{verbatim}
 
 \end{description}
 
 \section{Performance and Space Management} \label{sec:jns-perf}
 
-The core \janus{} routines -- {\tt py\_func/[3,4]} and {\tt py\_dot/4}
--- are written almost entirely in C, have shown good performance so
-far, and continue to be optimized.  Calling a simple Python function
-to increment a number from XSB and then returning the incremented
-value to XSB should take about a microsecond or less on a reasonably
-fast machine.  Of course, the overhead for passing large terms from
-and to Python will be somewhat higher.  For instance, the time to pass
-a list of integers from Python to XSB has been timed at about 20
-nanoseconds per list element.  Nonetheless, for nearly any practical
-application the time to perform useful functionality within Python
-will far outweigh any \janus{} overhead.
-
-Apart from system resource limitations, there is virtually no upper
-limit on the size of Python structures passed back to Prolog: stress
-tests have passed lists of integers of length 100 million from Python
-to Prolog without problems. However, it should be noted that \janus{}t
-must ensure that XSB's heap is properly expanded before copying a
-large structure from Python to XSB, a topic to which we now turn.
-
-\subsection{Memory Management} \label{sec:janus-memory}
-
-\subsubsection{Space Management for XSB's Heap}
-Because Python data structures are directly copied onto the XSB heap
-stack, the heap serves as a buffer for the return of information from
-Python.  XSB currently relies on the Python C API size routine {\tt
-  Py\_SIZE} to estimate the size of a structure, since accessing this
-routine has a constant-time overhead.\footnote{XSB estimates the size
-  multiplying {\tt Py\_SIZE} by a constant factor.}  However, {\tt
-  Py\_SIZE} only returns the length of a structure, and not its exact
-size.  Accordingly long lists of large structures, heavily nested
-dictionaries and other such structures may present a problem.  It
-should be noted that when \janus{} is initialized, XSB's default
-heap margin is reset to 1 megabyte so that any data structure whose
-size is less than 1 megabyte will be copied safely, even if its size
-is under-estimated.\footnote{XSB's default heap margin is 64 kbytes.}
-
-Fortunately, this default works for most users.  In using \janus{}
-the only times large data structures have proven a problem is when
-returning large bulk queries from Elasticsearch, or returning large
-sets of ontology instances from Wikidata.  In such a case there are
-two options.  First, one may reset the heap margin to an even larger
-value (see Volume 1 for details).  Alternately, one may use the option
-{\tt sizecheck(true)} for those {\tt py\_func} or {\tt py\_dot} calls that
-are expected to return large data structures.  If this option is
-specified, the call performs two traversals of the data structure to
-be returned: one to determine its size and ensure heap space, and another
-to copy the data structure.
-
-\subsection{Python Space Management}
-
-When using Python's C interface, every Python object that is declared
-in C must be explicitly released, a requirement that supports Python's
-garbage collection.  \janus{} memory usage has been checked using
-the {\tt guppy} package, which indicates that there are no memory
-leaks.
-
-%\subsection{Allowing Python to Reclaim Space}
-%
-%TBD: Discuss space issues for Python how they are now addressed and
-%how they will be addressed in the future.
+{\sc Needs to be rewritten}
+%\input{janus-plg-perf}
 
 \section{Interfaces to Python Libraries}
 
@@ -1100,9 +1089,9 @@ simple collections of examples to show how to query or update
 Elasticsearch, to detect the language of input text or to perform
 machine translation.  Nearly all of the interfaces have been a
 starting point for research or commercial
-applications.  \footnote{Testing has been done of the interfaces, but
+applications.\footnote{Testing has been done of the interfaces, but
 the testing has not been exhaustive.  As a result, please double-check
-any results, and report bugs -- or improvements -- to {\tt
+any results, and report bugs -- and especially improvements -- to {\tt
   xsb.sorceforge.net}.}
 
 When \janus{} is loaded, both the \janus{} directory and its
@@ -1134,14 +1123,15 @@ simpler, though useful, query support.
   \indourmoditem{load\_model(+BinPath,+Name)}{load\_model/2}{jns\_fasttext}
   Loads a word embedding model in fastText binary form, the path of
   which is {\tt BinPath}.  {\tt Name} is an atom to be used as a
-  Prolog referent, and so easily allows use of more than one word
-  embedding model at a time.
+  Prolog referent.  By associating different names with different
+  models it is easy to make use of more than one word embedding model
+  at a time.
 
   \indourmoditem{get\_nearest\_neighbors(+Name,+Word,-Neighbors)}{get\_nearest\_neighbors/3}{jns\_fasttext}
   Returns the 10 nearest neighbors of {\tt Word} in the model {\tt
     Name}.  This feature is useful for determining other words that
   are distributionally similar to {\tt Word}.  {\tt Neighbors} is a
-  list of tuples (terms with functor {\tt ''/2}) containing a
+  list of tuples (terms with functor {\tt -/2}) containing a
   neighboring word and its cosine similarity to {\tt Word}.   Although
   {\tt Word} must be a Prolog atom, it need not be an actual English
   word.  Because fastText uses subword embeddings rather than word
@@ -1160,7 +1150,7 @@ simpler, though useful, query support.
   can be done wholly on the Python side, it is much faster to do so,
   rather than manipulating vectors in XSB.  This is because the word
   vectors are actually kept as {\tt numpy} arrays and computations
-  performed in C rather than in Python.
+  performed in C rather than in Python (or Prolog).
 \end{description}
 
 \paragraph{Language Identification via {\tt lid.176.bin}}
@@ -1171,7 +1161,7 @@ current directory, the command:
 \end{verbatim}
 Loads the model and unifies {\tt Obj} with a reference to the loaded
 module which might look like {\tt pyObj(p0x7faca3428510)}.  
-Next, a call to the example python module {\tt jns\_fasttext}:
+Next, a call to the example Python module {\tt jns\_fasttext}:
 \begin{verbatim}
 py_func(jns_fasttext, fasttext_predict(pyObj(p0x7faca3428510),
        'janus is a really useful addition to XSB! But language detection
@@ -1180,7 +1170,7 @@ py_func(jns_fasttext, fasttext_predict(pyObj(p0x7faca3428510),
 returns the detected language and confidence value, which in this case
 
 \begin{verbatim}
-''('__label__en',0.93856)
+-('__label__en',0.93856)
 \end{verbatim}
 
 Note that loading the model can be done by calling the Python {\tt
@@ -1188,7 +1178,7 @@ Note that loading the model can be done by calling the Python {\tt
 {\tt jns\_fasttext} needs to be used (as opposed to calling the Python
 functionality directly) is because the confidence of the language
 detection is returned as a {\tt numpy} array, which \janus{} does
-not currently translate automatically. \footnote{The examples {\tt
+not currently translate automatically.\footnote{The examples {\tt
     jns\_fasttext} and {\tt googleTrans} were written by Albert Ki;
   {\tt jns\_faiss} was written by Albert Ki and Theresa Swift.}
 
@@ -1228,7 +1218,7 @@ exported by {\tt jns\_faiss.P} include:
   neighbors of a node.  The predicate takes as input {\tt Node}, the
   integer identifier of a node, and {\tt K} the number of nearest
   neighbors to be returned.  The return structure {\tt Neighbors} is
-  the Prolog representation of a 2-ary Python tuple (i.e., {\tt ''/2})
+  the Prolog representation of a 2-ary Python tuple (i.e., {\tt -/2})
   containing as its first argument a list of {\tt K} distances and as
   it second argument a list of {\tt K} neighbors.
 
@@ -1248,8 +1238,8 @@ exported by {\tt jns\_faiss.P} include:
 
   If both the number of indexed vectors and {\tt K} are large,
   construction of the Prolog vector graph may take a few minutes.
-  Construction time is almost wholly comprised of the time to find the
-  set of {\tt K} nearest neighbors for each node.
+  Construction time is almost wholly comprised of the time within
+  Faiss to find the set of {\tt K} nearest neighbors for each node.
 
 \item {\tt vector\_edge(Node1,Node2,Dist)}.  The vector graph, which
   represents distances is undirected.  However to save space, the {\tt
@@ -1275,14 +1265,14 @@ exported by {\tt jns\_faiss.P} include:
 
 \subsection{Translating Between RDF and Prolog: jns\_rdflib} \label{sec:jns-rdflib}
 This module interfaces to the Python {\tt rdflib} library to read RDF
-information from files in Turtle, N-triples and N-quads format, and to
-write files in Turtle and N-triples format.  In addition, RDF HDT
-files can be loaded and queried using rdflib-HDT.  As such {\tt
-  jns\_rdflib} augments XSB's RDF package (Chapter~\ref{chapter:RDF})
-which handles XML-RDF.
+information from files in Turtle, jsonld, N-triples and N-quads
+format, and to write files in Turtle, jsonld, and N-triples format.  In
+addition, RDF HDT files can be loaded and queried using {\tt
+  rdflib-HDT}.  As such {\tt jns\_rdflib} augments XSB's RDF package
+(Chapter~\ref{chapter:RDF}) which handles XML-RDF.
 
 Within a triple, URIs and blank nodes are returned as Prolog atoms,
-while literals are returned as terms with functor {\tt ''/3} (the
+while literals are returned as terms with functor {\tt -/3} (the
 Prolog representation of a 3-ary tuple) in which the first argument is
 the literal's string as a Prolog atom, the second argument is its
 datatype, and the third argument its language. If the data type or
@@ -1293,7 +1283,7 @@ language are not included, the argument will be null.  As examples:
 \end{verbatim}
 is returned as 
 \begin{verbatim}
-('"That Seventies Show"','<http://www.w3.org/2001/XMLSchema#string>',) 
+-('"That Seventies Show"','<http://www.w3.org/2001/XMLSchema#string>',) 
 \end{verbatim}
 while 
 \begin{verbatim}
@@ -1301,28 +1291,28 @@ while
 \end{verbatim}
 is returned as
 \begin{verbatim}
-('"That Seventies Show"',,en) 
+-('"That Seventies Show"',,en) 
 \end{verbatim}
 
-The file {\tt jns\_rdflib.P} contains predicates {\tt test\_nt/0}, {\tt
-  test\_ttl/0}, {\tt test\_nq/0} to test reading and writing.  Note
-that Python options needed to deserialize an RDFllb graph write are
-specific to the RDFlib plug-in for a particular format, and these
+The file {\tt jns\_rdflib.P} contains predicates {\tt test\_nt/0},
+{\tt test\_ttl/0}, {\tt test\_nq/0} to test reading and writing.  Note
+that Python options needed to deserialize an {\tt rdfllb} graph write
+are specific to the {\tt rdflib} plug-in for a particular format, and these
 plug-ins are not always consistent with one another.  As a result, if
-other formats are desired, minor modifications of {\tt jns\_rdflib} may
-be necessary, though they will often be simple to make.
+other formats are desired, minor modifications of {\tt jns\_rdflib}
+may be necessary, though they will often be simple to make.
 
 The use of {\tt jns\_rdflib} differs on the RDF format used.  For the
-{\tt turtle} (or {\tt ttl}), {\tt nt} (or {\tt ntriples}) and {\tt
-  nquads} and {\tt jsonld} formats a file is read into XSB as a
-(large) list, and an XSB list of terms of the proper form can be
-transformed into RDF and written to a file.  For the {\tt HDT} format
-the usage pattern is different: when an {\tt HDT} file is loaded, it
-is simply memory mapped into a process and facts are loaded into a
-rdflib graph (and into XSB) purely on demand~\footnote{At least I
-think that's how it works...}.
+{\tt turtle} (or {\tt ttl}), {\tt nt} (or {\tt ntriples}), {\tt
+  jsonld}, and {\tt nquads} formats a file is read
+into XSB as a (large) list, and an XSB list of terms of the proper
+form can be transformed into RDF and written to a file.  For the {\tt
+  HDT} format the usage pattern is different: when an {\tt HDT} file
+is loaded, it is simply memory mapped into a process and facts are
+loaded into a {\tt rdflib} graph (and into XSB) purely on
+demand~\footnote{At least I think that's how it works...}.
 
-\subsubsection{Functionality for Turtle, N-triples and N-quads Formats}
+\subsubsection{Functionality for Turtle, jsonld. N-triples and N-quads Formats}
 
 \paragraph{Reading RDF}
 \begin{itemize}
@@ -1334,7 +1324,7 @@ think that's how it works...}.
   be tested on {\tt sample.ttl}, {\tt sample.nt} and {\tt sample.nq},
   all of which are in the {\tt packages/janus/starters} directory.
 
-  Due to the structure of the Python {\tt RDFlib} graph, no guarantee
+  Due to the structure of the Python {\tt rdflib} graph, no guarantee
   is made that the order of facts in {\tt File} will match the order
   of facts in {\tt TripleList}.
 \end{itemize}
@@ -1349,13 +1339,16 @@ think that's how it works...}.
 
 \paragraph{Writing RDF}
 
-If {\tt TripleList} is a list of terms, structured as {\tt ''/3} terms
+If {\tt TripleList} is a list of terms, structured as {\tt -/3} terms
 described above, it can be easily be written to {\tt File} as properly
 formatted RDF.  The Python function {\tt
   rdflib\_write\_file\_no\_decode()} can be called directly as:
+{\small
 \begin{verbatim}
-py_func(jns_rdflib,rdflib_write_file_no_decode(+TripleList,+File),[format=+Fmt],-Ret).
+py_func(jns_rdflib,rdflib_write_file_no_decode(+TripleList,+File,format=+Fmt),-Ret).
 \end{verbatim}
+}
+\noindent
 where {\tt Fmt} is {\tt turtle} or {\tt nq}.  {\tt
   rdflib\_write\_file\_no\_decode()} is a simple function that creates
 an RDFlib graph out of {\tt TripleList}, serializes the graph and
@@ -1364,7 +1357,7 @@ specific to the RDFlib plug-in for a particular format, so if other
 formats are desired, minor modifications of {\tt jns\_rdflib} may be
 necessary.
 
-Due to the structure of the Python {\tt RDFlib} graph, no guarantee is
+Due to the structure of the Python {\tt rdflib} graph, no guarantee is
 made that the order of facts in {\tt File} will match the order of
 facts in {\tt TripleList}.
   
@@ -1377,23 +1370,24 @@ and queried.  The advantage of querying over compressed data is that
 large data stores become manageable that otherwise wouldn't be.  For
 instance, a Wikidata snapshot that contains several billion rows along
 with indexes takes up about 160 Gbytes on disk and takes about 3
-seconds to initialize into (jns\_)rdflib.  Furthermore, the data is
-loaded into RAM only as needed for query evaluation.  
+seconds to initialize into ({\tt jns\_}{\tt )rdflib}.  Furthermore,
+the data is loaded into RAM only as needed for query evaluation.
 
-{\tt jns\_rdflib} offers two main predicates for use with rdflib HDT:
+{\tt jns\_rdflib} offers two main predicates for use with {\tt rdflib}
+HDT:
 
 \begin{description}
-  \indourmoditem{hdt\_load(+Store,-Obj)}{hdt\_load/2}{janus}
+  \indourmoditem{hdt\_load(+Store,-Obj)}{hdt\_load/2}{jns\_rdflib}
   %
-  Initializes rdflib for the HDT file {\tt Store} and creates a rdflib
-  graph in which to store the results of queries.  {\tt Obj} is the
-  Python reference to the data store.
+  Initializes {\tt rdflib} for the HDT file {\tt Store} and creates a
+  {\tt rdflib} graph in which to store the results of queries.  {\tt
+    Obj} is the Python reference to the data store.
   
-  \indourmoditem{hdt\_query(?Arg1,?Arg2,?Arg3,-List)}{hdt\_query/4}{janus}
+  \indourmoditem{hdt\_query(?Arg1,?Arg2,?Arg3,-List)}{hdt\_query/4}{jns\_rdflib}
   %
 
   Allows a user to query a HDT store using Prolog-like syntax and
-  returning the results of the query in {\tt List}.  For instance the query
+  returns the results of the query in {\tt List}.  For instance the query
 \begin{verbatim}
     hdt_query('http://www.wikidata.org/entity/Q144',Pred,Obj,List)
 \end{verbatim}
@@ -1401,8 +1395,8 @@ finds all triples having the above URI as their subject.  In this
 case, {\tt List} would be unified with a long list beginning with
 \begin{footnotesize}
 \begin{verbatim}
-[('http://www.wikidata.org/entity/Q144','http://schema.org/name',''(dog,'',en))
- ('http://www.wikidata.org/entity/Q144','http://schema.org/description',''('domestic animal,'',en))
+[('http://www.wikidata.org/entity/Q144','http://schema.org/name',-(dog,'',en))
+ ('http://www.wikidata.org/entity/Q144','http://schema.org/description',-('domestic animal,'',en))
 ...
 \end{verbatim}
 \end{footnotesize}
@@ -1437,7 +1431,7 @@ associated with a {\tt Language} object, and using this
 association the same atom can be used to process text throughout the
 session.  Multiple models can be loaded and used to process different
 text or files in different languages or for different purposes.  For
-instance, the command:
+instance, the {\tt jns\_spacy} query:
 
 \begin{verbatim}
 proc_string(en_core_web_sm,'She was the youngest of the two daughters of a
@@ -1446,7 +1440,7 @@ marriage, been mistress of his house from a very early period.',Doc)
 \end{verbatim}
 
 \noindent
-processes the above text, and unifying {\tt Doc} with the referent to
+processes the above text, unifying {\tt Doc} with the referent to
 the resulting SpaCy {\tt Document} object, which contains the textual
 analysis of the string.  The predicate {\tt proc\_file/3} works
 similarly for textual files.
@@ -1454,14 +1448,17 @@ similarly for textual files.
 At this point, a user of {\tt jns\_spacy} has two options: she can
 either query the {\tt Document} object directly or call {\tt
   token\_assert/1} to assert information from the {\tt Document}
-object into a Prolog graph that can be conveniently analyzed.  If
-querying a {\tt Document} object directly, a small amount of code may
-need to be written because SpaCy's API often returns generators to its
-data structures rather than its data structures themselves.  Generally
-the code that needs to be written is extremely simple and consists of
-little more than a list comprehension: the functions {\tt get\_nps()},
-{\tt get\_ents()} and {\tt get\_token\_info()} in {\tt jns\_spacy.py}
-provide examples of this.
+object into a Prolog graph that can be conveniently analyzed.
+
+%If
+%querying a {\tt Document} object directly, if the original document is
+%large, one may wish to use need to be written because SpaCy's API often returns generators
+%to its data structures rather than its data structures themselves.
+%Generally the code that needs to be written is extremely simple and
+%consists of little more than a list comprehension: the functions {\tt
+%  get\_nps()}, {\tt get\_ents()} and {\tt get\_token\_info()} in {\tt
+%  jns\_spacy.py} provide examples of this.
+%
 
 %The predicate {\tt load\_and\_proc/2} loads a SpaCy model and
 %processes text, asserting Python references both to the document and
@@ -1477,7 +1474,7 @@ provide examples of this.
 %{\tt get\_ents()} and {\tt get\_token\_info()} in {\tt jns\_spacy.py}
 %provide examples of this.
 
-For most purposes however, it is easier to call the XSB predicate {\tt
+For many purposes however, it may be easier to call the XSB predicate {\tt
   token\_assert(Doc)} that asserts tokens and their dependency parse
 edges into XSB as explained below.  As an example of how to navigate
 this graph, {\tt show\_all\_trees/0} and its supporting predicates
@@ -1615,7 +1612,7 @@ Various convenience predicates for accessing {\tt token\_info\_raw/7}.
 {\tt token\_info/7} is a convenience predicate that calls {\tt
   token\_info\_raw/7} and filters out spaces and punctuation.  {\tt
   get\_text/2}, {\tt get\_lemma/2} etc. get the appropriate field from
-a {\tt token\_info\_raw/7} fact indexed by {\tt Index}.a
+a {\tt token\_info\_raw/7} fact indexed by {\tt Index}.
   
 \indourmoditem{\tt show\_all\_trees()}{show\_all\_trees/0}{jns\_spacy}
 %
@@ -1750,8 +1747,8 @@ called directly from Prolog.
 
 \subsection{Querying Wikidata from XSB}
 %
-{\sc Documentation is under construction, but the first versions of
-  these modules are complete.}
+%{\sc Documentation is under construction, but the first versions of
+%  these modules are complete.}
 
 Wikidata is a multi-language ontology-style knowledge graph created
 from processing Wikipedia articles and from many other sources.  The
@@ -1971,16 +1968,16 @@ language translation and language detection using \janus .
 
 
 
-\section{Known Limitations and Future Work}
+%\section{Known Limitations and Future Work}
 
-\begin{itemize}
-\item A callback mechanism is under development.  Currently it is
-  possible for Python to call XSB and XSB to call back Python, but not
-  for XSB to call Python, then Python to call back XSB.  
-\item A possible future version may include a hook in XSB's atom
-  garbage collection to list Python objects that may be garbage
-  collected, and to send this information back to Python.  
-\end{itemize}  
+%\begin{itemize}
+%\item A callback mechanism is under development.  Currently it is
+%  possible for Python to call XSB and XSB to call back Python, but not
+%  for XSB to call Python, then Python to call back XSB.  
+%\item A possible future version may include a hook in XSB's atom
+%  garbage collection to list Python objects that may be garbage
+%  collected, and to send this information back to Python.  
+%\end{itemize}  
 
 %%% Local Variables: 
 %%% mode: latex

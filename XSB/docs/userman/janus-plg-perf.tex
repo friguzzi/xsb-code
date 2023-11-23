@@ -1,0 +1,61 @@
+
+The core \janus{} routines -- {\tt py\_func/[3,4]} and {\tt py\_dot/4}
+-- are written almost entirely in C, have shown good performance so
+far, and continue to be optimized.  Calling a simple Python function
+to increment a number from XSB and then returning the incremented
+value to XSB should take about a microsecond or less on a reasonably
+fast machine.  Of course, the overhead for passing large terms from
+and to Python will be somewhat higher.  For instance, the time to pass
+a list of integers from Python to XSB has been timed at about 20
+nanoseconds per list element.  Nonetheless, for nearly any practical
+application the time to perform useful functionality within Python
+will far outweigh any \janus{} overhead.
+
+Apart from system resource limitations, there is virtually no upper
+limit on the size of Python structures passed back to Prolog: stress
+tests have passed lists of integers of length 100 million from Python
+to Prolog without problems. However, it should be noted that \janus{}t
+must ensure that XSB's heap is properly expanded before copying a
+large structure from Python to XSB, a topic to which we now turn.
+
+\subsection{Memory Management} \label{sec:janus-memory}
+
+\subsubsection{Space Management for XSB's Heap}
+Because Python data structures are directly copied onto the XSB heap
+stack, the heap serves as a buffer for the return of information from
+Python.  XSB currently relies on the Python C API size routine {\tt
+  Py\_SIZE} to estimate the size of a structure, since accessing this
+routine has a constant-time overhead.\footnote{XSB estimates the size
+  multiplying {\tt Py\_SIZE} by a constant factor.}  However, {\tt
+  Py\_SIZE} only returns the length of a structure, and not its exact
+size.  Accordingly long lists of large structures, heavily nested
+dictionaries and other such structures may present a problem.  It
+should be noted that when \janus{} is initialized, XSB's default
+heap margin is reset to 1 megabyte so that any data structure whose
+size is less than 1 megabyte will be copied safely, even if its size
+is under-estimated.\footnote{XSB's default heap margin is 64 kbytes.}
+
+Fortunately, this default works for most users.  In using \janus{}
+the only times large data structures have proven a problem is when
+returning large bulk queries from Elasticsearch, or returning large
+sets of ontology instances from Wikidata.  In such a case there are
+two options.  First, one may reset the heap margin to an even larger
+value (see Volume 1 for details).  Alternately, one may use the option
+{\tt sizecheck(true)} for those {\tt py\_func} or {\tt py\_dot} calls that
+are expected to return large data structures.  If this option is
+specified, the call performs two traversals of the data structure to
+be returned: one to determine its size and ensure heap space, and another
+to copy the data structure.
+
+\subsection{Python Space Management}
+
+When using Python's C interface, every Python object that is declared
+in C must be explicitly released, a requirement that supports Python's
+garbage collection.  \janus{} memory usage has been checked using
+the {\tt guppy} package, which indicates that there are no memory
+leaks.
+
+%\subsection{Allowing Python to Reclaim Space}
+%
+%TBD: Discuss space issues for Python how they are now addressed and
+%how they will be addressed in the future.

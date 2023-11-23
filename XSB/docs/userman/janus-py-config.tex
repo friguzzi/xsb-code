@@ -1,0 +1,284 @@
+\section{Configuration, Loading and Start-up} \label{px:config}
+
+%{\sc Working draft -- not complete.
+%  \bi
+%  \item Not mentioning LD\_LIBRARY or XSB\_ROOT issues.
+%  \item  only describing Linux.
+%  \item Once the above kinks are out, I need to integrate this
+%    documentation it with the xsbpy configuration.
+%    \ei
+%    }
+
+%Also, because \janus{} is installed as a site
+%package for a given version of Python, we strongly recommend using a
+%Python virtual envonment, just as a virtual Python environment is
+%usually necessary for installation via {\tt pip}.  Fortunately, once
+%the appropriate Python packages are present and a user has set up a
+%virtual Python environment, \janus{} is easy to set up.
+
+\subsection{Installation on Linux and macOS}
+
+\subsubsection{System Prerequisites}
+
+On Linux and MacOS, both \janus-py{} and \janus-plg{} are
+automatically configured as part of the source code configuration and
+making process for XSB, while on Windows \janus-py{} is not yet
+working properly.  This configuration and make process itself requires
+most of the tools to build \janus-py (e.g., {\tt build-essential} or
+{\tt xcode}).  In XSB \janus{} has been tested at various times on
+versions 3.6-3.11 of Python.
+
+\begin{itemize}
+\item {\bf Linux}
+
+%To properly execute these steps the proper Python system packages must
+%have been installed.
+
+%Beyond Linux packages like {\tt build-essential} that are needed to
+  %<build and make XSB itself,
+
+\janus{} requires Python development packages to have been installed
+for the Python version of interest.  (See
+Section~\ref{sec:xsbpy-linux} for an overview of installing such
+dependencies.) On Ubuntu, and other Debian-derived Linuxes
+installation also requires installing {\tt \$\{PYTHON\}-distutils},
+though this is not required for other Linuxes. For a given version of
+Python {\tt \$PYTHON} on Ubuntu, the command to install these Python
+packages would be:
+
+{\tt sudo apt-get install \$\{PYTHON\}-dev \$\{PYTHON\}-distutils}
+
+On Fedora-based Linuxes, the {\tt dnf} command must be
+used.\footnote{\januspy{} has been tested on Ubuntu v. 18 and v. 20,
+and on Fedora 35; and Python versions 3.7-3.11 have been tested.  We
+believe that \januspy{} will work on other recent Unix distributions
+and newer Python versions as well.}
+
+%Since \janus{} requires {\tt distutils}, the {\tt python-distutils}
+%package also needs to have been installed.
+
+%On Linux, setting up a Python virtual environment requires the {\tt
+%  python-dev} and {\tt python-venv} packages to be installed,
+
+\item {\bf macOS} For masOS, you'll need a development package of
+  Python that includes {\tt libpython.dylib} and {\tt python.h}, both
+  of which can be installed via homebrew, macports or other means.
+%    libpython.dylib} and {\tt python.h}.  You'll also need a C
+
+%  Future versions of PX will likely support automatic installation,
+%  but for now you'll have to make sure the following prerequisites are
+%  installed, using Xcode, brew or some other installer.
+
+  %A version of
+%  Python 3.6-3.10 is recommended, but for whatever Python version you
+%  use you'll need the development package that includes {\tt
+%    libpython.dylib} and {\tt python.h}.  You'll also need a C
+%  compiler either clang or gcc, wither of whcih can easily be
+%  installed via xcode.  
+  
+\end{itemize}
+
+%\subsubsection{Configuring \janus{} on Linux and macOS}
+
+%\paragraph{Quick Start}
+%\begin{enumerate}
+%\item cd to {\tt \$XSB\_ROOT/XSB/packages/xsbpy} and execute {\tt
+%  bash px\_configure.sh} or {\tt
+%  zsh px\_configure.sh}
+%\item {\tt source \$XSB\_HOME/packages/xsbpy/px\_activate} from anywhere
+%\item start using px!
+%\end{enumerate}
+%
+
+\subsubsection{Discussion}
+%If the correct Python libraries have been installed, configuration of
+%{\tt px} should be simple, and nearly the same on Linux and
+%macOS.  When XSB is first configured, via
+%\begin{verbatim}
+%$XSB_ROOT/XSB/build/configure
+%\end{verbatim}
+%the {\tt xsbpy} package, which allows XSB to call Python, is also
+%configured and compiled.  Using files created during the {\tt xsbpy}
+%build, \janus{} is configured and build by cd-ing to
+%\begin{verbatim}
+%$XSB_ROOT/XSB/packages/xsbpy
+%\end{verbatim}
+%\noindent
+%and executing
+%\begin{verbatim}
+%  bash px_configure.sh
+%\end{verbatim}
+%This second configuration step uses XSB to generate a {\tt setup.py}
+%file for the Python {\tt distutils} package, and then builds and
+%installs {\tt px}.  \footnote{At some point, this confuration will be
+%  changed to use Python's {\tt setuptools}.}  The compiled C
+%extensions for Python are build and put in the user's {\tt
+%  site-packages} directory, i.e.,
+%\begin{verbatim}
+%~/.local/lib/python3.10/site-packages/
+%\end{verbatim}
+XSB's configuration/make process creates a file, {\tt
+  janus\_activate}, somewhat analogous to activation code in {\tt
+  venv} or other virtual environments.\footnote{This activation file
+updates the {\tt LD\_LIBRARY\_PATH} used by the {\tt ld} command, and
+adds the {\tt janus} directory to {\tt PYTHONPATH}.  On macOS {\tt
+  LD\_LIBRARY\_PATH} is also updated.} In {\tt bash} or {\tt zsh},
+simply type
+\begin{verbatim}
+source $XSB_HOME/packages/xsbpy/px_activate
+\end{verbatim}
+and you're ready to go.
+
+%\begin{itemize}
+%\item As a default, if the command
+%
+%  {\tt \$XSB\_ROOT/XSB/packages/xsbpy/configure}
+%
+%  is issued, \janus{} is installed in the directory corresponding to {\tt
+%    sys.USER\_SITE} in the version of Python {\tt \$Python} with which
+%  {\tt xsbpy} was configured. In Linux this is under the users home
+%  directory (\verb|~|):
+%\begin{verbatim}
+%~/.local/lib/$PYTHON/site-packages
+%\end{verbatim}
+%If this default directory is used, {\tt px} will only be available to
+%the user who installed it, and {\tt px} will be available for all
+%Python projects for that user.
+%
+%\item If \janus{} is to be installed in a Python virtual environment
+%  that uses {\tt venv}, the virtual environment will first need to be
+%  activated in a given shell.  In {\tt bash} this is done as:
+%
+%\begin{verbatim}
+%source $VENV_DIR/bin/activate
+%\end{verbatim}
+%
+%Where {\tt \$VENV\_DIR} is the root directory for the virtual
+%environment.  Once this is done, the command
+%
+%\begin{verbatim}  
+%$XSB_ROOT/XSB/packages/xsbpy/configure ???
+%\end{verbatim}
+%
+%is issued, \janus{} will be installed in 
+%
+%\begin{verbatim}
+%$VENV_DIR/lib/$PYTHON/site-packages
+%\end{verbatim}
+%
+%\item For system administrators, if the command
+%
+%\begin{verbatim}  
+%sudo $XSB_ROOT/XSB/packages/xsbpy/configure ???
+%\end{verbatim}
+%
+%  is issued, \janus{} will be installed in
+%
+%\begin{verbatim}  
+%/usr/local/lib/$PYTHON/dist-packages
+%\end{verbatim}  
+%
+%  If this option is used, \janus{} will be avaiable to anyone who uses
+%  the version {\tt \$PYTHON}.
+%
+%\item As a final alternative, the command 
+%
+%\begin{verbatim}  
+%  $XSB_ROOT/XSB/packages/xsbpy/configure ???
+%\end{verbatim}
+%
+%will install \janus{} directly in the specified directory.
+%\end{itemize}
+%
+%{\sc TES: If possible, I need to redo setup.py to include px.py in the
+%  egg so that px.py does not need to be in the library path.}
+
+Once \janus{} has been built and activated, \janus{} can be used just
+as any other package installed as a personal or site package for {\tt
+  \$\{PYTHON\}}.
+
+\begin{verbatim}
+$PYTHON
+>>> import janus as jns
+[xsb_configuration loaded]
+[sysinitrc loaded]
+[xsbbrat loaded]
+[janus loaded, cpu time used: 0.001 seconds]
+janus_initted_with_python(auto(python3.11))
+[janus_py loaded]
+\end{verbatim}
+
+\noindent
+Note that XSB is initialized in the Python process when the \janus{}
+module is loaded.
+
+As a final point, you can test \januspy{} by changing directory to
+
+{\tt \$XSB\_ROOT/xsbtests/janus\_tests}
+
+and executing the command {\tt bash test.sh } $< xsb\_executable\_path>$
+   
+The test script executes a number of \janus{} examples, which may be
+useful for trying out various features.
+
+%------------------------------------------------------------
+
+%\noindent
+%Once the appropriate packages are present, a virtual environment can
+%be set up, usually in a user's home directory via a command like:
+
+%{\tt \$\{PYTHON\} -m venv {\tt \$VENV\_DIR}}
+
+%Next, the virtual environment needs to be activated in a command
+%shell,  In {\tt bash} this is done as:
+
+%{\tt source \$VENV\_DIR/bin/activate  }
+
+%In the same shell the \janus{} configuration will be run.  If XSB has
+%not already been configured and made, you'll need to do so as
+%discussed in Volume 1 of this manual, which will configure \janus{}
+%(and {\tt xsbpy}).  Otherwise, {\tt cd} to the {\tt xsbpy}
+%subdirectory and run the command
+%
+%{\tt ./configure}
+%%
+
+%\subsection{Configuring on Linux Systems}
+
+%Currently {\tt setup.py} requires include and
+%library directories as shown below.  The paths to these directories
+%must be changed to include the proper {\tt \$XSB\_ROOT} and, in the
+%case of the library directory the path of the XSB binary appropriate
+%to your system.  An example is:
+
+%\begin{footnotesize}
+%  \begin{verbatim}
+%module1 = Extension('xsbext',
+%                    include_dirs = ['/usr/include/python3.8',
+%                                    '/home/tswift/xsb-code/XSB/emu',
+%                                    '/home/tswift/xsb-code/XSB/packages/xsbpy',
+%                                    '/home/tswift/xsb-code/XSB/config/x86_64-unknown-linux-gnu'],
+%                    libraries = ['xsb'],
+%                    library_dirs = ['/home/tswift/xsb-code/XSB/config/x86_64-unknown-linux-gnu/bin'],
+%                    sources = ['xsbext.c','xsbpy_common.c'])
+%  \end{verbatim}
+%\end{footnotesize}
+%
+%Once {\tt setup.py} is properly configured, the user need only enter a
+%python comaand to build and install the module ({\tt sudo} privilege
+%may be needed for this).  For the above file the command is:
+%
+%\begin{verbatim}
+%%python3.8 setup.py install
+%end{verbatim}
+%\noindent
+%This command compiles the px sources, builds a Python egg, and
+%installs the egg in the Python libary for distributed packages
+%(e.g. {\tt dist-packages})
+
+%\subsection{Configuring PX on Windows}
+
+%The {\tt px} configuration is not yet working for Windows.  If you
+%have experience in Windows configuration and would like to help,
+%please let us know.
+
