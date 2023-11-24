@@ -223,7 +223,9 @@ pc_eval(Call,NewCall):-
 
 pc_eval_1([],[]).
 pc_eval_1([eval(Goal)|T],[Res|NT]):- !,
+    writeln(py_call(Goal,Res)),
     py_call(Goal,Res),
+    writeln(py_call(Goal,Res)),
     pc_eval_1(T,NT).
 pc_eval_1([Arg|T],[Arg|NT]):-
     pc_eval_1(T,NT).
