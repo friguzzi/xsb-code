@@ -514,6 +514,7 @@ one may equivalently call
 
 \noindent
 These equivalences also hold when options are provided for a call.
+\end{example}
 
 The syntax of {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]} is arguably
 slightly more ``Pythonic'' than {\tt py\_call/[2,3]}.  Python
@@ -523,13 +524,46 @@ obtaining an attribute and this distinction is maintained when using
   py\_call/[2,3]} is arguably slightly more ``Prologic'', since it
 treats module qualification in the same manner as with Prolog goals,
 and does not require the user to distinguish between Python methods
-and functions.
+and functions.  The following example shows how {\tt py\_call/[3.4]}
+can write concise code.
 
-There is no deep difference between the two approaches: they are
-merely alternate syntaxes.  In XSB, {\tt py\_call/[2,3]} is defined in
-terms of {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]}; in SWI it is
-the reverse.  Which form to use is a matter of taste.
+\begin{example} \rm
+  Like many languages, Python allows simple functional composition --
+  a simple case might be
+\begin{verbatim}
+>>> make_squares(make_list(4))
+\end{verbatim}              
+which makes a list of the first four integers and then squares each
+ integer in the list producing
+ \begin{verbatim}
+>>> [1,4,9,25]
+\end{verbatim}
+     {\tt py\_call/2} supports a similar form of recursion, by clothing arguments in {\tt eval/1}, for instance:
+\begin{verbatim}
+?- py_call(test_janus:squares(eval(test_janus:makelist(4))),Res).
+\end{verbatim}
+unifies {\tt Res} with the expected result.
+
+Compositions of method application to objects is similar.  The
+goal
+\begin{verbatim}
+py_call(returnVal:returnVal({a:b,c:d}),Obj,[py_object(true)]).
+\end{verbatim}
+unifies {\tt Obj} with a reference to the Python dictionary object for
+{\tt \{a:b,c:d\}}.  Using this binding, the goal
+\begin{verbatim}
+py_call(Obj:'__class__':'__name__', Name),
+\end{verbatim}
+first finds the Python class for {\tt Obj} and then unifies {\tt Name}
+with its string representation.
 \end{example}
+
+There is no deep difference between {\tt py\_call/[2,3]} and the
+mixture of {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]}. They are
+merely alternate syntaxes.  In XSB, {\tt py\_call/[2,3]} is defined in
+terms of {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]} and so {\tt
+  py\_func/[3,4]} and {\tt py\_dot/[3,4]} are slightly faster; in SWI
+it is the reverse.  Which form to use is a matter of taste.
 
 %\subsection{Summary of Examples}
 
@@ -931,7 +965,10 @@ emulates {\tt py\_func(Mod,Func,Ret,Opts)}, while
 {\tt py\_call(Obj:Func,Ret,Opts)}
 
 \noindent
-emulates {\tt py\_dot(Obj,Func,Ret,Opts)}.
+emulates {\tt py\_dot(Obj,Func,Ret,Opts)}.  Within {\tt
+  py\_call/[2,3]} function composition can be performed via the use of
+the {\tt eval/1} term and via nested use of {\tt :/2} as indicated in
+Example~\ref{jns-examp:pycall}.
 
 Options and Error cases
 are the same as for {\tt py\_func/[3,4]} and {\tt py\_dot/[3,4]}.
