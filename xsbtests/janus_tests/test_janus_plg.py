@@ -69,15 +69,22 @@ def prolog_dumps(list):
 #--------------
 
 def makelist():
-    return([1,2,3,4])
+        return([1,2,3,4])
 
 def squares(start, stop):
-     for i in range(start, stop):
-         yield i * i
+        for i in range(start, stop):
+                yield i * i
+
+def makelist_comp(n):
+        return [i for i in range(1,n+1)]
+
+def lsquares(list):
+        return [i*i for i in list]
+       
 
 #--------------
 
-def returnVal(X):
+def returnal(X):
 #        print(X)
         return(X)
 
