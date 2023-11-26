@@ -177,6 +177,9 @@ def prolog_load(File,**Features):
 
 #----------------------------------
 
+def returnVal(X):
+    return(X)
+
 class ReturnVal:
         
         def __init__(self):

@@ -51,7 +51,7 @@ func_tests :-
 func_tests :- 
     check_call(py_func(test_janus_plg,my_generation(5),_,[iter(true)]),[1,2,3,4]),
     fail.
-% Tests casting to an iterator 
+% Tests casting to an iterator
 func_tests :- 
     check_call(py_func(builtins, range(1,5),_F,[iter(true)]),[1,2,3,4]),
     fail.
@@ -100,6 +100,22 @@ py_object_tests:-
     (F = [1,2,3,4] ->
        writeln(succeeded(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4])))
      ; writeln('!!!failed'(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4]))) ),
+    fail.
+py_object_tests:-
+    py_func(atest,xsb_attr(),Obj),
+    check_call(py_dot(Obj,version,_),5.0),
+    fail.
+py_object_tests:-
+    py_func(atest,xsb_attr(),Obj),
+    py_setAttr(Obj,version,5.1),
+    check_call(py_dot(Obj,version,_),5.1),
+    fail.
+py_object_tests:-
+    check_call(py_dot(atest,python_intf,_),xsbpy),
+    fail.
+py_object_tests:-
+    py_setAttr(atest,python_intf,janus),
+    check_call(py_dot(atest,python_intf,_),janus),
     fail.
 py_object_tests :-
     py_dot_py_object_tests.
