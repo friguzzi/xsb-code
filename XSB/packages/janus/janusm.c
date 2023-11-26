@@ -1034,6 +1034,43 @@ DllExport void  pyObj_next_int(CTXTdecl) {
   return;
 }
 
+// Does not take dictionary values, as this doesn't seem to be supported
+// By the Python C-API
+// Tried to decref pObjIn but this didn't work. Not collecting pObjOut
+DllExport int py_setattr_int(CTXTdecl) {
+  PyObject *pyObjIn = NULL,*pyVal = NULL;
+  prolog_term prObjIn, prMethIn, prValIn; 
+  char *mod_string;
+  PyErr_Clear();
+  prObjIn = extern_reg_term(1);
+  //  Skipping several typechecks, as Python does them.
+  if(is_functor(prObjIn) && strcmp(p2c_functor(prObjIn),PYOBJ_C) == 0) {
+    convert_prObj_pyObj(CTXTc prObjIn, &pyObjIn);
+  }
+  else if (isstring(prObjIn)) {
+    mod_string = p2c_string(prObjIn);
+    mod_string = set_path_name(mod_string);
+    pyObjIn = get_module(mod_string);
+  }
+  else {
+    xsb_type_error_vargs(CTXTc "Python module or object",prObjIn,"py_dot/[3,4]","");
+  }
+  prMethIn = (Cell) extern_reg_term(2);
+  XSB_Deref(prMethIn);
+  if (isstring(prMethIn)) {
+    prValIn = (Cell) extern_reg_term(3);
+    XSB_Deref(prValIn);
+    convert_prObj_pyObj(CTXTc prValIn, &pyVal);
+    //    int ret = PyObject_SetAttrString(pyObjIn,string_val(prMethIn),pyVal);
+    PyObject_SetAttrString(pyObjIn,string_val(prMethIn),pyVal);
+    //    xp_python_error();
+  }
+  else {
+    xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
+  }
+  return TRUE;
+}
+
 //----------------------------------------------------------------------------------------
 // Not used
 prolog_term make_prolog_pyObj(PyObject *pyObj) {

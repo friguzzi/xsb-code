@@ -9,10 +9,10 @@
 :- export py_dot/3,py_dot/4,py_func/3, py_func/4,py_iter/3,py_iter/2.
 :- export py_next/2.
 :- export janus_python_version/1, py_free/1.
-:- export py_call/2, py_call/3.
+:- export py_call/2, py_call/3,py_setAttr/3.
 :- export py_is_object/1.
+:- export py_add_lib_dir/1, py_add_lib_dir/2.
 %:- export py_obj_py_iter/2.
-:- import pyObj_get_iter_int/2 from janusm.
 
    
 :- import bootstrap_package/2, xsb_running_under/1 from packaging.
@@ -24,9 +24,10 @@
    %,type_error/4
    from error_handler.
 
-:- export py_add_lib_dir/1, py_add_lib_dir/2.
+
 :- import init_janus/1 from init_janus.
-:- import py_func_int/6,py_dot_int/6, py_get_iter_int/5, pyObj_next_int/4 from janusm.
+:- import py_func_int/6,py_dot_int/6,py_setattr_int/3 from janusm.
+:- import pyObj_get_iter_int/2,py_get_iter_int/5, pyObj_next_int/4  from janusm.
 :- import free_python_object_int/1 from janusm.
 :- import py_add_lib_dir/1 from init_janus as py_add_lib_dir/1.
 :- import py_add_lib_dir/2 from init_janus as py_add_lib_dir/2.
@@ -223,7 +224,7 @@ pc_eval(Call,NewCall):-
 
 pc_eval_1([],[]).
 pc_eval_1([eval(Goal)|T],[Res|NT]):- !,
-    writeln(py_call(Goal,Res)),
+%    writeln(py_call(Goal,Res)),
     py_call(Goal,Res),
     writeln(py_call(Goal,Res)),
     pc_eval_1(T,NT).
@@ -237,6 +238,11 @@ py_call(Mod:Call,Ret,Opt):-
 
 py_is_object(pyObj(_)).
 py_is_object(pyIter(_)).
+
+py_setAttr(ObjMod,Attr,Val):-
+    py_setattr_int(ObjMod,Attr,Val).
+		   
+end_of_file.
 
 % py_next and py_object_py_iter are subsumed by py_iter.
 % used to backtrack though 'next' values of an iteration object
@@ -262,8 +268,6 @@ py_is_object(pyIter(_)).
 %py_obj_py_iter(In,_Out):-
 %    term_to_atom(In,Atom),
 %    abort(['Input of py_iter/2 must be a module and function, or a Python object reference: ',Atom]).
-
-end_of_file.
 
 %py_iter(Mod,Func,Return):-
 %    get_def_vars(Call,PosArgNbr,Dict),
