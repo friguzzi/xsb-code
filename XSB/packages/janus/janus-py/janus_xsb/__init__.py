@@ -72,6 +72,7 @@ class apply:
             return jns_next()
     def close(self):
         """Explicitly close the query."""
+#        close_query(self)
 #        swipl.close_query(self.state)
 
 # ================ Query  ================
@@ -152,7 +153,7 @@ def add_prolog_path(List):
 # ================ Pretty Printing  ================
 # Gives a Prolog-like echo to calls and writes answers in a Prolog-like manner
 
-def pp_jns_apply_once(Module,Pred,*args):
+def pp_jns_apply_once(Module,Pred,*args,**kwargs):
     """Pretty print apply_once() and its return
     """
 
@@ -162,12 +163,17 @@ def pp_jns_apply_once(Module,Pred,*args):
         else: 
             print('?- '+Module+':'+Pred+'('+str(args)+',Answer).')
         print('')
-        Dict = apply_once(Module,Pred,*args)
+        Dict = apply_once(Module,Pred,*args,**kwargs)
+#        print(str(Dict))
 
-        print('   TV = ' + _printable_tv(Dict['truth']))
-        if (Dict['truth'] != 0):
+        if ('truth_vals' in kwargs):
             print('   Answer  = ' + str(Dict['return']))
-        print('')
+            print('   TV = ' + _printable_tv(Dict['truth']))
+            print('')
+        else:
+            print('   Answer  = ' + str(Dict))
+            print('')
+            
     except Exception as err:
         _display_xsb_error(err)
         print('')
@@ -283,7 +289,7 @@ def pp_jns_cmd(Module,Pred,*args):
     
 def _display_xsb_error(err):    
         print('Exception Caught from XSB: ')
-#        print('   ' + str(err))
+        print('   ' + str(err))
         print('      ' + get_error_message())
 
 def _printable_tv(TV):

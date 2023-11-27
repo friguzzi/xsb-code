@@ -31,7 +31,7 @@ static int query_arity = 0;
 static PyObject *px_init();
 static PyObject *px_close();
 static PyObject *px_cmd(PyObject *self,PyObject *args);
-static PyObject *px_qdet(PyObject *self,PyObject *args);
+static PyObject *px_qdet(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_first(PyObject *self,PyObject *args);
 static PyObject *px_next(PyObject *self);
@@ -84,7 +84,8 @@ static PyMethodDef XsbMethods[] = {
     {"init", px_init, METH_VARARGS, "Init XSB"},
     {"close", px_close, METH_VARARGS, "Close XSB"},
     {"cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
-    {"apply_once",px_qdet, METH_VARARGS, "Determiate XSB query execution using data structures"},
+    {"apply_once",px_qdet, METH_VARARGS | METH_KEYWORDS,
+     "Determiate XSB query execution using data structures"},
     {"comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
     {"jns_query_once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
     {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
@@ -245,9 +246,15 @@ PyObject* newPyObj;
   breg = (CPtr)tcpstack.high - breg_offset;		\
   //     print_ending_registers;  
 
-static PyObject *px_qdet(PyObject *self,PyObject *args) {
+static PyObject *px_qdet(PyObject *self,PyObject *args,PyObject *kwargs) {
   size_t tuplesize = PyTuple_Size(args);
   size_t heap_offset;
+  int flag_arg = NO_TRUTHVALS;
+  if (kwargs) {
+    PyObject  *dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth_vals"));
+    if (PyLong_AsSsize_t(dictval) == PLAIN_TRUTHVALS) flag_arg = PLAIN_TRUTHVALS;
+  }
+  //  printf("flag_args %d\n",flag_arg);
   reset_ccall_error(CTXT);
   ensurePyXSBStackSpace(CTXTc args);
   prolog_term return_pr = p2p_new();
@@ -278,10 +285,19 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
   }
   else {
     if (is_var(reg_term(CTXTc 1))) {
-      PyObject *pydict = PyDict_New();
-      Py_INCREF(Py_False);
-      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
-      return pydict;
+      if (flag_arg == PLAIN_TRUTHVALS) {
+	PyObject *pydict = PyDict_New();
+	Py_INCREF(Py_False);
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
+	return pydict;
+      }
+      else {
+	char message[200];
+	snprintf(message,200,"Query to XSB failed for goal %s:%s(...)\n",
+		 p2c_string(p2p_arg(return_pr, 1)),p2c_string(p2p_arg(return_pr, 2)));
+	PyErr_SetString(PyExc_Exception,message);
+	return Py_None;
+      }
     }
     else {
       if (gl_bot != (CPtr)glstack.low) {
@@ -289,15 +305,19 @@ static PyObject *px_qdet(PyObject *self,PyObject *args) {
 	reset_local_heap_ptrs;
       }
       //      printPlgTerm(p2p_arg(new_call,tuplesize-1));
-      //      printf("abt to convet\n");
       convert_prObj_pyObj(p2p_arg(new_call,tuplesize-1),&newPyObj);
       //      printf("conveted\n");
       //      printPyObj(self,newPyObj);
-      PyObject *pydict = PyDict_New();
-      PyDict_SetItem(pydict,PyUnicode_FromString("truth"),get_tv());
-      PyDict_SetItem(pydict,PyUnicode_FromString("return"),newPyObj);
-      reset_regs;
-      return pydict;
+      if (flag_arg == PLAIN_TRUTHVALS) {
+	PyObject *pydict = PyDict_New();
+	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),get_tv());
+	PyDict_SetItem(pydict,PyUnicode_FromString("return"),newPyObj);
+	reset_regs;
+	return pydict;
+      }
+      else {
+	return newPyObj;
+      }
     }
   }
 }
@@ -565,7 +585,7 @@ static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
     if (dictval) varnum = PyLong_AsSsize_t(dictval);
     dictval = NULL;
     //    dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth_vals"));
-    dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth"));
+    dictval = PyDict_GetItem(kwargs,PyUnicode_FromString("truth_vals"));
     if (dictval) {
       if (PyLong_AsSsize_t(dictval) == NO_TRUTHVALS) flag_arg = NO_TRUTHVALS;
       else if (PyLong_AsSsize_t(dictval) == DELAY_LISTS) flag_arg = DELAY_LISTS;

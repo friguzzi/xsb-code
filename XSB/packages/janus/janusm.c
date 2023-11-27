@@ -1061,9 +1061,9 @@ DllExport int py_setattr_int(CTXTdecl) {
     prValIn = (Cell) extern_reg_term(3);
     XSB_Deref(prValIn);
     convert_prObj_pyObj(CTXTc prValIn, &pyVal);
-    //    int ret = PyObject_SetAttrString(pyObjIn,string_val(prMethIn),pyVal);
-    PyObject_SetAttrString(pyObjIn,string_val(prMethIn),pyVal);
-    //    xp_python_error();
+    int ret = PyObject_SetAttrString(pyObjIn,string_val(prMethIn),pyVal);
+    if (ret == -1) 
+      xp_python_error();
   }
   else {
     xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
