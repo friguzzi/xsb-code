@@ -20,6 +20,10 @@ py_func(test_janus_plg,returnVal(-(1,2,3,4)),pyObj,[py_object(true)]) succeeded.
 py_func(test_janus_plg,returnVal({}(,(:(1,2),:(3,4)))),pyObj,[py_object(true)]) succeeded.
 py_func(test_janus_plg,returnVal([1,2,3,4]),pyObj,[py_object(true)]) succeeded.
 succeeded(py_func(test_janus_plg,returnVal(pyobj),[1,2,3,4]))
+py_dot(pyObj,version,5.0) succeeded.
+py_dot(pyObj,version,5.1) succeeded.
+py_dot(atest,python_intf,xsbpy) succeeded.
+py_dot(atest,python_intf,janus) succeeded.
 py_dot(pyObj,returnVal([1,2,3,4]),pyObj,[py_object(true)]) succeeded.
 py_dot(pyObj,returnVal(py_set([1,2,3,4])),pyObj,[py_object(true)]) succeeded.
 py_dot(pyObj,returnVal(-(1,2,3,4)),pyObj,[py_object(true)]) succeeded.
@@ -103,5 +107,6 @@ py_call(builtins,float(1.E6),1000000.0) succeeded.
 success(py_call(PyObj:returnVal([1,2,3,4]),E))
 success(py_call(Obj:favorite_ice_cream,I))
 success(py_call(F:__class__:__name__, Class))
+py_call(returnVal : return_dictionary(),{(Name : Geeks,1 : [1,2,3,4])})
 success(py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F))
 collect(0)
