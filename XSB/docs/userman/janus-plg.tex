@@ -921,10 +921,33 @@ paths is as with {\tt py\_func/[3,4]}.
   MethAttr} to Python the actions are as described for {\tt
   py\_func/[3,4]}.  
   \end{itemize}
+
 %\end{itemize}
 %
 In addition, errors thrown by Python are
   caught by XSB and re-thrown as {\tt misc\_error} errors.
+
+  \indourjnsitem{py\_setAttr(+ObjMod,+Attr,+Val)}{py\_setAttr/3}
+    %
+    If {\tt ObjMod} is a module or an object, this command is
+    equivalent to the Python
+
+    {\tt ObjMod.Attr = Val}.
+
+{\bf Error Cases}
+\bi
+\item {\tt Obj} is not a Prolog atom or Python object reference
+\bi
+\item {\tt type\_error}
+\ei
+\item {\tt MethAttr} is not an atom.
+\bi
+\item {\tt type\_error}
+\ei
+\item If an error occurs when translating an argument of {\tt
+  MethAttr} to Python the actions are as described for {\tt
+  py\_func/[3,4]}.  
+  \end{itemize}
 
 \indourjnsitem{py\_iter(+ModObj,+FuncMethAttr,Ret)}{py\_iter/3}
 %\indourjnsitem{py\_iter(+ObjRef)}{py\_iter/4}
