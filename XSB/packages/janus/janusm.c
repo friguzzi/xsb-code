@@ -998,12 +998,13 @@ DllExport int pyObj_get_iter_int(CTXTdecl) {
 	return FALSE;
 }
 
-DllExport void  pyObj_next_int(CTXTdecl) {
+DllExport int pyObj_next_int(CTXTdecl) {
   prolog_term prTerm = extern_reg_term(1);
   prolog_term indicator = extern_reg_term(3);
   int flag = p2c_int(reg_term(4));
   if(strcmp(p2c_functor(prTerm),"pyIter") == 0)
     {
+      //      printf("found iter \n");
       prolog_term ref_pyobj = p2p_arg(prTerm, 1);
       char *node_pointer = p2c_string(ref_pyobj); 
       PyObject *iterator = (PyObject *)strtoll(node_pointer+1,NULL, 16);
@@ -1014,24 +1015,27 @@ DllExport void  pyObj_next_int(CTXTdecl) {
       //      printPyObj(obj);
       if(obj == NULL) {
 	c2p_int(CTXTc FALSE, indicator);
-	return;
+	return FALSE;
       }
       prolog_term return_pr = p2p_new(CTXT);
       if (!convert_pyObj_prObj_switch(CTXTc obj, &return_pr, flag)) {
 	c2p_int(CTXTc FALSE, indicator);
-	return;
+	return FALSE;
       }
       //      printPlgTerm(return_pr);
       prolog_term prRet = extern_reg_term(2);
       if(!p2p_unify(CTXTc return_pr, prRet)) {
+	//	printf("cound not unify\n");
 	c2p_int(CTXTc FALSE, indicator);
-	return;
+	return FALSE;
       }
+      //      printPlgTerm(prRet);
       c2p_int(CTXTc TRUE, indicator);
-      return;
+      //      printf("returning\n");
+      return TRUE;
     }
   c2p_int(CTXTc FALSE, indicator);
-  return;
+  return FALSE;
 }
 
 // Does not take dictionary values, as this doesn't seem to be supported

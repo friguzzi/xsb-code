@@ -73,7 +73,9 @@ PyObject *printPyObj(PyObject *self,PyObject *obj1);
    why this happens on the Mac, please let me (TES) know.
 */
 
+#ifdef DARWIN
 extern CPtr darwinDelayregHack;
+#endif
 
 //-------------------------------------------------
 // Initting
@@ -170,16 +172,27 @@ PyObject *get_jns_undef() {
   return jns_undef;
 }
 
+#ifdef DARWIN
 PyObject *get_tv() {
 if (darwinDelayregHack) {
   return get_jns_undef();
-  //    return PyLong_FromLong(PYUNDEF);
  }
  else {
    Py_INCREF(Py_True);
    Py_RETURN_TRUE;
  }
 }
+#else
+PyObject *get_tv() {
+if (delayreg) {
+  return get_jns_undef();
+ }
+ else {
+   Py_INCREF(Py_True);
+   Py_RETURN_TRUE;
+ }
+}
+#endif
 
 void ensurePyXSBStackSpace(CTXTdeclc PyObject *pyObj) {
   PyObject * thirdArg;
