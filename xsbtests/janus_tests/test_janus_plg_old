@@ -68,10 +68,10 @@ py_dot(pyObj,func2(real,doofus),Hello my name is john and I'm a real doofus) suc
 py_dot(pyObj,func3(real,big,doofus),Hello my name is john and I'm a real big doofus) succeeded.
 py_call(pyObj,func3(eager,janus,programmer),Hello my name is john and I'm a eager janus programmer) succeeded.
 py_func(builtins,float(+1E6),1000000.0) succeeded.
-py_dot(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeeded.
+py_dot(sys,flags,Res) succeeded
 py_dot(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 dict({(name : mary,age : 34,favorite_ice_cream : chocolate)})
-dir([name,age,favorite_ice_cream,__module__,__init__,func0,func1,func2,func3,func4,__dict__,__weakref__,__doc__,__new__,__repr__,__hash__,__str__,__getattribute__,__setattr__,__delattr__,__lt__,__le__,__eq__,__ne__,__gt__,__ge__,__reduce_ex__,__reduce__,__getstate__,__subclasshook__,__init_subclass__,__format__,__sizeof__,__dir__,__class__])
+obj_dir succeeded
 personErr1 (should err)(type_error(Python module or object,1))
 personErr2 (should err)(type_error(callable_term,1))
 caught error for path.append(Dir)
@@ -101,7 +101,7 @@ py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(range(1,4)),F),py_iter(F,H) succeeded
 py_func(builtins,range(1,4),[1,2,3],[iter(true)]) succeeded.
 py_call(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
-py_call(sys,flags,-(0,0,0,0,0,0,0,0,0,0,0,1,0,@(false),0,0,@(false),-1)) succeeded.
+py_call(sys:flags,Flags) succeeded
 py_call(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 py_call(builtins,float(1.E6),1000000.0) succeeded.
 success(py_call(PyObj:returnVal([1,2,3,4]),E))

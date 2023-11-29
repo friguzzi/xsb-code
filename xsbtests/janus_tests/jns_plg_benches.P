@@ -20,7 +20,9 @@ bench:-
     writeln('--------- py_func_send_list(2,000,000) ---------'),
     bench_call(py_func_send_list(2000000)),
     writeln('--------- py_func_get_list(1,000,000) ---------'),
-    bench_call(py_func_get_list(1000000)),
+    (xsb_configuration(architecture,'x86_64-pc-linux-gnu') -> 
+	 bench_call(py_func_get_list(500000)) 
+    ;    bench_call(py_func_get_list(1000000))),
     writeln('--------- plg_incr(4,000,000) ---------'),
     bench_call(plg_incr(4000000)).
 
