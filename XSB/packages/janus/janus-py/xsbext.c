@@ -294,6 +294,7 @@ static PyObject *px_qdet(PyObject *self,PyObject *args,PyObject *kwargs) {
   xsb(CTXTc XSB_EXECUTE,0,0);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    Py_INCREF(Py_None);
     return Py_None;
   }
   else {
@@ -309,6 +310,7 @@ static PyObject *px_qdet(PyObject *self,PyObject *args,PyObject *kwargs) {
 	snprintf(message,200,"Query to XSB failed for goal %s:%s(...)\n",
 		 p2c_string(p2p_arg(return_pr, 1)),p2c_string(p2p_arg(return_pr, 2)));
 	PyErr_SetString(PyExc_Exception,message);
+	Py_INCREF(Py_None);
 	return Py_None;
       }
     }
@@ -376,6 +378,7 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
   int rcode = xsb_query(CTXT);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    Py_INCREF(Py_None);
     return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
@@ -411,6 +414,7 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
   if (!rcode) {
     if (ccall_error_thrown(CTXT))  {
       PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+      Py_INCREF(Py_None);
       return Py_None;
     } else {
       if (is_var(reg_term(CTXTc 1))) {
@@ -433,9 +437,10 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
       }
     }
   }
-  else
+  else {
     Py_INCREF(Py_None);
     return Py_None;
+  }
 }
 
 static PyObject *px_once(PyObject *self,PyObject *args) {
@@ -462,12 +467,15 @@ static PyObject *px_once(PyObject *self,PyObject *args) {
   int rcode = xsb_query(CTXT);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    Py_INCREF(Py_None);
     return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
       PyObject *pydict = PyDict_New();
-      if (tv_type == NO_TRUTHVALS)
+      if (tv_type == NO_TRUTHVALS) {
+	Py_INCREF(Py_None);
 	return Py_None;
+      }
       else {
 	Py_INCREF(Py_False);
 	PyDict_SetItem(pydict,PyUnicode_FromString("truth"),Py_False);
@@ -524,6 +532,7 @@ if (gl_bot != (CPtr)glstack.low) {
   //  xsb(CTXTc XSB_EXECUTE,0,0);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    Py_INCREF(Py_None);
     return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
@@ -563,6 +572,7 @@ static PyObject *px_next(PyObject *self) {
   if (!rcode) {
     if (ccall_error_thrown(CTXT))  {
       PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+      Py_INCREF(Py_None);
       return Py_None;
     } else {
       if (is_var(reg_term(CTXTc 1))) {
@@ -584,8 +594,10 @@ static PyObject *px_next(PyObject *self) {
       }
     }
   }
-  else
+  else {
+    Py_INCREF(Py_None);
     return Py_None;
+  }
 }
 
 static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
@@ -643,6 +655,7 @@ static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs) {
   xsb(CTXTc XSB_EXECUTE,0,0);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
+    Py_INCREF(Py_None);
     return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
@@ -702,6 +715,7 @@ static PyObject *px_cmd(PyObject *self,PyObject *args) {
   if (ccall_error_thrown(CTXT)) {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
     //    printf("Error: %s\n",xsb_get_error_message(CTXT));
+    Py_INCREF(Py_None);
     return Py_None;
     } else {
     PyObject *tv;
@@ -721,9 +735,13 @@ PyObject *px_close_query() {
   int rcode = xsb_close_query();
   if (rcode == XSB_ERROR) {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
-    return Py_None;
+    Py_INCREF(Py_None);
+    Py_RETURN_NONE;
   }
-  else return Py_None;
+  else {
+    Py_INCREF(Py_None);
+    Py_RETURN_NONE;
+  }
 }
 
 
