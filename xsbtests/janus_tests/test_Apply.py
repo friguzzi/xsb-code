@@ -31,7 +31,22 @@ def test_q():
     for i in jns.apply('jns_test','am_3','foobar',[1,2,3]):
         print('am_3: ' + str(i))
     print('--------------------------')
-
+    for i in jns.apply('jns_test','bt2'):
+        print('bt2.1: ' + str(i))
+        print('------------')
+        jns.close_query()
+    print('--------------------------')
+    C1 =  jns.apply('jns_test','bt2')
+    for i in C1:
+        print('bt2.2: ' + str(i))
+        print('------------')
+        jns.close_query()
+    print('--------------------------')
+    for i in jns.apply('jns_test','bt2'):
+        print('bt2.3: ' + str(i))
+        print('------------')
+    print("End")
+    
 test_q()      
 
 sys.stdout = orig_output
