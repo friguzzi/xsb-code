@@ -911,7 +911,7 @@ entailment constraint as the same~\footnote{Code for this is contained
 %examined to determine why a given literal is undefined. The reason
 %could be a negative loop somewhere in the program, due to floundering
 %negation, or due to a type of bounded rationality supported in XSB
-c%alled {\tt restraint} (cf. e.g. \cite{GroS13}).
+%called {\tt restraint} (cf. e.g. \cite{GroS13}).
 
 %In our running example, the function call
 
@@ -937,7 +937,7 @@ c%alled {\tt restraint} (cf. e.g. \cite{GroS13}).
 %other delay list indicates that an answer is {\em undefined}.  The two
 %delay lists for {\tt test\_comp(e,5)} show two instances of this
 %answer were returned in previous queries where {\tt sec\_collection}
-w%as not used.
+%as not used.
 %  \end{example}
 
 \subsection{Other \januspy{} Resources and Examples}
@@ -1074,7 +1074,7 @@ most of the examples in this chapter and many others.
 instance of an iterator class that is used to backtrack through all
 solutions to the constructed goal.  The Prolog goal invoked is
 automatically closed after iterating through all solutions, or when an
-explict {\tt jns.close\_prolog\_goal()} is called.  See
+explict {\tt jns.close\_query()} is called.  See
 Section~\ref{sec:var-nd} for examples of its use.
 
 \pymoditem{query(query\_string,**kwargs)}{query()}{janus\_xsb}
@@ -1083,12 +1083,36 @@ The string-based {\tt query()} is invoked as {\tt query\_once()} but
 creates an instance of an iterator class that is used to backtrack
 through all solutions to the constructed goal.  The Prolog goal
 invoked is automatically closed after iterating through all solutions,
-or when an explict {\tt jns.close\_prolog\_goal()} is called.  See
+or when an explict {\tt jns.close\_query()} is called.  See
 Section~\ref{sec:nd-query} for examples of its use.
 
-\pymoditem{close\_prolog\_goal()}{close\_prolog\_goal()}{janus\_xsb}
+\pymoditem{close\_query()}{close\_prolog\_goal()}{janus\_xsb}
 Closes a Prolog goal that was opened by {\tt apply()} or {\tt
-  query()}.  {\sc TES: The name close\_query() is arguably misleading}
+  query()}.
+
+In general, an XSB query opened by {\tt apply()} or {\tt query()}
+closes automatically when all answers to the query have been derived.
+(The {\tt \_\_next\_\_()} method for the {\tt apply} and {\tt query}
+classes ensures this).  An iterator $I$ is also automatically closed
+when Python execution leaves the scope of $I$.  However, since only
+one XSB query can be open at one time, an explicit close is requred in
+situations where 1) not all answers are required, and 2) the control
+flow is such that Python will not automatically close the iterator.  A
+schematic exampole is:
+\begin{verbatim}
+MyIter = jns.apply(...)
+:
+for elt in MyIter:
+  do something
+  if condition:
+     jns.close_query()    
+\end{verbatim}
+
+
+{\sc TES: The name close\_query() is arguably misleading, since it can
+  be used both for jns.query() and jns.apply().  The name jns.close()
+  is also ambiguous since it might be taken to mean that janus -- and
+  the underlying Prolog -- should be closed.}
 
   \pymoditem{comp(module,pred,*args,**kwargs)}{comp()}{janus\_xsb}
   %
