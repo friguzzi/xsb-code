@@ -1,4 +1,4 @@
-:- compiler_options([xpp_on,sysmod]).
+:- compiler_options([xpp_on,sysmod,spec_off]).
 
 %%#include "celltags_xsb.h"
 
@@ -13,39 +13,13 @@ xsb -e "[xsbdoc], xsbdoc(prolog_db_format,pdf),halt."
 /***
 For better performance, could do:
 
-New pred to add:
+A variant of select_db/4 might be say partition
+partition(STerm,TTerm,IDB0,SDB,DDB), which is like select but
+generates an updated input database with the selected items in SDB
+deleted.
 
-select_db(+PrefixTerm,+TemplPrefixTerm,+DB0,?DB): takes a prefix term, a
-template prefix term, and a DB0 and produces a new DB that contains
-terms that are instances of TemplPrefixTerm.  The arities of
-PrefixTerm and TemplPrefixTerm (i.e., the number of variables in each)
-must be the same.  The resulting database contains terms that are
-instances of TemplPrefixTerm whose variables are instantiated by
-instances of PrefixTerm in DB0.
-
-For example, select_db(r(a,f(_,_),_),res(_,_,_),DB0,DB) would produce
-the same DB as
-findall_db(res(A,B,C),fact_in_db(r(a,f(A,B),C),DB0),DB).
-But it runs in log time, since it just finds the point in the trie of
-PrefixTerm and then constructs the TemplPrefixTerm sequence and points
-it to that trie.
-
-Or maybe more useful, a minor variant that doesn't require PrefixTerm
-to be a prefix term, but allows variables in the "prefix" portion, and
-then is nondeterministic; for each binding those variables, produce
-the res(_,_,_) form for that (now instantiated) prefix term.
-
-So select(r(X,f(_,_),_),DB0,DB) would, for X such that there is
-r(X,f(_,_),_) in DB0, bind DB to a prolog_db representing ans(_,_,_)
-for the tails...
-
-
-Another possibly useful predicate might be in_proj_db(Pref,N,DB) where
-Pref is a prefix term with M variables, N is an integer =< M, and DB
-is a DB. E.g., in_proj_db(p(A,B,_,_),2,DB) succeeds for instances of
-p/4 in DB, binding A and B to values of those terms in DB.  It
-succeeds only once for each distinct pair of values A and B.
-
+(So retractall_in_db would be:
+retractall_in_db(STerm,STerm,IDB0,_,DDB).
 ***/
 
 :- comment(title,"Trie-Terms for Sets and Prolog Databases").
@@ -76,7 +50,7 @@ duplicate clauses) cannot be used in the clauses of trie-term
 databases.  Trie-term databases can support Prolog meta-programming in
 a pure way, since trie-terms are simply Prolog terms and so earlier
 trie-term database states are automatically recovered on backtracking
-(unlike with Prolog's built-in assert and retract operations).
+(unlike with Prolog''s built-in assert and retract operations).
 
 In fact, any Prolog term can be the head (or body) of a clause, so in
 particular integers, floats and variables are supported.  Therefore,
@@ -117,8 +91,8 @@ some applications.  ").
 :- comment(module," The @tt{prolog_db} module defines a data type that
 supports a very general facility for manipulating sets of Prolog
 clauses represented as a single (interned, ground) Prolog term that
-can be useful for a variety of purposes.  We will describe the
-module's functionality through a series of examples, which use
+can be useful for a variety of purposes.  We''ll describe the
+module''s functionality through a series of examples, which use
 progressively more complicated aspects of the data type.
 
 @section{Sets of Atoms (or Terms)}
@@ -131,11 +105,11 @@ a programmer wishes to maintain a term that explicitly represents a
 set of atoms.  This is often done using a sorted list in Prolog;
 sorting eliminates duplicates and canonicalizes a list to a set, so
 then list equality implements set equality.  This works well for small
-sets but, when sets get larger than a few 10's of items, performance
+sets but, when sets get larger than a few 10''s of items, performance
 can suffer signicantly.  This can be avoided by using the
 @tt{prolog_db} data type.  The empty set is represented by the empty
-list; an element, say 'George', is added to it with
-@pred{assert_in_db('George',[],_S1)} creating the set with 'George'
+list; an element, say ''George'', is added to it with
+@pred{assert_in_db(''George'',[],_S1)} creating the set with ''George''
 added in @var{_S1}.  For example,
 
 @begin{verbatim}
@@ -395,7 +369,7 @@ terms can be interpreted as defining a set of relations by
 interpreting the main functor symbol of each term as a relation name,
 and the subterms of that structure as the field values of a tuple of
 that relation.  This is exactly how Prolog would treat such a set of
-terms were they to be asserted into Prolog's clause database.
+terms were they to be asserted into Prolog''s clause database.
 
 For example, one can create a trie-term containing two r/2 tuples and
 three q/3 tuples in @var{_DB} with
@@ -488,7 +462,7 @@ DB1, it would have been replaced with the new definition.
 
 @subsection{Example: Semi-Naive Transitive Closure}
 
-We'll introduce several other single database operators that are
+We''ll introduce several other single database operators that are
 supported by the @tt{prolog_db} abstract data type with the following
 more complicated example.  Assume we have a trie-term relational
 database that contains an edge relation @pred{e/2}.  We want to
@@ -790,7 +764,7 @@ The first problem is how to store a set of key-value pairs so that
 given a key and value, we can efficiently add the pair to the table,
 and given a key, efficiently access its paired value in the table.
 There are many data structures that support these operations.  We use
-a variant of the radix tree data structure.  We'll describe the
+a variant of the radix tree data structure.  We will describe the
 variant we use by starting by assuming that the keys are n-bit
 integers.  We use a 4-way tree to store the index.  The last 2 bits of
 the key determine which of the four subtrees of the root contain the
@@ -873,13 +847,6 @@ A Colisions structure is a term of the form:
     collide to this location.
 
 
-*/
-
-
-
-
-
-
 For our trie-terms, we want to index on the symbols in a Prolog term,
 and not n-bit integers.  But we can turn symbols into n-bit integers
 by choosing a hash function whose output value is an appropriately
@@ -942,9 +909,7 @@ that indicate tables, i.e., @var{P1}, @var{P2}, and @var{P3}, can
 actually be prefix terms, and they refer to a set of tuples in a
 trie-term as described in the previous paragraph.  So, in fact, a
 table specification of @pred{r/3}, say, is simply an accepted
-short-hand for the actual prefix term @pred{r(_,_,_)}.
-
-").    
+short-hand for the actual prefix term @pred{r(_,_,_)}.  ").    
 
 /***********************************************************/
 
@@ -960,22 +925,15 @@ assert_in_db(Clauses,H0,H) :-
 	    assert_list(MClauses)
 	 ;  assert(Clauses)
 	)
-     ;  tab_intern_termhash(DB0,H0),
+     ;  intern_termhash(DB0,H0),
 	assert_in_db_b(Clauses,DB0,DB),
-	tab_intern_termhash(DB,H)
+	intern_termhash(DB,H)
     ).
 
 %% simpler alias if desired.
 :- comment(add/3,"@pred{add/3} is an alias for @pred{assert_in_db/3}.").
 :- mode add(?,+,?).
 add(Clauses,H0,H) :- assert_in_db(Clauses,H0,H).
-
-%% bug if do this, for very large metainterp??
-%%:- import (table)/1 from standard.
-%%:- table tab_intern_termhash/2 as intern.
-:- mode tab_intern_termhash(+,?),tab_intern_termhash(?,+).
-tab_intern_termhash(DB0,H0) :-
-    intern_termhash(DB0,H0).
 
 assert_list([]).
 assert_list([Clause|Clauses]) :-
@@ -999,9 +957,9 @@ the ``clause'' to be asserted is itself a list, and so interpreting it
 as a list of clauses would be incorrect. ").
 :- mode assert1_in_db(?,+,?).
 assert1_in_db(Clause,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     assert1_in_db_b(Clause,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 assert1_in_db_b(Clause,DB0,DB) :-
     (Clause = (Head :- Body)
@@ -1018,7 +976,7 @@ list) to the empty DB to generate @var{DB}.").
 assert_in_db(Clauses,H) :-
     new_db(DB0),
     assert_in_db(Clauses,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 %% simpler alias if desired.
 :- comment(add/2,"@pred{add/2} is an alias for @pred{assert_in_db/2}.").
@@ -1036,7 +994,7 @@ add_to_trie_dict(Head,Body,Dict0,Dict) :-
 :- mode add_trie_dict(+,?,+,-).
 add_trie_dict(KeyTerms,Value,Dict0,Dict) :-
     (KeyTerms \== []
-     ->	get_key_new_terms(KeyTerms,Key,NKeyTerms),
+     ->	next_prefix_symbol(KeyTerms,Key,NKeyTerms),
 	add_radix_dict(Key,NewSubDict,Dict0,Dict,OldSubDict),
 	add_trie_dict(NKeyTerms,Value,OldSubDict,NewSubDict)
      ;	order_insert(Dict0,Value,Dict)
@@ -1056,49 +1014,27 @@ order_insert(ACVs,V,NVs) :-
 	)
     ).
 
-%%:- table hash_key/2. % breaks it, because arguments are sometimes
-%%           interned and sometimes not.
+%% use C builtin
+hash_key(_,Key,HashCode) :-
+    prolog_db_bi(3,Key,HashCode,[]).
 
-%% note _$Var(i) hashes to same place for all i, intentional, I think...
-%%#define HASHBASE 536870027
 
-hash_key(Key,HashCode) :-
-    (Key @= functor(_,_,_)
-     ->	Key = functor(_Mod,Fun,Ari),
-	term_hash(Fun,536870027,HashCode0),
-	HashCode is (HashCode0 + Ari) mod 536870027
-     ;	term_hash(Key,536870027,HashCode)
-    ).
-%%    term_hash(Key,13,HashCode).
+%% use C builtin
+next_prefix_symbol(TermTerms,Key,NTerms) :-
+    prolog_db_bi(1,TermTerms,Key,NTerms).
 
-get_key_new_terms([Term|Terms],Key,NTerms) :-
-    (var(Term)
-     ->	NTerms = Terms,
-	Key = Term
-     ; atomic(Term)
-     ->	NTerms = Terms,
-	Key = Term
-     ; get_key_new_terms1(Term,Terms,Key,NTerms)
-    ).
 
-get_key_new_terms1(Term,Terms,Key,NTerms) :-
-    (varno(Term)
-     ->	NTerms = Terms,
-	Key = Term
-     ;	functor(Term,Mod,Fun,Ari),
-	Key = functor(Mod,Fun,Ari),
-	Term =.. [Fun|SubTerms],
-	append(SubTerms,Terms,NTerms)
-    ).    
+match_key_new_terms(TermTerms,Key,NTerms) :-
+    prolog_db_bi(1,TermTerms,Key,NTerms).
 
-match_key_new_terms([Term|Terms],Key,NTerms) :-
+/*match_key_new_terms([Term|Terms],Key,NTerms) :-
     (Key = functor(Mod,Fun,Ari)
      ->	my_functor(Term,Mod,Fun,Ari),
 	Term =.. [_|SubTerms],
 	append(SubTerms,Terms,NTerms)
      ;	Term = Key,
 	NTerms = Terms
-    ).
+    ).**/
 
 :- comment(add_radix_dict/5,
 "add_radix_dict(+Term,?NewVal,+HashTree0,-HashTree,-OldVal) adds a
@@ -1110,13 +1046,13 @@ a new key.)").
 
 % add_radix_dict/5
 add_radix_dict(Key,NVal,Tree0,Tree,OVal) :-
-    hash_key(Key,HashCode),
+    hash_key([],Key,HashCode),
     add_radix_dict(Tree0,Key,NVal,HashCode,0,OVal,Tree).
     
 %add_radix_dict(Tree0,Key,NVal,HashCode,Depth,OVal,Tree)
 add_radix_dict([],Key,Val,_,_,[],rtl(Key,Val,[])).
 add_radix_dict(ORTL,Key,Val,HashCode,Depth,OVal,Tree) :- ORTL = rtl(OKey,_,_),
-    hash_key(OKey,HashOCode),
+    hash_key([],OKey,HashOCode),
     (HashCode =:= HashOCode
      ->	rtl_insert(ORTL,Key,Val,OVal,Tree)
      ;	OVal = [], % adding a new entry so old is []
@@ -1126,20 +1062,6 @@ add_radix_dict(RT,Key,Val,HashCode,Depth,OVal,Tree) :- RT = rt(RT1,RT2,RT3,RT4),
     Index is (HashCode >> Depth) /\ 3,
     NDepth is Depth + 2,
     updated_rt(Index,RT1,RT2,RT3,RT4,ORT,NRT,Tree),
-/**    (Index =< 1
-    -> (Index =:= 0
-        -> ORT = RT1,
-	   Tree = rt(NRT,RT2,RT3,RT4)
-        ;  ORT = RT2,
-	   Tree = rt(RT1,NRT,RT3,RT4)
-       )
-    ;  (Index =:= 2
-        -> ORT = RT3,
-	   Tree = rt(RT1,RT2,NRT,RT4)
-        ;  ORT = RT4,
-	   Tree = rt(RT1,RT2,RT3,NRT)
-       )
-    ), ***/
     add_radix_dict(ORT,Key,Val,HashCode,NDepth,OVal,NRT).
 
 updated_rt(0,RT1,RT2,RT3,RT4,RT1,NRT,rt(NRT,RT2,RT3,RT4)).
@@ -1179,71 +1101,18 @@ updated_leaf_rtl_same(1,NT,rt([],NT,[],[])).
 updated_leaf_rtl_same(2,NT,rt([],[],NT,[])).
 updated_leaf_rtl_same(3,NT,rt([],[],[],NT)).
 
-
-/***********
-add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,Depth,Tree) :-
-    (HashCode =:= OHashCode
-     ->	rtl_insert(ORTL,Key,Val,_OVal,Tree)
-     ;	Index is (HashCode >> Depth) /\ 3,
-	OIndex is (OHashCode >> Depth) /\ 3,
-	(Index =\= OIndex
-	 -> NRTL = rtl(Key,Val,[]),
-	    (Index =< 1
-	     -> (Index =:= 0
-		 -> (OIndex =:= 1
-		     -> Tree = rt(NRTL,ORTL,[],[])
-		     ; OIndex =:= 2
-		     -> Tree = rt(NRTL,[],ORTL,[])
-		     ;  Tree = rt(NRTL,[],[],ORTL)
-		    )
-		 ;  (OIndex =:= 0
-		     -> Tree = rt(ORTL,NRTL,[],[])
-		     ; OIndex =:= 2
-		     -> Tree = rt([],NRTL,ORTL,[])
-		     ;  Tree = rt([],NRTL,[],ORTL)
-		    )
-		)
-	     ;  (Index =:= 2
-		 -> (OIndex =:= 0
-		     -> Tree = rt(ORTL,[],NRTL,[])
-		     ; OIndex =:= 1
-		     -> Tree = rt([],ORTL,NRTL,[])
-		     ;  Tree = rt([],[],NRTL,ORTL)
-		    )
-	         ;  (OIndex =:= 0
-		     -> Tree = rt(ORTL,[],[],NRTL)
-		     ; OIndex =:= 1
-		     -> Tree = rt([],ORTL,[],NRTL)
-		     ;  Tree = rt([],[],ORTL,NRTL)
-		    )
-		)
-	    )
-	 ;  NDepth is Depth + 2,
-	    (Index =< 1
-	    -> (Index =:= 0
-	       -> Tree = rt(NT,[],[],[])
-	       ;  Tree = rt([],NT,[],[])
-	       )
-	    ; (Index =:= 2
-	      -> Tree = rt([],[],NT,[])
-	      ;  Tree = rt([],[],[],NT)
-	      )
-	    ),
-	    add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,NDepth,NT)
-	)
-    ). ***********/
-
 /***********************************************************/
 
 %% for now
 :- comment(clause_in_db/3,"@pred{clause_in_db(?Head,?Body,+DB)}
 unifies, in turn, @var{Head} and @var{Body} with the head and body of
 rules in @var{DB}.").
+
 :- mode clause_in_db(?,?,+).
 clause_in_db(Head,Body,H) :-
     (H == module
      ->	clause(Head,Body)
-     ;	tab_intern_termhash(DB,H),
+     ;	intern_termhash(DB,H),
 	clause_in_db_b(Head,Body,DB)
     ).
 
@@ -1255,7 +1124,7 @@ rules in @var{DB}.  @var{Body} contains numbervarred variables, and
 clause_in_db(Head,Body,Vars,H) :-
     (H == module
      ->	clause(Head,Body)
-     ;	tab_intern_termhash(DB,H),
+     ;	intern_termhash(DB,H),
 	lookup_trie_vdict([Head],Body,Vars,DB)
     ).
 
@@ -1264,7 +1133,7 @@ turn, @var{Fact} with each fact in DB, @var{DB}.  The order of
 returned facts is indeterminate.").
 :- mode fact_in_db(?,+).
 fact_in_db(Head,H) :-
-    tab_intern_termhash(DB,H),
+    intern_termhash(DB,H),
     (DB == internalDB
      ->	call0(Head)
      ;	lookup_trie_vdict([Head],true,_Vars,DB)
@@ -1279,108 +1148,96 @@ clause_in_db_b(Head,Body,Dict) :-
 
 lookup_trie_vdict([],Body,_Vars,Dict) :- 
     member(Body,Dict).
-%% Use nonstandard '_$Var$' to not conflict with normal numbervar (hack)
 lookup_trie_vdict(Terms,Body,Vars,Dict) :- Terms = [Term|RTerms],
-    (lookup_radix_dict('_$Var$'(VNo),Val,Dict),
-     integer(VNo),
-     log_ith(VNo,Vars,Term),
-     lookup_trie_vdict(RTerms,Body,Vars,Val)
-     ;
-     get_key_new_terms(Terms,Key,NTerms),
-     (nonvar(Key), \+ varno(Key)
-      -> lookup_radix_dict(Key,Val,Dict),
-	 lookup_trie_vdict(NTerms,Body,Vars,Val)
-      ;	 lookup_radix_dict(Key,Val,Dict),
-	 Key =.. [_|NArgs],
-	 append(NArgs,NTerms,NNTerms),
-	 lookup_trie_vdict(NNTerms,Body,Vars,Val)
-     )
+    lookup_trie_vars(Term,Body,Vars,Dict,RTerms).
+lookup_trie_vdict(Terms,Body,Vars,Dict) :- Terms = [_|_],
+    lookup_trie_novars(Terms,Body,Vars,Dict).
+
+%% handle vars in DB
+lookup_trie_vars(Term,Body,Vars,Dict,RTerms) :-
+    Key = '_$Var$'(VNo),
+    lookup_radix_dict_det([],Key,RTL,Dict),
+    rtl_member(Key,Val,RTL),
+%%    integer(VNo),  % shouldn't be required, since DB must be ground
+    log_ith(VNo,Vars,Term),
+    lookup_trie_vdict(RTerms,Body,Vars,Val).
+    
+%% when no vars in DB
+lookup_trie_novars(Terms,Body,Vars,Dict) :- 
+    next_prefix_symbol(Terms,Key,NTerms),
+    (nonvar(Key), \+varno(Key)  %functor or constant?, this handles $var(_)
+     -> lookup_radix_dict_det([],Key,RTL,Dict),
+	rtl_member_det(Key,Val,RTL),
+	lookup_trie_vdict(NTerms,Body,Vars,Val)
+     ;  (var(Key)
+	 -> lookup_radix_dict(RTL,Dict),
+	    rtl_member(Key,Val,RTL)
+	 ;  lookup_radix_dict_det([],Key,RTL,Dict),  % this handles %var(int)
+	    rtl_member_det(Key,Val,RTL)  %%what is Key here?
+	),
+	Key =.. [_|NArgs],  %cannot use new builtin due to $Var proc
+	append(NArgs,NTerms,NNTerms),
+	lookup_trie_vdict(NNTerms,Body,Vars,Val)
     ).
 
-:- comment(gfact_in_db/2, "@pred{gfact_in_db(?Term,+DB)}
-nondeterministically unifies @var{Term} with each ground fact in
-prolog DB @var{DB}.").
-:- mode gfact_in_db(?,+).
-gfact_in_db(Term,H) :- 
-    tab_intern_termhash(DB,H),
+:- comment(fact_in_gdb/2, "@pred{fact_in_gdb(?Term,+DB)}
+nondeterministically unifies @var{Term} with each fact in
+ground prolog DB @var{DB}.").
+:- mode fact_in_gdb(?,+).
+fact_in_gdb(Term,H) :- 
+    intern_termhash(DB,H),
     lookup_trie_dict([Term],DB).
 
 lookup_trie_dict([],Dict) :- 
     member(true,Dict).
 lookup_trie_dict(Terms,Dict) :-
-    get_key_new_terms(Terms,Key,NTerms),
+    next_prefix_symbol(Terms,Key,NTerms),
     (nonvar(Key)
-     -> lookup_radix_dict(Key,Val,Dict),
+     -> lookup_radix_dict_det([],Key,RTL,Dict),
+	(ground(Key)
+	 -> rtl_member_det(Key,Val,RTL)
+	 ;  rtl_member(Key,Val,RTL)
+	),
 	lookup_trie_dict(NTerms,Val)
-     ;	lookup_radix_dict(Key,Val,Dict),
+     ;	lookup_radix_dict(RTL,Dict),
+	rtl_member(Key,Val,RTL),
 	Key =.. [_|NArgs],
 	append(NArgs,NTerms,NNTerms),
 	lookup_trie_dict(NNTerms,Val)
     ).
 
-/*** Does NOT define variant, more variables at same places...
-variant_clause_in_db(Head,Body,H) :-
-    tab_intern_termhash(DB,H),
-    copy_term((Head,Body),(HeadC,BodyC)),
-    my_numbervars((HeadC,BodyC),0,_),
-    lookup_trie_dict([HeadC],BodyC,DB).
+varno(Var) :- nonvar(Var), Var = '_$Var$'(VNo), integer(VNo).
 
-lookup_trie_dict([],Body,Dict) :- 
-    member(Body,Dict).
-lookup_trie_dict(Terms,Body,Dict) :-
-    get_key_new_terms(Terms,Key,NTerms),
-    (nonvar(Key)
-     ->	lookup_radix_dict(Key,Val,Dict),
-	lookup_trie_dict(NTerms,Body,Val)
-     ;	lookup_radix_dict(Key,Val,Dict),
-	Key =.. [_|NArgs],
-	append(NArgs,NTerms,NNTerms),
-	lookup_trie_dict(NNTerms,Body,Val)
-    ). ****/
-
-varno(Var) :- Var = '_$Var$'(VNo), integer(VNo).
-
-varno(Var,VNo) :- Var = '_$Var$'(VNo), integer(VNo).
+varno(Var,VNo) :- nonvar(Var), Var = '_$Var$'(VNo), integer(VNo).
 
 
-lookup_radix_dict(Key,Val,Tree) :-
+lookup_radix_dict(RTL,Tree) :-
     (Tree @= rtl(_,_,_)
-     ->	rtl_member(Key,Val,Tree)
-     ;	nonvar(Key)
-     ->	hash_key(Key,HashCode),
-	lookup_radix_vdict(Tree,HashCode,Key,Val) % key bound, det (make builtin?)
-     ;	lookup_radix_vdict(Tree,HashCode,Key,Val)
+     -> RTL = Tree
+     ; lookup_sub_radix_vdict_all(Tree,RTL)
     ).
 
-lookup_radix_vdict(RTL,_,Key,Val) :- RTL = rtl(_,_,_),
-    rtl_member(Key,Val,RTL).
-lookup_radix_vdict(RT,HashCode,Key,Val) :- RT = rt(_,_,_,_),
-    (nonvar(Key)
-     ->	Index is HashCode /\ 3,
-	NHashCode is HashCode >> 2,
-	%% much better code generated w/this dupl, should fix compiler
-	lookup_sub_radix_vdict(RT,NHashCode,Key,Val,Index) 
-     ;	lookup_sub_radix_vdict(RT,NHashCode,Key,Val,Index)
-    ).
+%% Special case for ground Key
+%% use C builtin, for speed.
+lookup_radix_dict_det(_,Key,RTL,Dict) :-
+    prolog_db_bi(2,Key,RTL,Dict).
 
 %% lookahead hackery to avoid laying down choicepoint in most cases
 %% rtl_member('_$Var$'(_h691),_h694,rtl(functor(usermod,'_$Var$',1),rtl(A,[true],[]),[])) fails,
 %%    should succeed binding _h691 to value gotten from V1...
 %%    needed for handling:
 %%  assert_in_db(p('_$Var$'(X)),DB),trace,clause_in_db(p('_$Var$'(1)),true,DB).
-/*
-rtl_member('_$Var$'(X),V,rtl(functor(usermod,'_$Var$',1),SubDict,[]|RTL)) :-
-    lookup_radix_vdict(X,V,SubDict).  doesn't work..... need higher access...
-*/
 rtl_member(K,V,rtl(K1,V1,RTL)) :-
-    (RTL == []
-     ->	rtl_member1(K,V,K1,V1)
-     ;	rtl_member2(K,V,K1,V1,RTL)
+    (RTL \== []
+     ->	rtl_member2(K,V,K1,V1,RTL)
+     ;	rtl_member1(K,V,K1,V1)
     ).
 
 rtl_member1(K,V,K1,V1) :-
-    (var(K), K1 = functor(Mod,Fun,Ari)
-     ->	V = V1, my_functor(K,Mod,Fun,Ari)
+    NK = functor(Mod,Fun,Ari),
+    (var(K), K1 @= NK
+     ->	V = V1, K1 = NK,
+        my_functor(K,Mod,Fun,Ari)
      ;	K = K1, V = V1
     ).
 
@@ -1390,15 +1247,25 @@ rtl_member2(K,V,K1,V1,RTL) :-
      rtl_member(K,V,RTL)
     ).
 
-:- index lookup_sub_radix_vdict/5-5.
-lookup_sub_radix_vdict(rt(RT1,_,_,_),HashCode,Key,Val,0) :-
-    lookup_radix_vdict(RT1,HashCode,Key,Val).
-lookup_sub_radix_vdict(rt(_,RT2,_,_),HashCode,Key,Val,1) :-
-    lookup_radix_vdict(RT2,HashCode,Key,Val).
-lookup_sub_radix_vdict(rt(_,_,RT3,_),HashCode,Key,Val,2) :-
-    lookup_radix_vdict(RT3,HashCode,Key,Val).
-lookup_sub_radix_vdict(rt(_,_,_,RT4),HashCode,Key,Val,3) :-
-    lookup_radix_vdict(RT4,HashCode,Key,Val).
+% special case for ground key
+rtl_member_det(K,V,rtl(K1,V1,RTL)) :-
+    term_compare(K,K1,Ord),
+    (Ord =:= 0
+     -> V = V1
+     ; Ord > 0,
+       RTL \== [],
+       rtl_member_det(K,V,RTL)
+    ).
+
+lookup_sub_radix_vdict_all(RTL,RTL) :- RTL = rtl(_,_,_).
+lookup_sub_radix_vdict_all(rt(RT1,_,_,_),RTL) :-
+    lookup_sub_radix_vdict_all(RT1,RTL).
+lookup_sub_radix_vdict_all(rt(_,RT2,_,_),RTL) :-
+    lookup_sub_radix_vdict_all(RT2,RTL).
+lookup_sub_radix_vdict_all(rt(_,_,RT3,_),RTL) :-
+    lookup_sub_radix_vdict_all(RT3,RTL).
+lookup_sub_radix_vdict_all(rt(_,_,_,RT4),RTL) :-
+    lookup_sub_radix_vdict_all(RT4,RTL).
 
 /***********************************************************/
 
@@ -1414,9 +1281,9 @@ retractall_in_db(Clauses,H0,H) :-
 	    retractall_list(MClauses)
 	 ;  retractall(Clauses)
 	)
-     ;	tab_intern_termhash(DB0,H0),
+     ;	intern_termhash(DB0,H0),
 	retractall_in_db_b(Clauses,DB0,DB),
-	tab_intern_termhash(DB,H)
+	intern_termhash(DB,H)
     ).
 
 %% simpler alias if desired
@@ -1460,9 +1327,12 @@ delete_trie_vdict([],Body,Vars,Dict0,Dict) :-
 delete_trie_vdict(Terms,Body,Vars,Dict0,Dict) :- Terms = [Frst|NTermsT],
     (is_most_general_term(Terms)
      ->	Dict = []
-     ;	findall(VNo,lookup_radix_dict('_$Var$'(VNo),_,Dict0),VNos),
+    ;	findall(VNo,(Key = '_$Var$'(VNo),
+		     lookup_radix_dict_det([],Key,RTL,Dict0),
+		     rtl_member(Key,_Val,RTL)),
+		VNos),
 	delete_list_vns_from_trie_list(VNos,Frst,NTermsT,Body,Vars,Dict0,Dict1),
-        get_key_new_terms(Terms,VKey,NTerms),
+        next_prefix_symbol(Terms,VKey,NTerms),
 	(nonvar(Key), varno(VKey,VNo)
 	 -> log_ith(VNo,Vars,Key)
 	 ;  Key = VKey
@@ -1519,7 +1389,7 @@ delete_list_vns_from_trie_list([VNo|VNos],Term,NTerms,Body,Vars,Dict0,Dict) :-
 
 delete_radix_vdict(Key,ValTran,Vars,Tree0,Tree) :-
     (nonvar(Key)
-     ->	hash_key(Key,HashCode)
+     ->	hash_key([],Key,HashCode)
      ;	true
     ),
     (delete_from_radix_tree(Tree0,Key,ValTran,Vars,Tree,HashCode)
@@ -1600,10 +1470,10 @@ predicates, and completely independent of the size (i.e., the number
 of tuples) of the predicates.").
 :- mode union_db(+,+,?).
 union_db(H1,H2,H) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     union_db_b(DB1,DB2,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 union_db_b(DB1,DB2,DB3) :-
     union_tries(DB1,DB2,0,DB3).
@@ -1633,8 +1503,8 @@ union_tries0(RTA,RTLB,Depth,T) :- RTA = rt(_,_,_,_),
 :- index union_with_rtl/5-2.
 union_with_rtl(T,[],_Depth,T,_K1).
 union_with_rtl(RTLA,RTLB,Depth,T,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_union(RTLA,RTLB,T)
      ;	Ind1 is (Hash1 >> Depth) /\ 3,
@@ -1647,7 +1517,7 @@ union_with_rtl(RTLA,RTLB,Depth,T,K1) :- RTLB = rtl(K2,_,_),
 	)
     ).
 union_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     union_tries_ind_recur_l(RTLA,RTB,Depth1,T,NInd).
@@ -1655,7 +1525,7 @@ union_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
 :- index union_with_rt/4-2.
 union_with_rt(T,[],_Depth,T).
 union_with_rt(RTA,RTLB,Depth,T) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     union_tries_ind_recur_r(RTA,RTLB,Depth1,T,NInd).
@@ -1785,7 +1655,7 @@ succeeds if the relation determined by prefix term @var{Pref} in
 database @var{DB} is empty.  It fails otherwise.").
 :- mode is_empty_in_db(?,+).
 is_empty_in_db(Pref,H) :-
-    tab_intern_termhash(DB,H),
+    intern_termhash(DB,H),
     cvt_pa(Pref,Prefa),
     \+ find_subtrie_for_prefix([Prefa],DB,_TL,_HT).
 
@@ -1832,7 +1702,7 @@ count_in_db(Pref,DB,Count) :-
 of clauses in @var{DB} in @var{Count}.  ").
 :- mode size_db(+,?).
 size_db(H,Cnt) :-
-    tab_intern_termhash(DB,H),
+    intern_termhash(DB,H),
     size_db_b(DB,Cnt).
 
 size_db_b(DB,Cnt) :-
@@ -1865,10 +1735,10 @@ trie to share subterms with the input tries, and to perhaps avoid
 traversing large portions of the input tries.  ").
 :- mode intersect_db(+,+,?).
 intersect_db(H1,H2,H) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     intersect_db_b(DB1,DB2,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 :- comment(intersect_in_db/5,
 "@pred{intersect_in_db(+P1,+P2,+P3,+DB0,?DB)} intersects two subtries
@@ -1899,14 +1769,14 @@ intersect_tries0(RTA,RTLB,Depth,T) :- RTA = rt(_,_,_,_),
 :- index intersect_with_rtl/5-2.
 intersect_with_rtl(_T,[],_Depth,[],_K1).
 intersect_with_rtl(RTLA,RTLB,_Depth,T,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_intersect(RTLA,RTLB,T)
      ;	T = []
     ).
 intersect_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     intersect_tries_ind_recur_l(RTLA,RTB,Depth1,T0,NInd),
@@ -1915,7 +1785,7 @@ intersect_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
 :- index intersect_with_rt/4-2.
 intersect_with_rt(_T,[],_Depth,[]).
 intersect_with_rt(RTA,RTLB,Depth,T) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     intersect_tries_ind_recur_r(RTA,RTLB,Depth1,T0,NInd),
@@ -2007,10 +1877,10 @@ databases contain the same sets of tuples, the difference immediately
 detects that and returns the empty database.").
 :- mode difference_db(+,+,?).
 difference_db(H1,H2,H) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     difference_db_b(DB1,DB2,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 :- comment(difference_in_db/5,
 "@pred{difference_in_db(+P1,+P2,+P3,+DB0,?DB)} computes the set
@@ -2041,14 +1911,14 @@ difference_tries0(RTA,RTLB,Depth,T) :- RTA = rt(_,_,_,_),
 :- index difference_with_rtl/5-2.
 difference_with_rtl(T,[],_Depth,T,_K1).
 difference_with_rtl(RTLA,RTLB,_Depth,T,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_difference(RTLA,RTLB,T)
      ;	T = RTLA
     ).
 difference_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     difference_tries_ind_recur_l(RTLA,RTB,Depth1,T0,NInd),
@@ -2057,7 +1927,7 @@ difference_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
 :- index difference_with_rt/4-2.
 difference_with_rt(T,[],_Depth,T).
 difference_with_rt(RTA,RTLB,Depth,T) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     difference_tries_ind_recur_r(RTA,RTLB,Depth1,T0,NInd),
@@ -2141,8 +2011,8 @@ terms in prolog DB, @var{DB1}, are a subset of the terms in prolog DB,
 @pred{DB2}, and fails otherwise.").
 :- mode subset_db(+,+).
 subset_db(H1,H2) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     subset_db_b(DB1,DB2).
 
 :- comment(subset_in_db/3, "@pred{subset_in_db(+Pref1,+Pref2,+DB)}
@@ -2170,21 +2040,21 @@ subset_tries0(RTA,RTLB,Depth) :- RTA = rt(_,_,_,_),
 
 :- index subset_with_rtl/4-2.
 subset_with_rtl(RTLA,RTLB,_Depth,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_subset(RTLA,RTLB)
      ;	fail
     ).
 subset_with_rtl(RTLA,RTB,Depth,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     subset_tries_ind_recur_l(RTLA,RTB,Depth1,NInd).
     
 :- index subset_with_rt/3-2.
 subset_with_rt(RTA,RTLB,Depth) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     subset_tries_ind_recur_r(RTA,RTLB,Depth1,NInd).
@@ -2274,10 +2144,10 @@ trie to share subterms with the input tries, and to perhaps avoid
 traversing large portions of the input tries.").
 :- mode sym_diff_db(+,+,-).
 sym_diff_db(H1,H2,H) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     sym_diff_db_b(DB1,DB2,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 :- comment(sym_diff_in_db/5,
 "@pred{sym_diff_in_db(+P1,+P2,+P3,+DB0,?DB)} computes the symmetric
@@ -2308,14 +2178,14 @@ sym_diff_tries0(RTA,RTLB,Depth,T) :- RTA = rt(_,_,_,_),
 :- index sym_diff_with_rtl/5-2.
 sym_diff_with_rtl(T,[],_Depth,T,_K1).
 sym_diff_with_rtl(RTLA,RTLB,Depth,T,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_sym_diff(RTLA,RTLB,T)
      ;	union_with_rtl(RTLA,RTLB,Depth,T,K1)
     ).
 sym_diff_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     sym_diff_tries_ind_recur_l(RTLA,RTB,Depth1,T0,NInd),
@@ -2324,7 +2194,7 @@ sym_diff_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
 :- index sym_diff_with_rt/4-2.
 sym_diff_with_rt(T,[],_Depth,T).
 sym_diff_with_rt(RTA,RTLB,Depth,T) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     sym_diff_tries_ind_recur_r(RTA,RTLB,Depth1,T0,NInd),
@@ -2408,8 +2278,8 @@ sym_diff_tries_ind_recur_r(rt(RT1,RT2,RT3,RT4),RT,D,rt(RT1,RT2,RT3,ST),3) :-
 the prolog databases @var{DB1} and @var{DB2} are disjoint.").
 :- mode disjoint_db(+,+).
 disjoint_db(H1,H2) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     disjoint_db_b(DB1,DB2).
 
 :- comment(disjoint_in_db/3, "@pred{disjoint_in_db(+Pref1,+Pref2,+DB)}
@@ -2438,14 +2308,14 @@ disjoint_tries0(RTA,RTLB,Depth) :- RTA = rt(_,_,_,_),
 :- index disjoint_with_rtl/4-2.
 disjoint_with_rtl(_T,[],_Depth,_Key).
 disjoint_with_rtl(RTLA,RTLB,_Depth,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_disjoint(RTLA,RTLB)
      ;	true
     ).
 disjoint_with_rtl(RTLA,RTB,Depth,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     disjoint_tries_ind_recur_l(RTLA,RTB,Depth1,NInd).
@@ -2453,7 +2323,7 @@ disjoint_with_rtl(RTLA,RTB,Depth,Key) :- RTB = rt(_,_,_,_),
 :- index disjoint_with_rt/3-2.
 disjoint_with_rt(_T,[],_Depth).
 disjoint_with_rt(RTA,RTLB,Depth) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     disjoint_tries_ind_recur_r(RTA,RTLB,Depth1,NInd).
@@ -2549,9 +2419,9 @@ bodies.)  The complexity of this operation is the size of the
 essentially extended with a pointer to the @var{Pref2} trie.").
 :- mode xprod_in_db(?,?,?,+,?).
 xprod_in_db(Pref1,Pref2,Pref3,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     xprod_in_db_b(Pref1,Pref2,Pref3,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 xprod_in_db_b(Pref1,Pref2,Pref3,DB0,DB) :-
     cvt_pa(Pref1,Pref2,Pref1a,Pref2a),
@@ -2601,9 +2471,9 @@ xprod_tries_extend(rtl(K,V,RTL),RTB,rtl(K,NV,NRTL)) :-
 will be in the prefix term @var{PrefI}.").
 :- mode materialize_in_db(?,?,+,?).
 materialize_in_db(PrefI,PrefO,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     materialize_in_db_b(PrefI,PrefO,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 materialize_in_db_b(PrefI,PrefO,DB0,DB) :-
     cvt_pa(PrefI,PrefO,PrefIa,PrefOa),
@@ -2622,8 +2492,8 @@ instances of @var{DB1} is a subset of the set of ground instances of
 attempted by comparing individual rules. ").
 :- mode subsumed_db(+,+).
 subsumed_db(H1,H2) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     subsumed_db_b(DB1,DB2).
 
 /* Note: This implementation of subsumed_db requires in_db_b, and
@@ -2708,9 +2578,9 @@ target prefix term will be added if it is not in the input database,
 @var{DB0}.)  ").
 
 apply_op_in_db(Lambda,Pref1,Pref2,Pref3,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     apply_op_in_db_b(Lambda,Pref1,Pref2,Pref3,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 apply_op_in_db_b(lambda(HT1,HT2,HT3,Op),Pref1,Pref2,Pref3,DB0,DB) :-
     cvt_pa(Pref1,Pref2,Pref1a,Pref2a),
@@ -2744,7 +2614,7 @@ whose arguments are those varaibles.  The goal must define the desired
 relational operator on subtries.  ").
 
 apply_rel_op_in_db(Lambda,Pref1,Pref2,H) :-
-    tab_intern_termhash(DB,H),
+    intern_termhash(DB,H),
     apply_rel_op_in_db_b(Lambda,Pref1,Pref2,DB).
 
 apply_rel_op_in_db_b(lambda(HT1,HT2,Op),Pref1,Pref2,DB) :-
@@ -2773,14 +2643,26 @@ in @var{SHT}, and the number of variables remaining in the tail is
 returned in @var{TailLen}.").
 
 find_subtrie_for_prefix([HeadTerm|HeadTail],HT,TailLen,SHT) :-
-    nonvar(HeadTerm),
-    get_key_new_terms([HeadTerm],Key,HTerms),
-    lookup_radix_dict(Key,SHT0,HT),
-    append(HTerms,HeadTail,NHeadTail),
-    (is_most_general_term(NHeadTail)
-     ->	length(NHeadTail,TailLen),
-	SHT = SHT0
-     ;	find_subtrie_for_prefix(NHeadTail,SHT0,TailLen,SHT)
+    (nonvar(HeadTerm)
+     -> next_prefix_symbol([HeadTerm],Key,HTerms),
+	(nonvar(Key)
+          -> lookup_radix_dict_det([],Key,RTL,HT),
+	     (ground(Key)
+	      -> rtl_member_det(Key,SHT0,RTL)
+              ;  rtl_member(Key,SHT0,RTL)
+	     )
+          ;  lookup_radix_dict(RTL,HT),
+	     rtl_member(Key,SHT0,RTL)
+	),
+	append(HTerms,HeadTail,NHeadTail),
+	(is_most_general_term(NHeadTail)
+	 -> length(NHeadTail,TailLen),
+	    SHT = SHT0
+	 ;  find_subtrie_for_prefix(NHeadTail,SHT0,TailLen,SHT)
+	)
+     ;  HeadTail = [],
+	TailLen = 1,
+	SHT = HT
     ).
 
 %% rename to update_subtrie/4.
@@ -2806,7 +2688,7 @@ update_subtrie(HeadTail,NSHT,OSHT,TailLen,HT0,HT) :-
 update_subtrie_1([HeadTerm|HeadTail],NSHT,OSHT,TailLen,HT0,HT) :-
     nonvar(HeadTerm),
     NSHT \== [],
-    get_key_new_terms([HeadTerm],Key,HTerms),
+    next_prefix_symbol([HeadTerm],Key,HTerms),
     append(HTerms,HeadTail,NHeadTail),
     (is_most_general_term(NHeadTail)
      ->	length(NHeadTail,TailLen),
@@ -2862,7 +2744,7 @@ prefix_term(PT,Prefix,TailVars) :-
      ->	is_most_general_term(PT),
 	TailVars = PT,
 	Prefix = []
-     ;	get_key_new_terms(PT,Key,NTerms),
+     ;	next_prefix_symbol(PT,Key,NTerms),
 	Prefix = [Key|PrefixT],
 	prefix_term(NTerms,PrefixT,TailVars)
     ).
@@ -2881,8 +2763,8 @@ split_prefix_term_b0([],[],DB,DB).
 split_prefix_term_b0(Terms,Tail,DB0,DB) :- Terms = [Term|Terms1],
     (var(Term)
      ->	Tail = Terms, DB = DB0
-     ;	get_key_new_terms(Terms,Key,NTerms),
-	lookup_radix_dict(Key,SDB,DB0),
+     ;	next_prefix_symbol(Terms,Key,NTerms),
+	lookup_radix_dict(SDB,DB0),
 	split_prefix_term_b0(NTerms,Tail,SDB,DB)
     ).
     
@@ -3060,7 +2942,7 @@ in_db(Goal,H) :-
      ->	misc_error('[prolog_db] in_db/2, Illegal argument 1, must not be a variable')
     ; H == module
      ->	call(Goal)
-     ;	tab_intern_termhash(DB,H),
+     ;	intern_termhash(DB,H),
 	in_db_b(Goal,DB)
     ).
 
@@ -3104,7 +2986,7 @@ is represented as its term; a rule is represented as a @tt{:-/2}
 term.").
 
 db_to_list(HDB,L) :-
-    tab_intern_termhash(DB,HDB),
+    intern_termhash(DB,HDB),
     findall(C,(clause_in_db_b(H,B,DB),
 	       (B == true
 		-> C = H
@@ -3117,7 +2999,7 @@ in DB, @var{DB}, to the file @var{Filename}.  If @var{Filename} is
 'userout', the clauses will be written to userout. ").
 :- mode dump_db(+,+).
 dump_db(FileName,H) :-
-    tab_intern_termhash(DB,H),
+    intern_termhash(DB,H),
     dump_db_b(FileName,DB).
 
 
@@ -3258,7 +3140,7 @@ without cuts, so it can be used when this file is loaded into a DB by
 pure_in_db(G,H) :-
     (H == module
      ->	call(G)
-     ;	tab_intern_termhash(DB,H),
+     ;	intern_termhash(DB,H),
 	pure_in_db_b(G,_,DB)
     ).
 
@@ -3301,7 +3183,7 @@ is_db(H) :-
     atom(H),
     (H == []
      ->	true
-     ;	tab_intern_termhash(DB,H),
+     ;	intern_termhash(DB,H),
 	DB \== H
     ).
 	       
@@ -3327,9 +3209,9 @@ the clauses in @file{FileName} and adds them to the database
 @var{DB0}, creating a new database @var{DB}. ").
 :- mode load_in_db(+,+,?).
 load_in_db(FileName,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     load_in_db_b(FileName,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 :- comment(loadc_in_db/3, "@pred{loadc_in_db(+FileName,+DB0,-DB)} uses
 @tt{read_canonical} to read the clauses in @file{FileName} and adds
@@ -3337,9 +3219,9 @@ them to the database @var{DB0}, creating a new database @var{DB}. The
 clauses in the file must be in canonical vorm.").
 :- mode loadc_in_db(+,+,?).
 loadc_in_db(FileName,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     loadc_in_db_b(FileName,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 :- comment(load_in_db/4, "
 @pred{load_in_db(+FileName,+ExclSet,+DB0,?DB)} reads the clauses in
@@ -3349,10 +3231,10 @@ most common use of the @var{ExclSet} is to avoid adding unwanted
 directives.  ").
 :- mode load_in_db(+,+,+,-).
 load_in_db(FileName,HExcl,H0,H) :-
-    tab_intern_termhash(DB0,H0),
-    tab_intern_termhash(EDB,HExcl),
+    intern_termhash(DB0,H0),
+    intern_termhash(EDB,HExcl),
     load_in_db_b(FileName,term,EDB,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 :- comment(loadc_in_db/4, "
 @pred{loadc_in_db(+FileName,+ExclSet,+DB0,?DB)} uses
@@ -3363,10 +3245,10 @@ them into @var{DB0} generating @var{DB}.  The most common use of the
 the file must be in canonical form.  ").
 :- mode loadc_in_db(+,+,+,?).
 loadc_in_db(FileName,HExcl,H0,H) :-
-    tab_intern_termhash(DB0,H0),
-    tab_intern_termhash(EDB,HExcl),
+    intern_termhash(DB0,H0),
+    intern_termhash(EDB,HExcl),
     load_in_db_b(FileName,canon,EDB,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 load_in_db_b(FileName,DB0,DB) :-
     new_db(EDB),
@@ -3472,9 +3354,9 @@ The p/3 clauses must be ground facts. (q/4 could have rules with
 non-empty bodies, but I don't see any application for this.)  ").
 :- mode join_in_db(?,?,+,?,+,?).
 join_in_db(Pref1,Pref2,NJoin,Pref3,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     join_in_db_b(Pref1,Pref2,NJoin,Pref3,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 join_in_db_b(Pref1,Pref2,NJoin,Pref3,DB0,DB) :-
 %%    writeln(userout,DB0),
@@ -3505,14 +3387,14 @@ join_tries0(RTA,RTLB,NJoin,Depth,T) :- RTA = rt(_,_,_,_),
 :- index join_with_rtl/6-2.
 join_with_rtl(_T,[],_NJoin,_Depth,[],_K1).
 join_with_rtl(RTLA,RTLB,NJoin,_Depth,T,K1) :- RTLB = rtl(K2,_,_),
-    hash_key(K1,Hash1),
-    hash_key(K2,Hash2),
+    hash_key([],K1,Hash1),
+    hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
      ->	rtl_join(RTLA,RTLB,NJoin,T)
      ;	T = []
     ).
 join_with_rtl(RTLA,RTB,NJoin,Depth,T,Key) :- RTB = rt(_,_,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     join_tries_ind_recur_l(RTLA,RTB,NJoin,Depth1,T0,NInd),
@@ -3521,7 +3403,7 @@ join_with_rtl(RTLA,RTB,NJoin,Depth,T,Key) :- RTB = rt(_,_,_,_),
 :- index join_with_rt/5-2.
 join_with_rt(_T,[],_NJoin,_Depth,[]).
 join_with_rt(RTA,RTLB,NJoin,Depth,T) :- RTLB = rtl(Key,_,_),
-    hash_key(Key,Hash),
+    hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     join_tries_ind_recur_r(RTA,RTLB,NJoin,Depth1,T0,NInd),
@@ -3613,9 +3495,9 @@ Note that reordering can bring a later argument to the beginning to
 make it available for use in a call to @pred{join_in_db/6}. ").
 :- mode reorder_in_db(?,?,+,?).
 reorder_in_db(PrefI,PrefO,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     reorder_in_db_b(PrefI,PrefO,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 reorder_in_db_b(PrefI,PrefO,DB0,DB) :-
     cvt_pa(PrefI,PrefIa),
@@ -3676,6 +3558,75 @@ reorder_trie_rtl(rtl(K,Dict,RTLs),Terms,ReordVars,OutPrefTail,OutSubDict0,OutSub
 
 /********************************************************/
 
+:- comment(select_db/4,"@pred{select_db(+InTerm,+OutTerm,+DB0,-DB)}
+selects a subDB from @var{DB0}, tranforming tuples, and returning the
+result in @var{DB}.  It can do equi-selects and projectios.
+@var{InTerm} and @var{OutTerm} are terms that determine the selection
+and transformation.  All variables in @var{OutTerm} must (already)
+appear in @var{InTerm}.  The effect is of
+findall_db(OutTerm,in_db(InTerm,DB0),DB), but this should generally be
+more efficient. Either term can be a variable.  ").
+
+select_db(PrefI,PrefO,H0,H) :-
+    intern_termhash(DB0,H0),
+    select_db_b(PrefI,PrefO,DB0,DB),
+    intern_termhash(DB,H).
+
+% assume variables in TermI include all variables in TermO
+% Attempt...
+select_db_b(TermI,TermO,DB0,DB) :-
+    select_from_trie(DB0,[TermI],[TermO],[],DB).
+
+select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
+%%    standard:writeln(sft(TermI,TermO)),
+    (TermI == TermO
+     -> NRT = RT0
+    ;  (TermI == []
+       -> match_key_new_terms(TermO,KO,NTermsO),
+	  add_radix_dict(KO,SRT0,[],NRT,ONRT),
+	  select_from_trie(RT0,TermI,NTermsO,ONRT,SRT0)
+       ;  match_key_new_terms(TermI,KI,NTermsI),
+	  (nonvar(KI)
+	  -> lookup_radix_dict_det([],KI,RTL,RT0),
+	     rtl_member(KI,SHT0,RTL),
+	     select_from_trie(SHT0,NTermsI,TermO,NRT0,NRT)
+	  ;  select_all_radix(RT0,KI,NTermsI,TermO,NRT)
+	  )
+	)
+    ).
+
+/* We have to do unions here, because projection (and transformation)
+   is allowed.  This elimination of duplicates can be expensive.  We
+   might want to try to special-case situations we can determine
+   cannot produce duplicates.  Or look at this closer to see how to
+   improve efficienty. */
+select_all_radix([],_,_,_,[]).
+select_all_radix(RT0,KI,NTermsI,NTermO,NRT) :-
+    RT0 = rtl(_,_,_),
+    select_all_rtl(RT0,KI,NTermsI,NTermO,[],NRT).
+select_all_radix(RT0,KI,NTermsI,NTermO,NRT) :-
+    RT0 = rt(RT1,RT2,RT3,RT4),
+    select_all_radix(RT1,KI,NTermsI,NTermO,NRT1),
+    select_all_radix(RT2,KI,NTermsI,NTermO,NRT2),
+    union_db_b(NRT1,NRT2,NRT2a),
+    select_all_radix(RT3,KI,NTermsI,NTermO,NRT3),
+    union_db_b(NRT3,NRT2a,NRT3a),
+    select_all_radix(RT4,KI,NTermsI,NTermO,NRT4),
+    union_db_b(NRT4,NRT3a,NRT).
+
+select_all_rtl([],_KI,_NTermsI,_NTermO,NRT,NRT).
+select_all_rtl(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
+    copy_term(t(KI,NTermsI,NTermO),t(NKI,NNTermsI,NNTermO)),
+    RT0 = rtl(NKI0,Dict,RTL),
+    (NKI0 = functor(Mod,Fun,Ari)
+     -> functor(NKI,Mod,Fun,Ari),
+	NKI =.. [Fun|Args],
+	append(Args,NNTermsI,NNTermsI2)
+     ;  NKI = NKI0, NNTermsI2 = NNTermsI
+    ),
+    select_from_trie(Dict,NNTermsI2,NNTermO,NRT0,NRT1),
+    select_all_rtl(RTL,KI,NNTermsI2,NNTermO,NRT1,NRT).
+
 :- comment(project_in_db/5,
 "@pred{project_in_db(+PrefI,+NArgs,+PrefO,+DB0,?DB)} creates a new
 relation that projects away the first @var{NArgs} of the tuples of
@@ -3692,9 +3643,9 @@ which projects away the first two arguments of the @tt{p/4} relation
 in @var{DB0} to generate the @tt{q/2} relation in @var{DB}. ").
 :- mode project_in_db(?,+,?,+,?).
 project_in_db(PrefI,NArgs,PrefO,H0,H) :-
-    tab_intern_termhash(DB0,H0),
+    intern_termhash(DB0,H0),
     project_in_db_b(PrefI,NArgs,PrefO,DB0,DB),
-    tab_intern_termhash(DB,H).
+    intern_termhash(DB,H).
 
 project_in_db_b(PrefI,NArgs,PrefO,DB0,DB) :-
     cvt_pa(PrefI,PrefIa),
@@ -3746,8 +3697,8 @@ runs (at worst) in time proportional to the size of the smaller set. "
 ).
 :- mode compare_size_db(+,+,?).
 compare_size_db(H1,H2,Order) :-
-    tab_intern_termhash(DB1,H1),
-    tab_intern_termhash(DB2,H2),
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
     compare_size_db_b(DB1,DB2,Order).
 
 compare_size_db_b(DB1,DB2,Order) :-
@@ -3877,7 +3828,7 @@ gdb(DB) :-
     ).
 
 
-
+%%prolog_db_bi(_,_,_,_) :- '_$builtin'(82).
 
 /********************************************************/
 
@@ -3889,7 +3840,8 @@ radix_tree_size(T,Size) :-
      gensym('_ctr',Ctr),
      conset(Ctr,0),
      (do_all
-      lookup_radix_dict(_,_,T),
+      lookup_radix_dict(RTL,T),
+      rtl_member(K,_,RTL),
       coninc(Ctr)
      ),
      conget(Ctr,Size).
@@ -3910,7 +3862,7 @@ radix_tree_max_depth(rt(R1,R2,R3,R4),K) :-
 
 
 hash_bin(Term,BinList0,BinList) :-
-    hash_key(Term,X),
+    hash_key([],Term,X),
     (X =\= 0
      ->	Bit is X /\ 3,
 	X1 is X >> 2,

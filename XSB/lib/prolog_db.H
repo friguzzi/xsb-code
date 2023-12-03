@@ -1,10 +1,11 @@
 :- export new_db/1, is_db/1, assert_in_db/3, add/3, assert1_in_db/3, 
    assert_in_db/2, add/2, retractall_in_db/3, remove/3, clause_in_db/3, fact_in_db/2,
-   gfact_in_db/2,
+   fact_in_gdb/2,
    in_db/2, in/2, in_db/3, load_in_db/3, load_in_db/2, subset_db/2,
    loadc_in_db/2, loadc_in_db/3, loadc_in_db/4,
    subsumed_db/2, size_db/2,
    union_db/3, intersect_db/3, difference_db/3, sym_diff_db/3, disjoint_db/2,
+   select_db/4, 
    db_to_list/2, dump_db/2, dump_db/3, pure_in_db/2, load_in_db/4,
    write_db/1, write_db/2, writeln_db/1, writeln_db/2, write_label_db/2, write_label_db/3,
    write_label_db/2, write_label_db/3, writeln_label_db/2, writeln_label_db/3.
@@ -15,6 +16,7 @@
    copy_in_db/4, materialize_in_db/4, xprod_in_db/5, join_in_db/6,
    reorder_in_db/4, project_in_db/5, is_empty_in_db/2, is_empty_in_db/3,
    move_in_db/4.
+
 :- export count_in_db/3.
 :- export compare_size_db/3.
 :- export findall_db/3.
@@ -49,7 +51,7 @@
 
 %%:- import (multifile)/1 from standard.
 
-:- import intern_termhash/2, term_hash/3, term_compare/3,
+:- import intern_termhash/2, term_compare/3,
    term_arg/3, psc_arity/2, term_psc/2, term_type/2,
    call0/1
    from machine.
@@ -58,3 +60,5 @@
 :- import call_c/1, functor/4 from standard.
 
 :- import concat_atom/2 from string.
+
+:- import prolog_db_bi/4 from machine.
