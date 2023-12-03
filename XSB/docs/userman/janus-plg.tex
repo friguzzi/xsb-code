@@ -64,10 +64,10 @@ further examples.
 
 We introduce some of the core functionality of \janusplg{} via a
 series of examples.  As background, when \janus{} is loaded, Python is
-also loaded and initialized within the XSB process, the core Prolog
-modules of \janus{} are loaded into XSB, and paths to \janus{} and its
+also loaded and initialized within the Prolog process, the core Prolog
+modules of \janus{} are loaded into Prolog, and paths to \janus{} and its
 sub-directories are added both to Prolog and to Python (the latter
-paths are added by modifying Python's {\tt sys.path}). Later, XSB
+paths are added by modifying Python's {\tt sys.path}). Later, Prolog
 calls Python, Python will search for modules and packages in the same
 manner as if they were stand-alone.
 
@@ -654,8 +654,8 @@ viewpoint of Python types as follows:
          translating from Python to Prolog, the outer enclosure is
          ignored, so Python {\tt "'Hello'"} is translated to the
          Prolog {\tt '\textbackslash{}'Hello\textbackslash{}'{}'},
-         while the Python {\tt '"Goodby"'} is translated to the Prolog
-         {\tt '"Goodby"'}.
+         while the Python {\tt '"Goodbye"'} is translated to the Prolog
+         {\tt '"Goodbye"'}.
        \item {\em Sequence Types}:
          \begin{itemize}
            \item Python lists are bi-translated as Prolog lists and
@@ -721,7 +721,7 @@ viewpoint of Python types as follows:
 %all be redefined my modifying the file {\tt xsbpy\_defs.h} in the {\tt
 %  xsbpy} directory.
 
-\section{Usage}
+\section{The Prolog-Python API}
 
 \begin{description}
 
@@ -760,7 +760,7 @@ produces the expected result:
 If {\tt Module} has not already been
   loaded, it will be automatically loaded during the call.  Python modules are
   searched for in the paths maintained in Python's {\tt sys.path} list
-  and these Python paths can be queried from XSB via {\tt
+  and these Python paths can be queried from Prolog via {\tt
     py\_lib\_dir/1} and modified via {\tt py\_add\_lib\_dir/1}.
      
 {\tt Function} is the invocation of a Python function in {\tt Module},
@@ -794,10 +794,6 @@ Currently supported options are:
 %    Python class that supports the iterator protocol, such as {\tt
 %      range()}.
 \end{itemize}
-%The only Prolog bjeopttion currently allowed is {\tt sizecheck(trbue)},
-%which traverses the tPython data structure to determine its size before
-%returning the data structure to XSB.  (See
-%Section~\ref{sec:xsbpy-memory} for details of this option.)
 
 {\bf Error Cases}
 
@@ -927,12 +923,12 @@ paths is as with {\tt py\_func/[3,4]}.
 In addition, errors thrown by Python are
   caught by XSB and re-thrown as {\tt misc\_error} errors.
 
-  \indourjnsitem{py\_setAttr(+ObjMod,+Attr,+Val)}{py\_setAttr/3}
+  \indourjnsitem{py\_setAttr(+ModObj,+Attr,+Val)}{py\_setAttr/3}
     %
-    If {\tt ObjMod} is a module or an object, this command is
+    If {\tt ModObj} is a module or an object, this command is
     equivalent to the Python
 
-    {\tt ObjMod.Attr = Val}.
+    {\tt ModObj.Attr = Val}.
 
 {\bf Error Cases}
 \bi
@@ -1051,10 +1047,10 @@ communicates with Elasticsearch via (sometimes large) JSON terms.
 \indourrepeatjnsitem{py\_add\_lib\_dir(+Path,+FirstLast)}{py\_add\_lib\_dir/2}
 \indourjnsitem{py\_add\_lib\_dir(+Path)}{py\_add\_lib\_dir/1}
 %
-The convenience and compatability predicate {\tt py\_add\_lib\_dir/2}
+The convenience and compatibility predicate {\tt py\_add\_lib\_dir/2}
 allows the user to add a path to the end of {\tt sys.path} (if {\tt
   FirstLast = last} or the beginning (if {\tt FirstLast = fiast}.
-{\tt py\_add\_li\_dir/1} acts as {\tt py\_add\_li\_dir/2} where {\tt
+{\tt py\_add\_lib\_dir/1} acts as {\tt py\_add\_lib\_dir/2} where {\tt
   FirstLast = last}.
 
 When adding to the end {\tt sys.path} this predicate acts similarly to

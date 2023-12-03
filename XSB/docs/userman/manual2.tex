@@ -95,6 +95,9 @@
 \newcommand{\repeatpymoditem}[3]{\item[{\mbox{\tt #1}}]\index{Python functions!\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\ \vspace*{-.30in}} 
 \newcommand{\pymoditem}[3]{\item[{\mbox{\tt #1}}]\index{Python functions!\texttt{#2}}\hspace*{\fill}{\mbox{\sf module:} {\tt #3}}\ \\}
 
+\newcommand{\repeatstdpymoditem}[2]{\item[{\mbox{\tt #1}}]\index{Python functions!\texttt{#2}}\hspace*{\fill}{\mbox{\sf Janus Standard}}\ \\ \vspace*{-.30in}} 
+\newcommand{\stdpymoditem}[2]{\item[{\mbox{\tt #1}}]\index{Python functions!\texttt{#2}}\hspace*{\fill}{\mbox{\sf Janus standard}}\ \\}
+
 %Obsolete -- please use item commands above.
 \newcommand{\ournewitem}[2]{\item[{\mbox{\tt #1}}]\hspace*{\fill}{\mbox{\sf #2}}\ \\}
 
@@ -228,17 +231,17 @@ Interfaces and Packages}
 %\input{cdf/cdf}
 %\input{otherpackages}
 
+\bibliographystyle{abbrv}
+\bibliography{longstring,manual,pita}
+
+\printindex
+\printindex[pred]
+
 \appendix
 \input{xsbpy}
 \input{px}
 
-\bibliographystyle{abbrv}
-\bibliography{longstring,manual,pita}
-
 %s\input{manual2.ind}
-
-\printindex
-\printindex[pred]
 
 \end{document}
 
