@@ -3580,7 +3580,7 @@ select_db_b(TermI,TermO,DB0,DB) :-
 select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
 %%    standard:writeln(sft(TermI,TermO)),
     (TermI == TermO
-     -> NRT = RT0
+     -> NRT = RT0 %,standard:writeln(short_circuit(TermI))
     ;  (TermI == []
        -> match_key_new_terms(TermO,KO,NTermsO),
 	  add_radix_dict(KO,SRT0,[],NRT,ONRT),
@@ -3590,7 +3590,12 @@ select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
 	  -> lookup_radix_dict_det([],KI,RTL,RT0),
 	     rtl_member(KI,SHT0,RTL),
 	     select_from_trie(SHT0,NTermsI,TermO,NRT0,NRT)
-	  ;  select_all_radix(RT0,KI,NTermsI,TermO,NRT)
+	  ;  match_key_new_terms(TermO,KO,NTermsO),
+	     (var(KO)
+	      -> select_all_radix(RT0,KI,NTermsI,TermO,NRT)
+	      ;  add_radix_dict(KO,SRT0,[],NRT,ONRT),
+		 select_from_trie(RT0,TermI,NTermsO,ONRT,SRT0)
+	     )
 	  )
 	)
     ).
