@@ -3583,17 +3583,19 @@ select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
      -> NRT = RT0 %,standard:writeln(short_circuit(TermI))
     ;  (TermI == []
        -> match_key_new_terms(TermO,KO,NTermsO),
-	  add_radix_dict(KO,SRT0,[],NRT,ONRT),
+	  add_radix_dict(KO,SRT0,NRT0,NRT,ONRT),
 	  select_from_trie(RT0,TermI,NTermsO,ONRT,SRT0)
        ;  match_key_new_terms(TermI,KI,NTermsI),
 	  (nonvar(KI)
 	  -> lookup_radix_dict_det([],KI,RTL,RT0),
 	     rtl_member(KI,SHT0,RTL),
 	     select_from_trie(SHT0,NTermsI,TermO,NRT0,NRT)
+	  ; TermO == []
+	  -> NRT = [true]
 	  ;  match_key_new_terms(TermO,KO,NTermsO),
 	     (var(KO)
-	      -> select_all_radix(RT0,KI,NTermsI,TermO,NRT)
-	      ;  add_radix_dict(KO,SRT0,[],NRT,ONRT),
+	      -> select_all_radix(RT0,KI,NTermsI,TermO,NRT0,NRT)
+	      ;  add_radix_dict(KO,SRT0,NRT0,NRT,ONRT),
 		 select_from_trie(RT0,TermI,NTermsO,ONRT,SRT0)
 	     )
 	  )
@@ -3605,7 +3607,18 @@ select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
    might want to try to special-case situations we can determine
    cannot produce duplicates.  Or look at this closer to see how to
    improve efficienty. */
-select_all_radix([],_,_,_,[]).
+select_all_radix([],_,_,_,NRT,NRT).
+select_all_radix(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
+    RT0 = rtl(_,_,_),
+    select_all_rtl(RT0,KI,NTermsI,NTermO,NRT0,NRT).
+select_all_radix(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
+    RT0 = rt(RT1,RT2,RT3,RT4),
+    select_all_radix(RT1,KI,NTermsI,NTermO,NRT0,NRT1),
+    select_all_radix(RT2,KI,NTermsI,NTermO,NRT1,NRT2),
+    select_all_radix(RT3,KI,NTermsI,NTermO,NRT2,NRT3),
+    select_all_radix(RT4,KI,NTermsI,NTermO,NRT3,NRT).
+
+/****select_all_radix([],_,_,_,[]).
 select_all_radix(RT0,KI,NTermsI,NTermO,NRT) :-
     RT0 = rtl(_,_,_),
     select_all_rtl(RT0,KI,NTermsI,NTermO,[],NRT).
@@ -3617,7 +3630,7 @@ select_all_radix(RT0,KI,NTermsI,NTermO,NRT) :-
     select_all_radix(RT3,KI,NTermsI,NTermO,NRT3),
     union_db_b(NRT3,NRT2a,NRT3a),
     select_all_radix(RT4,KI,NTermsI,NTermO,NRT4),
-    union_db_b(NRT4,NRT3a,NRT).
+    union_db_b(NRT4,NRT3a,NRT). *****/
 
 select_all_rtl([],_KI,_NTermsI,_NTermO,NRT,NRT).
 select_all_rtl(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
