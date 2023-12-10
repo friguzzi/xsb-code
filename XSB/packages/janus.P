@@ -9,7 +9,7 @@
 :- export py_dot/3,py_dot/4,py_func/3, py_func/4,py_iter/3,py_iter/2.
 :- export py_next/2.
 :- export janus_python_version/1, py_free/1.
-:- export py_call/2, py_call/3,py_setAttr/3.
+:- export py_call/2, py_call/3,py_setattr/3.
 :- export py_is_object/1.
 :- export py_add_lib_dir/1, py_add_lib_dir/2.
 %:- export py_obj_py_iter/2.
@@ -239,7 +239,7 @@ py_call(Mod:Call,Ret,Opt):-
 py_is_object(pyObj(_)).
 py_is_object(pyIter(_)).
 
-py_setAttr(ObjMod,Attr,Val):-
+py_setattr(ObjMod,Attr,Val):-
     py_setattr_int(ObjMod,Attr,Val).
 		   
 end_of_file.
