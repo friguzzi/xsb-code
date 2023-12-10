@@ -709,13 +709,30 @@ void xp_python_error() {
     //  PyErr_Print();
 }
 
+PyObject *get_module(Cell mod) {
+  char *mod_string = p2c_string(mod);
+  PyObject *pyModule = NULL;
+  mod_string = set_path_name(mod_string);
+  PyObject *mod_name = PyUnicode_FromString(mod_string);
+  if ((pyModule = PyImport_GetModule(mod_name))) 
+    return pyModule;
+  else {
+    pyModule = PyImport_ImportModule(mod_string);
+    if(pyModule == NULL) {
+      xsb_existence_error(CTXTc "Python module",mod, "py_func/py_dot/py_iter",3, 2) ;
+      //      xp_python_error();
+    }
+    return pyModule;
+  }
+}
+	   
 // Does not take dictionary values, as this doesn't seem to be supported
 // By the Python C-API
 // Tried to decref pObjIn but this didn't work. Not collecting pObjOut
 DllExport int py_dot_int(CTXTdecl) {
-  PyObject *pModule = NULL, *pyObjIn = NULL, *pObjOut = NULL;
+  PyObject *pyModule = NULL, *pyObjIn = NULL, *pObjOut = NULL;
   prolog_term prObjIn, prMethIn; 
-  char *function, *module;
+  char *function;
   PyErr_Clear();
   prObjIn = extern_reg_term(1);
   //  Skipping several typechecks, as Python does them.
@@ -723,15 +740,8 @@ DllExport int py_dot_int(CTXTdecl) {
     convert_prObj_pyObj(CTXTc prObjIn, &pyObjIn);
   }
   else if (isstring(prObjIn)) {
-    module = p2c_string(prObjIn);
-    module = set_path_name(module);
-    pModule = PyImport_ImportModule(module);
-    if(pModule == NULL) {
-      PyErr_Print();
-      xsb_abort("++Error[janus]: (existence) no Python module named \'%s\' could be found."
-		"(in arg 1 of py_dot/4)\n",module);
-    }
-    pyObjIn = pModule;
+    pyModule = get_module(prObjIn);
+    pyObjIn = pyModule;
   }
   else {
     xsb_type_error_vargs(CTXTc "Python module or object",prObjIn,"py_dot/[3,4]","");
@@ -803,29 +813,13 @@ void xp_pyerr_print() {
     PyErr_Print();
 }
 
-PyObject *get_module(char *mod_string) {
-  PyObject *pyModule = NULL;
-  mod_string = set_path_name(mod_string);
-  PyObject *mod_name = PyUnicode_FromString(mod_string);
-  if ((pyModule = PyImport_GetModule(mod_name))) 
-    return pyModule;
-  else {
-    pyModule = PyImport_ImportModule(mod_string);
-    if(pyModule == NULL) {
-      xp_python_error();
-    }
-    return pyModule;
-  }
-}
-	   
 DllExport int py_func_int(CTXTdecl) {
   PyObject *pyModule = NULL, *pFunc = NULL;
   PyObject *pArgs = NULL, *pValue = NULL, *pyDefVarsDict = NULL;
   prolog_term CallTerm, temp,Dict;
   PyErr_Clear();
   prolog_term mod = extern_reg_term(1);
-  char *mod_string = p2c_string(mod);
-  pyModule = get_module(mod_string);
+  pyModule = get_module(mod);
   //  Py_DECREF(pName);
   CallTerm = extern_reg_term(2);
   if(is_functor(CallTerm)) {
@@ -843,7 +837,7 @@ DllExport int py_func_int(CTXTdecl) {
       }
     }
     else  { // it isn't callable
-      xsb_existence_error(CTXTc "Python module function",CallTerm, "py_func",3, 2) ;
+     xsb_existence_error(CTXTc "Python module function",CallTerm, "py_func",3, 2) ;
     }
     Dict = extern_reg_term(3);
     convert_prObj_pyObj(CTXTc Dict,&pyDefVarsDict);
@@ -873,8 +867,9 @@ DllExport int py_func_int(CTXTdecl) {
     return TRUE;
   } /* if is_functor(CallTerm) */
   else	{
-      xsb_type_error_vargs(CTXTc "callable",CallTerm,"py_func/[3,4]",
-			   "not a callable function in the Python module %s\n",mod_string);
+    char *mod_string = p2c_string(mod);
+    xsb_type_error_vargs(CTXTc "callable",CallTerm,"py_func/[3,4]",
+			 "not a callable function in the Python module %s\n",mod_string);
   }
   //  Py_Finalize();
   return TRUE;
@@ -906,13 +901,7 @@ DllExport int py_get_iter_int(CTXTdecl) {
   prolog_term V, temp,Dict;
   PyErr_Clear();
   prolog_term mod = extern_reg_term(1);
-  char *module = p2c_string(mod);
-  module = set_path_name(module);
-  //  pName = PyUnicode_FromString(module);
-  pyModule = PyImport_ImportModule(module);
-  if(pyModule == NULL) {
-    xp_python_error();
-  }
+  pyModule = get_module(mod);
   V = extern_reg_term(2);
   if(is_functor(V)) {
     char *function = p2c_functor(V);
@@ -929,8 +918,9 @@ DllExport int py_get_iter_int(CTXTdecl) {
       }
     }
     else {  // it isn't callable (may not get here -- set_python_argument may handle)
+      char *mod_string = p2c_string(mod);
       xsb_type_error_vargs(CTXTc "callable",V,"py_iter/[3,4]",
-    		   "not a callable function in the Python module %s\n",module);
+    		   "not a callable function in the Python module %s\n",mod_string);
     }
     Dict = extern_reg_term(3);
     convert_prObj_pyObj(CTXTc Dict,&pDict);
@@ -1044,7 +1034,6 @@ DllExport int pyObj_next_int(CTXTdecl) {
 DllExport int py_setattr_int(CTXTdecl) {
   PyObject *pyObjIn = NULL,*pyVal = NULL;
   prolog_term prObjIn, prMethIn, prValIn; 
-  char *mod_string;
   PyErr_Clear();
   prObjIn = extern_reg_term(1);
   //  Skipping several typechecks, as Python does them.
@@ -1052,9 +1041,7 @@ DllExport int py_setattr_int(CTXTdecl) {
     convert_prObj_pyObj(CTXTc prObjIn, &pyObjIn);
   }
   else if (isstring(prObjIn)) {
-    mod_string = p2c_string(prObjIn);
-    mod_string = set_path_name(mod_string);
-    pyObjIn = get_module(mod_string);
+    pyObjIn = get_module(prObjIn);
   }
   else {
     xsb_type_error_vargs(CTXTc "Python module or object",prObjIn,"py_dot/[3,4]","");
