@@ -107,14 +107,14 @@ py_object_tests:-
     fail.
 py_object_tests:-
     py_func(atest,xsb_attr(),Obj),
-    py_setAttr(Obj,version,5.1),
+    py_setattr(Obj,version,5.1),
     check_call(py_dot(Obj,version,_),5.1),
     fail.
 py_object_tests:-
     check_call(py_dot(atest,python_intf,_),xsbpy),
     fail.
 py_object_tests:-
-    py_setAttr(atest,python_intf,janus),
+    py_setattr(atest,python_intf,janus),
     check_call(py_dot(atest,python_intf,_),janus),
     fail.
 py_object_tests :-
