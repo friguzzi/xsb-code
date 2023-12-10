@@ -395,18 +395,56 @@ kwargs_tests:-
 kwargs_tests.
 
 error_tests:-
-    error_tests_1(no_module,foo(1),
-		  [' Python Error;',_,'Type: <class ''ModuleNotFoundError''>',_,
-		   'Value: ModuleNotFoundError("No module named ''no_module''")',_]),
+    catch(py_func(no_module,foo(1),_X),E,xsb_error_get_tag(E,Tag)),
+    (Tag = existence_error('Python module',no_module) ->
+     writeln('caught existence error for py_func(no_module,foo(1),X)')
+     ; writeln('failedxistence error for py_func(no_module,foo(1),X)')),
     fail.
+% catch existence_error
 error_tests:-
-    catch(py_func(test_janus_plg,foo(1),_),E,(xsb_error_get_tag(E,T),writeln(T))),
+    catch(py_func(test_janus_plg,foo(1),_),E,(xsb_error_get_tag(E,T),writeln(caught(T)))),
     fail.
 error_tests:-
     catch(py_func(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
     (T = type_error(callable_term,7) ->
-	 true ; writeln('catch(py_func(test_janus_plg,7)) failed')),
+       writeln('caught py_func(test_janus_plg,7,_F) (should error)')
+     ; writeln('catch(py_func(test_janus_plg,7)) failed')),
     fail.
+
+error_tests:-
+    catch(py_dot(no_module,foo(1),_X),E,xsb_error_get_tag(E,Tag)),
+    (Tag = existence_error('Python module',no_module) ->
+     writeln('caught existence error for py_dot(no_module,foo(1),X)')
+     ; writeln('failedxistence error for py_dot(no_module,foo(1),X)')),
+    fail.
+% catch existence_error
+%error_tests:-
+%    catch(py_func(test_janus_plg,foo(1),_),E,(xsb_error_get_tag(E,T),writeln(caught(T)))),
+%    fail.
+error_tests:-
+    catch(py_dot(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
+    (T = type_error(callable_term,7) ->
+       writeln('caught py_dor(test_janus_plg,7,_F) (should error)')
+     ; writeln('catch(py_dot(test_janus_plg,7)) failed')),
+    fail.
+
+error_tests:-
+    catch(py_iter(no_module,foo(1),_X),E,xsb_error_get_tag(E,Tag)),
+    (Tag = existence_error('Python module',no_module) ->
+     writeln('caught existence error for py_iter(no_module,foo(1),X)')
+     ; writeln('failedxistence error for py_iter(no_module,foo(1),X)')),
+    fail.
+% catch existence_error
+%error_tests:-
+%catch(py_func(test_janus_plg,foo(1),_),E,(xsb_error_get_tag(E,T),writeln(caught(T)))),
+%    fail.
+error_tests:-
+    catch(py_iter(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
+    (T = type_error(callable_term,7) ->
+       writeln('caught py_iter(test_janus_plg,7,_F) (should error)')
+     ; writeln('catch(py_iter(test_janus_plg,7)) failed')),
+    fail.
+
 % returns obj
 %error_tests:-
 %    catch(py_func(test_err,raise_err_3(),_X),E,(xsb_error_get_message(E,M),writeln(M))),

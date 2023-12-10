@@ -54,8 +54,13 @@ dict conversion_sizecheck tests successful
 json_loads_test successful
 json_2({glossary : {(title : example glossary,GlossDiv : {(title : S,GlossList : {GlossEntry : {(ID : SGML,SortAs : SGML,GlossTerm : Standard Generalized Markup Language,Acronym : SGML,Abbrev : ISO 8879:1986,GlossDef : {(para : A meta-markup language, used to create markup languages such as DocBook.,GlossSeeAlso : [GML,XML])},GlossSee : markup)}})})}})
 py_func(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(baz,2),-(bar,1)]) succeeded.
-error_test_succeeded((no_module,foo(1)))
-existence_error(Python module function,foo(1))
+caught existence error for py_func(no_module,foo(1),X)
+caught(existence_error(Python module function,foo(1)))
+caught py_func(test_janus_plg,7,_F) (should error)
+caught existence error for py_dot(no_module,foo(1),X)
+caught py_dor(test_janus_plg,7,_F) (should error)
+caught existence error for py_iter(no_module,foo(1),X)
+caught py_iter(test_janus_plg,7,_F) (should error)
 error_test_succeeded((test_err,raise_err_1()))
 Should error: (unhashable set elt) type_error(hashable term,{}(:(a,b)))
 Should error: (unhashable dict key) type_error(hashable term,[1,2,3])
