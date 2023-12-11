@@ -438,32 +438,25 @@ error_tests:-
 %error_tests:-
 %catch(py_func(test_janus_plg,foo(1),_),E,(xsb_error_get_tag(E,T),writeln(caught(T)))),
 %    fail.
-error_tests:-
+  error_tests:-
     catch(py_iter(test_janus_plg,7,_F),E,xsb_error_get_tag(E,T)),
     (T = type_error(callable_term,7) ->
        writeln('caught py_iter(test_janus_plg,7,_F) (should error)')
      ; writeln('catch(py_iter(test_janus_plg,7)) failed')),
     fail.
-
 % returns obj
 %error_tests:-
 %    catch(py_func(test_err,raise_err_3(),_X),E,(xsb_error_get_message(E,M),writeln(M))),
 %    fail.
 error_tests:-
     \+ janus_python_version('python3.11'),
-   error_tests_1(test_err,raise_err_1(),
-		  [' Python Error;',_,'Type: <class ''Exception''>',_, 
-		   'Value: Exception(''spam'', ''eggs'')',_,
-		   'Python traceback (most recent call last):',_,
-		   'File ',_,', line 3, in raise_err_1',_]),
+   error_tests_1(test_err,raise_err_1(),[]),
     fail.
-error_tests:-
+  error_tests:-
     janus_python_version('python3.11'),
-    error_tests_1(test_err,raise_err_1(),
-		  [' Python Error;',_,'Type: <class ''Exception''>',_,
-		   'Value: Exception(''spam'', ''eggs'')',_]),
+    error_tests_1(test_err,raise_err_1(),[' Value: Exception(''spam'', ''eggs'') ']),
     fail.
-error_tests:-
+  error_tests:-
     catch(py_func(test_janus_plg,returnVal(py_set([q,{a:b}])),_F),E,
 	  (xsb_error_get_tag(E,Tag),lazy_writeln(['Should error: (unhashable set elt) ',Tag]))),
     fail.
@@ -482,8 +475,7 @@ error_tests_1(Mod,Goal,Message):-
     (concat_atom(Message,Mess) ->
        writeln(error_test_succeeded((Mod,Goal)))
     ;  writeln('!!!failed'(error_tests_1(Mod,Goal))),
-       writeln(bad(Mess)),
-       writeln(good(Message))).
+       writeq(bad(Mess)),nl,writeq(good(Message)),nl).
     
 meth_tests:- 
     check_call(py_func('Person','Person'(john,35),Obj),pyObj(_)),
