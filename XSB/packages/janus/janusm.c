@@ -671,7 +671,7 @@ DllExport int init_python() {
   return TRUE;
 }
 
-void xp_python_error() {
+void janus_python_error() {
   PyObject *ptype, *pvalue, *ptraceback = NULL;
   PyErr_Fetch(&ptype, &pvalue, &ptraceback);
   PyObject* ptypeRepr = PyObject_Repr(ptype);
@@ -691,16 +691,18 @@ void xp_python_error() {
 			    "  File \"%s\", line %d, in %s\n", filename, line, funcname);
         tb = tb->tb_next;
     }
-    xsb_abort("Python Error;\n Type: %s \n Value: %s \n %s",
-	      PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr),
-	      forest_log_buffer_1->fl_buffer);
+    xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+			    "Value: %s \n %s",PyUnicode_AsUTF8(pvalueRepr)
+			    ,forest_log_buffer_1->fl_buffer);
   }
   else 
-    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
-	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+    xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+		      "Value: %s \n",PyUnicode_AsUTF8(pvalueRepr));
 #else
-    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
-	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+  xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+			  "Value: %s \n",PyUnicode_AsUTF8(pvalueRepr));
+    //    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
+    //	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
 #endif
   //#else
   //    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
@@ -720,7 +722,6 @@ PyObject *get_module(Cell mod) {
     pyModule = PyImport_ImportModule(mod_string);
     if(pyModule == NULL) {
       xsb_existence_error(CTXTc "Python module",mod, "py_func/py_dot/py_iter",3, 2) ;
-      //      xp_python_error();
     }
     return pyModule;
   }
@@ -793,7 +794,7 @@ DllExport int py_dot_int(CTXTdecl) {
     xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
   }
   if (pObjOut == NULL) { // TES todo change to check for python error
-    xp_python_error();
+    janus_python_error();
   }
   //  Py_DECREF(pyMeth);
   int flag = p2c_int(extern_reg_term(5));
@@ -851,7 +852,7 @@ DllExport int py_func_int(CTXTdecl) {
     Py_DECREF(pArgs);
     Py_DECREF(pyDefVarsDict);
     if (pValue == NULL) { // TES todo change to check for python error
-      xp_python_error();
+      janus_python_error();
     }
     int flag = p2c_int(extern_reg_term(5));
     prolog_term return_pr;
@@ -934,7 +935,7 @@ DllExport int py_get_iter_int(CTXTdecl) {
     Py_DECREF(pDict);
     //    printPyObj(CTXTc pValue);
     if (pValue == NULL) { // TES todo change to check for python error
-      xp_python_error();
+      janus_python_error();
     }
     PyObject *iterator = PyObject_GetIter(pValue); 
     if(iterator == NULL) {
@@ -1054,7 +1055,7 @@ DllExport int py_setattr_int(CTXTdecl) {
     convert_prObj_pyObj(CTXTc prValIn, &pyVal);
     int ret = PyObject_SetAttrString(pyObjIn,string_val(prMethIn),pyVal);
     if (ret == -1) 
-      xp_python_error();
+      janus_python_error();
   }
   else {
     xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
@@ -1182,5 +1183,43 @@ prolog_term make_prolog_pyObj(PyObject *pyObj) {
 //	PyList_Append(resultList,lis);
 //	}
 //	return resultList;
+//}
+
+// void xp_python_error() {
+//   PyObject *ptype, *pvalue, *ptraceback = NULL;
+//   PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+//   PyObject* ptypeRepr = PyObject_Repr(ptype);
+//   PyObject* pvalueRepr = PyObject_Repr(pvalue);
+// #if PY_MINOR_VERSION < 11
+//   PyTracebackObject *tb = (PyTracebackObject *)ptraceback;
+//   if (NULL != tb && NULL != tb->tb_frame ) {
+//     int buff_ctr = 0;
+//     buff_ctr = sprintf(forest_log_buffer_1->fl_buffer,
+// 			  "Python traceback (most recent call last):\n");
+//     while (NULL != tb) {
+//       PyFrameObject *frame = tb ->tb_frame;
+//         int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
+//         const char *filename = PyUnicode_AsUTF8(frame->f_code->co_filename);
+//         const char *funcname = PyUnicode_AsUTF8(frame->f_code->co_name);
+//         buff_ctr += sprintf(forest_log_buffer_1->fl_buffer+buff_ctr,
+// 			    "  File \"%s\", line %d, in %s\n", filename, line, funcname);
+//         tb = tb->tb_next;
+//     }
+//     xsb_abort("Python Error;\n Type: %s \n Value: %s \n %s",
+// 	      PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr),
+// 	      forest_log_buffer_1->fl_buffer);
+//   }
+//   else 
+//     xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
+// 	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+// #else
+//     xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
+// 	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+// #endif
+  //#else
+  //    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
+  //	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+    //  PyErr_Restore(NULL,NULL, NULL);
+    //  PyErr_Print();
 //}
 
