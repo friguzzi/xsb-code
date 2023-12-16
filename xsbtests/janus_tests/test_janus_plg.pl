@@ -9,6 +9,7 @@
 :- import xsb_error_get_message/2,xsb_error_get_tag/2 from error_handler.
 :- import lazy_writeln/1 from standard.
 :- import numbervars/1 from num_vars.
+:- import py_pp/1 from py_pp.
 
 test:-
     func_tests,
@@ -454,7 +455,9 @@ error_tests:-
     fail.
   error_tests:-
     janus_python_version('python3.11'),
-    error_tests_1(test_err,raise_err_1(),[' Value: Exception(''spam'', ''eggs'') ']),
+    %    error_tests_1(test_err,raise_err_1(),[' Value: Exception(''spam'', ''eggs'') ']),
+    catch(py_func(test_err,raise_err_1(),_X),E,xsb_error_get_tag(E,Tag)),Tag = python_err(_,V),
+    write('py_func(test_err,raise_err_1(),_X): '),py_pp(V),
     fail.
   error_tests:-
     catch(py_func(test_janus_plg,returnVal(py_set([q,{a:b}])),_F),E,
