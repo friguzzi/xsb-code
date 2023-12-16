@@ -456,7 +456,7 @@ error_tests:-
   error_tests:-
     janus_python_version('python3.11'),
     %    error_tests_1(test_err,raise_err_1(),[' Value: Exception(''spam'', ''eggs'') ']),
-    catch(py_func(test_err,raise_err_1(),_X),E,xsb_error_get_tag(E,Tag)),Tag = python_err(_,V),
+    catch(py_func(test_err,raise_err_1(),_X),E,xsb_error_get_tag(E,Tag)),Tag = python_error(_,V),
     write('py_func(test_err,raise_err_1(),_X): '),py_pp(V),
     fail.
   error_tests:-
