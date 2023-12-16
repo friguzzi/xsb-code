@@ -672,12 +672,20 @@ DllExport int init_python() {
 }
 
 void janus_python_error() {
-  PyObject *ptype, *pvalue, *ptraceback = NULL;
-  PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+  PyObject *ptype, *pyValue, *ptraceback = NULL;
+  PyErr_Fetch(&ptype, &pyValue, &ptraceback);
   PyObject* ptypeRepr = PyObject_Repr(ptype);
-  PyObject* pvalueRepr = PyObject_Repr(pvalue);
+  PyObject* pyValueRepr = PyObject_Repr(pyValue);
+  prolog_term error_value = p2p_new(CTXT);
+  if (!convert_pyObj_prObj(pyValue, &error_value, 0) ) {
+    prolog_term error_value1 = p2p_new(CTXT);
+    const  char *result = PyUnicode_AsUTF8(pyValueRepr);		
+    c2p_string(CTXTc (char *) result, error_value1);
+    error_value = error_value1;
+    }
 #if PY_MINOR_VERSION < 11
   PyTracebackObject *tb = (PyTracebackObject *)ptraceback;
+  prolog_term error_value = p2p_new(CTXT);
   if (NULL != tb && NULL != tb->tb_frame ) {
     int buff_ctr = 0;
     buff_ctr = sprintf(forest_log_buffer_1->fl_buffer,
@@ -691,24 +699,14 @@ void janus_python_error() {
 			    "  File \"%s\", line %d, in %s\n", filename, line, funcname);
         tb = tb->tb_next;
     }
-    xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-			    "Value: %s \n %s",PyUnicode_AsUTF8(pvalueRepr)
-			    ,forest_log_buffer_1->fl_buffer);
   }
-  else 
+  else
     xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-		      "Value: %s \n",PyUnicode_AsUTF8(pvalueRepr));
+			    error_value,"No Python backtrace found.\n");
 #else
-  xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-			  "Value: %s \n",PyUnicode_AsUTF8(pvalueRepr));
-    //    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
-    //	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
+      xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+			      error_value,"Stack not printed for Python >= 3.11\n");
 #endif
-  //#else
-  //    xsb_abort("Python Error;\n Type: %s \n Value: %s \n",
-  //	    PyUnicode_AsUTF8(ptypeRepr),PyUnicode_AsUTF8(pvalueRepr));
-    //  PyErr_Restore(NULL,NULL, NULL);
-    //  PyErr_Print();
 }
 
 PyObject *get_module(Cell mod) {
@@ -858,7 +856,7 @@ DllExport int py_func_int(CTXTdecl) {
     prolog_term return_pr;
     ensureXSBStackSpace(CTXTc pValue,flag);
     return_pr = p2p_new(CTXT);
-    // ususally returns pyobject by default.
+    // Ususally returns pyobject by default.
     if(!convert_pyObj_prObj_switch(CTXTc pValue, &return_pr, flag)) {
       xsb_abort("++Error[janus]: The return of %s/%d could not be translated to Prolog"
 		"(in py_func/[3,4,5])\n",function,args_count);
