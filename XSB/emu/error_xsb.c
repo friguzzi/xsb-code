@@ -221,7 +221,6 @@ DllExport void call_conv xsb_throw_internal(CTXTdeclc prolog_term Ball, size_t B
   if (unwind_stack(CTXT)) xsb_exit("Unwind_stack failed in xsb_throw_internal!");
   /* Resume main emulator instruction loop */
   pcreg = (pb)&fail_inst;
-
   longjmp(xsb_abort_fallback_environment, XSB_ERROR);
 }
 
@@ -1028,6 +1027,54 @@ void call_conv xsb_new_table_error(CTXTdeclc char *subtype, char * goalstring, c
 
 /**************/
 
+//static void printPlgTerm(CTXTdeclc prolog_term term) {
+//  XSB_StrDefine(StrArgBuf);
+//  XSB_StrSet(&StrArgBuf,"");
+//  print_pterm(CTXTc term,1, &StrArgBuf);
+//  printf("printPlgTerm: %s\n", StrArgBuf.string);
+//}
+
+DllExport void call_conv xsb_library_error_vargs(char *functor, char *error_type,Cell error_value,
+						 char *description, ...) {
+  char message[MAXBUFSIZE];
+  va_list args;
+  prolog_term ball_to_throw;
+  int isnew;
+  CPtr error_rec;
+  size_t ball_len = 15*sizeof(Cell);;
+  va_start(args, description);
+  //  strcpy(message, "++Error[XSB]: [Runtime/C] ");
+  strcpy(message, " ");
+  vsnprintf(message+strlen(message), (MAXBUFSIZE-strlen(message)), description, args);
+  if (message[strlen(message)-1] == '\n') message[strlen(message)-1] = 0;
+  va_end(args);
+
+  if (heap_local_overflow(ball_len)) {
+    xsb_exit("no heap space in xsb_type_error");
+  }
+
+  ball_to_throw = makecs(hreg);
+  error_rec = hreg;
+  hreg += 9;  // error/2 + library_error/1 + context/2
+  bld_functor(error_rec, pair_psc(insert("error",2,(Psc)flags[CURRENT_MODULE],&isnew)));
+  bld_cs((error_rec+1),(error_rec+3));
+  bld_cs((error_rec+2),(error_rec+6));
+  bld_functor((error_rec+3), pair_psc(insert("python_error",2,(Psc)flags[CURRENT_MODULE],&isnew)));
+  bld_string((error_rec+4),string_find(error_type,1));
+  //  bld_string((error_rec+5),string_find(error_value,1));
+  bld_ref(error_rec+5,error_value);
+ bld_functor(error_rec+6, pair_psc(insert("context",2,
+				    (Psc)flags[CURRENT_MODULE],&isnew)));
+  bld_string(error_rec+7, string_find(message,1));
+  bld_copy(error_rec+8,build_xsb_backtrace(CTXT));
+  //  printPlgTerm(makecs((error_rec+5)));
+    
+  xsb_throw_internal(CTXTc ball_to_throw, ball_len);
+
+}
+
+/**************/
+
 DllExport void call_conv xsb_type_error_vargs(CTXTdeclc char *valid_type,Cell culprit, char * goalstring, char *description, ...) {
   char message[MAXBUFSIZE];
   va_list args;
@@ -1068,7 +1115,6 @@ DllExport void call_conv xsb_type_error_vargs(CTXTdeclc char *valid_type,Cell cu
 				    (Psc)flags[CURRENT_MODULE],&isnew)));
   bld_string(error_rec+10,string_find(message,1));
   bld_string(error_rec+11,string_find(goalstring,1));
-
   xsb_throw_internal(CTXTc ball_to_throw, ball_len);
 
 }
