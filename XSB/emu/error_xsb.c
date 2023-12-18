@@ -1034,7 +1034,7 @@ void call_conv xsb_new_table_error(CTXTdeclc char *subtype, char * goalstring, c
 //  printf("printPlgTerm: %s\n", StrArgBuf.string);
 //}
 
-DllExport void call_conv xsb_library_error_vargs(char *functor, char *error_type,Cell error_value,
+DllExport void call_conv xsb_library_error_vargs(CTXTdeclc char *functor, char *error_type,Cell error_value,
 						 char *description, ...) {
   char message[MAXBUFSIZE];
   va_list args;

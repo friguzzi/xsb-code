@@ -95,7 +95,7 @@ init_janus(Pyversion):-
 
 compile_janusm_for_windows :-
     getenv('PYTHON_LIBRARY',PyLib),
-%%  e.g. PyLib=  'c:\Users\warren\AppData\Local\Programs\Python\Python39\libs\python3.lib'
+%% e.g. PyLib=  'c:\\Users\\warren\\AppData\\Local\\Programs\\Python\\Python39\\libs\\python3.lib',
     concat_atom([PythonDir,'\\libs\\',_,'.lib'],PyLib),
     concat_atom(['/I"',PythonDir,'\\include"'],PyInclude),
     concat_atom(['/libpath:"',PythonDir,'\\libs"'],PyLibs),

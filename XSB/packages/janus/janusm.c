@@ -685,7 +685,7 @@ void janus_python_error() {
     }
 #if PY_MINOR_VERSION < 11
   PyTracebackObject *tb = (PyTracebackObject *)ptraceback;
-  prolog_term error_value = p2p_new(CTXT);
+  //  prolog_term error_value = p2p_new(CTXT);
   if (NULL != tb && NULL != tb->tb_frame ) {
     int buff_ctr = 0;
     buff_ctr = sprintf(forest_log_buffer_1->fl_buffer,
@@ -701,11 +701,12 @@ void janus_python_error() {
     }
   }
   else
-    xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+    xsb_library_error_vargs(CTXTc "python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
 			    error_value,"No Python backtrace found.\n");
 #else
-      xsb_library_error_vargs("python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-			      error_value,"Stack not printed for Python >= 3.11\n");
+    xsb_library_error_vargs(CTXTc "python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+			    error_value,"Stack not printed for Python >= 3.11\n");
+  ;
 #endif
 }
 

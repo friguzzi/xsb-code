@@ -160,7 +160,7 @@ DllExport extern void call_conv xsb_table_error_vargs(CTXTdeclc char *, char *, 
 DllExport extern void call_conv xsb_new_table_error(CTXTdeclc char *, char *,char*, ...) ;
 DllExport extern void call_conv xsb_type_error(CTXTdeclc char *,Cell , const char *,int) ;
 DllExport extern void call_conv xsb_type_error_vargs(CTXTdeclc char *, Cell,char *,char *, ...) ;
-DllExport extern void call_conv xsb_library_error_vargs(char *, char *, Cell, char *, ...) ;
+DllExport extern void call_conv xsb_library_error_vargs(CTXTdeclc char *, char *, Cell, char *, ...) ;
 
 extern void call_conv xsb_memory_error(char *, char *);
 DllExport void call_conv xsb_throw_memory_error(int);
