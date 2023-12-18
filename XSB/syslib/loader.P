@@ -561,7 +561,7 @@ load(PModName,ModPsc,IfCmd,ToLoc) :-
      -> compile_and_load(FileName,ModFile,PModName,ModTerm)
      ;  tilde_expand_filename(ModFile,ExpandedModName), % file not found
 	xsb_backtrace(BT),  % no usermod file to load!
-	throw(error(existence_error(module,ExpandedModName),context([],BT)))
+	throw(error(existence_error('file for module',ExpandedModName),context([],BT)))
 %%	existence_error(module,ExpandedModName,load,1)
     ).
 
