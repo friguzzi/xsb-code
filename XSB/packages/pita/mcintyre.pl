@@ -200,10 +200,17 @@ save_samples(_M,_I,_S):-
 save_samples(M,G):-
   sampled(R,Sub,V),
   assert(M:mem(G,R,Sub,V)),
-  erase(sampled(R,Sub,V)),
   fail.
+save_samples(M,G):-
+  retractall(sampled(R,Sub,V)).
 
-save_samples(_M,_G).
+% Original
+%save_samples(M,G):-
+%  sampled(R,Sub,V),
+%  assert(M:mem(G,R,Sub,V)),
+%  erase(sampled(R,Sub,V)),
+%  fail.
+%save_samples(_M,_G).
 
 restore_samples(M,I,S):-
   M:mem(I,S,R,Sub,V),
