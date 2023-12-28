@@ -144,7 +144,8 @@ extern void xsb_segfault_quitter(int);
 int unwind_stack(CTXTdecl);
 
 DllExport extern void call_conv xsb_domain_error(CTXTdeclc char *, Cell, const char *, int) ;
-  DllExport extern void call_conv xsb_evaluation_error(CTXTdeclc int,char * , ...);
+DllExport extern void call_conv xsb_domain_error_vargs(CTXTdeclc char *,Cell,char *, ...);
+DllExport extern void call_conv xsb_evaluation_error(CTXTdeclc int,char * , ...);
 DllExport extern void call_conv xsb_existence_error(CTXTdeclc char *,Cell, const char *,int, int) ;
 DllExport extern void call_conv xsb_instantiation_error(CTXTdeclc const char *, int) ;
 DllExport extern void call_conv xsb_misc_error(CTXTdeclc char*,const char*,int) ; 
