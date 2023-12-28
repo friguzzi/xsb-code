@@ -84,7 +84,7 @@ int find_length_prolog_list(prolog_term V)
 extern PyObject *PyObject_CallMethodNoArgs(PyObject *obj, PyObject *name);
 
 // TES: tries to make a reasonable but safe approximation of the size of a Python term
-// Counts 4 bytes for each character just to be sure.
+// Counts 4 bytes for each character just to be sure.  May take out.
 Integer get_safe_python_size(PyObject *pyObj) {
   Integer size = 0;
   size_t i = 0;
@@ -160,7 +160,7 @@ int prlist2pyList(CTXTdeclc prolog_term V, PyObject *pList, int count)
 	{ 
 		head = p2p_car(temp);
 		PyObject *pyObj = NULL;
-		if( !convert_prObj_pyObj(CTXTc head, &pyObj))
+		if (convert_prObj_pyObj(CTXTc head, &pyObj) < TRUE)
 			return FALSE;
 		PyList_SetItem(pList, i, pyObj);
 		temp = p2p_cdr(temp);
@@ -415,18 +415,6 @@ int convert_pyObj_prObj(CTXTdeclc PyObject *pyObj, prolog_term *prTerm, int flag
       return FALSE;
     return TRUE;
   }
-  //  else if(flag == 0 && PyList_Check(pyObj)) {
-  //    char str[30];
-  //    sprintf(str, "p%p", pyObj);
-  //    prolog_term ref = p2p_new(CTXT);
-  //    c2p_functor(CTXTc "pyList", 1, ref);
-  //    prolog_term ref_inner = p2p_arg(ref, 1);
-  //    c2p_string(CTXTc str, ref_inner);		
-  //    if(!p2p_unify(CTXTc ref, *prTerm))
-  //      return FALSE;	
-  //    return TRUE;
-  //  }
-  //  else if(flag == 1 && PyList_Check(pyObj)) {
   else if(PyList_Check(pyObj)) {
     PyObject *pyObjInner;
     size_t size = PyList_GET_SIZE(pyObj); //change tes
@@ -635,15 +623,16 @@ char *set_path_name(char *module)
   return module;
 }
 
-void set_python_argument(CTXTdeclc prolog_term temp, PyObject *pArgs,int i, char *funct, int arity) {
-  PyObject *pValue;
-  if(!convert_prObj_pyObj(CTXTc temp, &pValue)) {
-    xsb_abort("++Error[janus]: argument %d of %s/%d could not be translated to python"
-		"(arg 2 of py_func/[3,4,5])\n",i,funct,arity);
+void set_python_argument(CTXTdeclc prolog_term prterm, PyObject *pArgs,int i, char *funct, int arity) {
+  PyObject *pyValue;
+  if(convert_prObj_pyObj(CTXTc prterm, &pyValue)  < TRUE) {
+    xsb_domain_error_vargs("py_term",prterm,
+			   "++Error[janus]: argument %d of %s/%d could not be translated to python"
+			   "(arg 2 of py_func/py_dot/py_iter\n",i,funct,arity);
   }
   //  if (is_functor(temp) && strcmp(p2c_functor(temp),PYOBJ_C) == 0 ) {
   //      Py_INCREF(pValue);
-  PyTuple_SetItem(pArgs, i-1, pValue);
+  PyTuple_SetItem(pArgs, i-1, pyValue);
 }
 
 DllExport int init_python() {
@@ -705,8 +694,7 @@ void janus_python_error() {
 			    error_value,"No Python backtrace found.\n");
 #else
     xsb_library_error_vargs(CTXTc "python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-			    error_value,"Stack not printed for Python >= 3.11\n");
-  ;
+			      error_value,"Stack not printed for Python >= 3.11\n");
 #endif
 }
 
@@ -720,7 +708,7 @@ PyObject *get_module(Cell mod) {
   else {
     pyModule = PyImport_ImportModule(mod_string);
     if(pyModule == NULL) {
-      xsb_existence_error(CTXTc "Python module",mod, "py_func/py_dot/py_iter",3, 2) ;
+      janus_python_error();
     }
     return pyModule;
   }
@@ -792,7 +780,7 @@ DllExport int py_dot_int(CTXTdecl) {
   else {
     xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
   }
-  if (pObjOut == NULL) { // TES todo change to check for python error
+  if (pObjOut == NULL) { 
     janus_python_error();
   }
   //  Py_DECREF(pyMeth);
@@ -850,7 +838,7 @@ DllExport int py_func_int(CTXTdecl) {
     Py_DECREF(pFunc);
     Py_DECREF(pArgs);
     Py_DECREF(pyDefVarsDict);
-    if (pValue == NULL) { // TES todo change to check for python error
+    if (pValue == NULL) {
       janus_python_error();
     }
     int flag = p2c_int(extern_reg_term(5));
@@ -954,6 +942,7 @@ DllExport int py_get_iter_int(CTXTdecl) {
       return FALSE;
     return TRUE;
   }
+
   else	{ // TES: may not get here
     xsb_type_error_vargs(CTXTc "callable",V,"py_iter/[3,4]","");
   }
@@ -1057,7 +1046,7 @@ DllExport int py_setattr_int(CTXTdecl) {
       janus_python_error();
   }
   else {
-    xsb_type_error_vargs(CTXTc "Atom or Structure",prMethIn,"py_dot/[3,4]","");
+    xsb_type_error_vargs(CTXTc "callable",prMethIn,"py_setattr/[3,4]","");
   }
   return TRUE;
 }
