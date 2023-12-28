@@ -397,9 +397,9 @@ kwargs_tests.
 
 error_tests:-
     catch(py_func(no_module,foo(1),_X),E,xsb_error_get_tag(E,Tag)),
-    (Tag = existence_error('Python module',no_module) ->
-     writeln('caught existence error for py_func(no_module,foo(1),X)')
-     ; writeln('failedxistence error for py_func(no_module,foo(1),X)')),
+   (Tag = python_error('<class ''ModuleNotFoundError''>',_) ->
+     writeln('caught python error for py_func(no_module,foo(1),X)')
+     ; writeln('failed python error for py_func(no_module,foo(1),X)')),
     fail.
 % catch existence_error
 error_tests:-
@@ -414,9 +414,9 @@ error_tests:-
 
 error_tests:-
     catch(py_dot(no_module,foo(1),_X),E,xsb_error_get_tag(E,Tag)),
-    (Tag = existence_error('Python module',no_module) ->
-     writeln('caught existence error for py_dot(no_module,foo(1),X)')
-     ; writeln('failedxistence error for py_dot(no_module,foo(1),X)')),
+    (Tag = python_error('<class ''ModuleNotFoundError''>',_) ->
+     writeln('caught python error for py_dot(no_module,foo(1),X)')
+     ; writeln('python error for py_dot(no_module,foo(1),X)')),
     fail.
 % catch existence_error
 %error_tests:-
@@ -431,9 +431,9 @@ error_tests:-
 
 error_tests:-
     catch(py_iter(no_module,foo(1),_X),E,xsb_error_get_tag(E,Tag)),
-    (Tag = existence_error('Python module',no_module) ->
-     writeln('caught existence error for py_iter(no_module,foo(1),X)')
-     ; writeln('failedxistence error for py_iter(no_module,foo(1),X)')),
+    (Tag = python_error('<class ''ModuleNotFoundError''>',_) ->
+     writeln('caught python error for py_iter(no_module,foo(1),X)')
+     ; writeln('failed python error for py_iter(no_module,foo(1),X)')),
     fail.
 % catch existence_error
 %error_tests:-
