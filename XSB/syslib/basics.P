@@ -350,8 +350,8 @@ subseq([H|T],S,[H|C]) :- subseq(T,S,C).
 
 %---
 % This prefix has better behavior than the one in lists.P (according to TES) 
-prefix([X|_],[X]).
-prefix([X|Y],[X|Z]):- prefix(Y,Z).
+list_prefix([X|_],[X]).
+list_prefix([X|Y],[X|Z]):- list_prefix(Y,Z).
 
 %---
 % A not so naive reverse
