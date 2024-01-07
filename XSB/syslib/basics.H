@@ -22,11 +22,8 @@
 ** 
 */
 
-
 :- export append/3, between/3, copy_term/2, flatten/2, for/3, ith/3, length/2,
-   list_valcount/2, list_hist/4, member/2, memberchk/2, perm/2, reverse/2, subset/2,
-   subseq/3, select/3.
-:- export list_last/2.
+  list_valcount/2, list_hist/4, list_last/2, member/2, memberchk/2, perm/2, prefix/2, reverse/2, subset/2, subseq/3, select/3.
 :- export ground/1.
 :- export log_ith/3, log_ith_bound/3, log_ith_new/3, log_ith_to_list/2.
 :- export logk_ith/4.
