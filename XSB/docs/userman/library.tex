@@ -51,7 +51,7 @@ e.g.\ \verb'[a, b, c | _ ]': while {\tt member/2} would insert {\tt
     Predicate {\tt closetail/1} closes the tail of an open-ended list.
     It succeeds only once.
 
-\ourmoditem{last(List,Elt)}{last/2}{lists}
+\ourmoditem{list\_last(List,Elt)}{list\_last/2}{basics}
 %
 Succeeds if {\tt Elt} unifies with the last element of {\tt List}.
 
@@ -75,16 +75,22 @@ Succeeds if {\tt Elt} unifies with the last element of {\tt List}.
 derives from {\tt List1} by deleting an {\tt Element}
 non-deterministically.
 
-\ourmoditem{reverse(+List, ?ReversedList)}{reverse/2}{basics}
-    Succeeds if {\tt ReversedList} is the reverse of list {\tt List}.
-    If {\tt List} is not a proper list, {\tt reverse/2} can succeed
-    arbitrarily many times.  It works only one way.
-
 \ourmoditem{perm(+List, ?Perm)}{perm/2}{basics}
     Succeeds when {\tt List} and {\tt Perm} are permutations of each
     other.  The main use of {\tt perm/2} is to generate permutations
     of a given list.  {\tt List} must be a proper list.
     {\tt Perm} may be partly instantiated.
+
+\ourmoditem{list\_prefix(?L1, ?L2)}{list\_prefix/2}{basics} True if
+the list {\tt L1} is a prefix of the list {\tt L2}, i.e., if the
+length of {\tt L2} is $n>0$ then the first $n$ elements of {\tt L2}
+unify with the first $n$ elements of {\tt L1}, and {\tt L2} is empty
+iff {\tt L1} is empty.
+
+\ourmoditem{reverse(+List, ?ReversedList)}{reverse/2}{basics}
+    Succeeds if {\tt ReversedList} is the reverse of list {\tt List}.
+    If {\tt List} is not a proper list, {\tt reverse/2} can succeed
+    arbitrarily many times.  It works only one way.
 
 \ourmoditem{ith(?Index, ?List, ?Element)}{ith/3}{basics}
     Succeeds if the ${\tt Index^{th}}$ element of the list {\tt List} 
