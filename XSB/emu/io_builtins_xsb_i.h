@@ -209,8 +209,9 @@ inline static xsbBool file_function(CTXTdecl)
      and differentiating binaries, so its best to not allow integer
      modes any more */
     int ioport, opennew;
-    int str_type = 0;
+    int str_type;
     char string_mode[4];
+    str_type = 0;
 
     tmpstr = ptoc_longstring(CTXTc 2);
     pterm = ptoc_tag(CTXTc 3);
@@ -409,8 +410,10 @@ inline static xsbBool file_function(CTXTdecl)
     ** the string read.
     ** Prolog invocation: file_read_line(+File, -Str) */
     char buf[MAX_IO_BUFSIZE+1];
-    int break_loop = FALSE;
-    int eof=FALSE;
+    int break_loop;
+    int eof;
+    break_loop = FALSE;
+    eof = FALSE;
 
     io_port = (int)ptoc_int(CTXTc 2);
     XSB_STREAM_LOCK(io_port);
@@ -442,13 +445,16 @@ inline static xsbBool file_function(CTXTdecl)
     ** Invoke: file_function(FILE_READ_LINE, +File, -List). Returns
     ** the list of codes read. Rewritten by DSW 5/18/04 to allow \0 in lines.
     ** Prolog invocation: file_read_line_list(+File, -Str) */
-    int *line_buff = NULL;
-    int line_buff_len = 0;
+    int *line_buff;
+    int line_buff_len;
     int line_buff_disp;
     int c;
     Cell new_list;
-    CPtr top = NULL;
+    CPtr top;
     int i;
+    line_buff = NULL;
+    line_buff_len = 0;
+    top = NULL;
 
     io_port = (int)ptoc_int(CTXTc 2);
     XSB_STREAM_LOCK(io_port);
@@ -457,7 +463,8 @@ inline static xsbBool file_function(CTXTdecl)
     line_buff_disp = 0;
     do {
       if (line_buff_disp >= line_buff_len-1) { // -1 in case of eol
-	int old_len = line_buff_len;
+	int old_len;
+	old_len = line_buff_len;
 	line_buff_len = line_buff_disp+MAX_IO_BUFSIZE;
 	if(!(line_buff = mem_realloc(line_buff,old_len*sizeof(int),
 				     line_buff_len*sizeof(int),LEAK_SPACE)))
@@ -606,8 +613,9 @@ inline static xsbBool file_function(CTXTdecl)
        builtin (interface to setvbuf) will have to be introduced. */
     FILE *src_fptr, *dest_fptr;
     int src_fd, dest_fd, dest_xsb_fileno, src_xsb_fileno, errcode=0;
-    char *mode = NULL;
+    char *mode;
     prolog_term dest_fptr_term;
+    mode = NULL;
 
     src_xsb_fileno = (int)ptoc_int(CTXTc 2);
     dest_fptr_term = ptoc_tag(CTXTc 3);
@@ -631,8 +639,8 @@ inline static xsbBool file_function(CTXTdecl)
 	mode = "r+";
 #else /* Unix */ 
 	int fd_flags;
-	/* get the flags that open has set for this file descriptor */
 	fd_flags = fcntl(dest_fd, F_GETFL) & (O_ACCMODE | O_APPEND); 
+	/* get the flags that open has set for this file descriptor */
 	switch (fd_flags) {
 	case O_RDONLY:
 	    mode = "rb";
@@ -711,7 +719,8 @@ inline static xsbBool file_function(CTXTdecl)
     /* this can take any C file descriptor and make it into an XSB I/O port.
         For backward compatability,mode may not be used -- where it is "u" */
     int pipe_fd, i;
-    char *mode=NULL;
+    char *mode;
+      mode = NULL;
 #ifndef WIN_NT /* unix */
     int fd_flags;
 #endif
@@ -1058,8 +1067,10 @@ inline static xsbBool file_function(CTXTdecl)
 
   case ATOM_LENGTH: {
     Integer len;
-    Cell term = ptoc_tag(CTXTc 2);
-    Cell lenpar = ptoc_tag(CTXTc 3);
+    Cell term;
+    Cell lenpar;
+    term = ptoc_tag(CTXTc 2);
+    lenpar = ptoc_tag(CTXTc 3);
     if (isstring(term)) {
       len = utf8_nchars((byte *)string_val(term));
       if (isref(lenpar)) ctop_int(CTXTc 3,len);
@@ -1081,7 +1092,8 @@ inline static xsbBool file_function(CTXTdecl)
 
   case FILE_SET_CHARACTER_SET: {
     char *charset_str;
-    int charset = UTF_8;
+    int charset;
+    charset = UTF_8;
     charset_str = ptoc_string(CTXTc 3);
     if (!strcmp(charset_str,"LATIN_1")) charset = LATIN_1;
     else if (!strcmp(charset_str,"latin_1")) charset = LATIN_1;
@@ -1124,7 +1136,8 @@ inline static xsbBool file_function(CTXTdecl)
 
   case WRITE_FLOAT_VAR_FORMAT: {
     FILE* fptr;
-    int io_port = (int)ptoc_int(CTXTc 2);
+    int io_port;
+    io_port = (int)ptoc_int(CTXTc 2);
     SET_FILEPTR(fptr, io_port);
     char format[] = "%          ";
     //    printf("prec %d\n",(int) ptoc_int(CTXTc 4));
@@ -1137,7 +1150,8 @@ inline static xsbBool file_function(CTXTdecl)
   }
   case WRITE_RADIX: {
     FILE* fptr;
-    int io_port = (int)ptoc_int(CTXTc 2);
+    int io_port;
+    io_port = (int)ptoc_int(CTXTc 2);
     SET_FILEPTR(fptr, io_port);
     if (ptoc_int(CTXTc 4) == XSB_HEXIDECIMAL) 
       fprintf(fptr,"%" Intxfmt,ptoc_int(CTXTc 3));

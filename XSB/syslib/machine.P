@@ -338,6 +338,8 @@ formatted_io(_OPnumber, _FileOrString,_Format,_ArgTerm,_RetCode) :-
 
 trimcore :- '_$builtin'(TRIMCORE).
 
+prolog_db_bi(_A,_B,_C,_D) :- '_$builtin'(PROLOG_DB_BI).
+
 /* This is the builtin where people should put their private, experimental
    builtin code. SEE THE EXAMPLE IN emu/private_builtin.c to UNDERSTAND HOW 
    TO DO IT. Note: even though this is a single builtin, YOU CAN SIMULATE 
@@ -469,10 +471,16 @@ mt_random_request(_ReqNumber,_Arg1,_Arg2):-
 is_charlist(List) :- is_charlist(List, _).
 
 :- mode conname(?,?).  % ??
+% bad name, converts 0-ary structure in usermod to constant,
+%   leaving non-0-ary terms alone.
 conname(Con, Name) :-
 	term_type(Con, Type),
-	( Type =:= XSB_STRING -> Name = Con
-	; Type =:= XSB_STRUCT -> term_psc(Con, Psc), psc_name(Psc, Name)
+	( Type =:= XSB_STRING
+	 -> Name = Con
+	 ; Type =:= XSB_STRUCT, term_psc(Con, Psc), psc_arity(Psc,Arity), Arity =:= 0,
+	   psc_mod(Psc,ModPsc), (ModPsc =:= 0 ; psc_name(ModPsc,ModName), ModName = usermod)
+	 -> psc_name(Psc, Name)
+	 ;  Name = Con
 	).
 
 :- mode conpsc(?,?).

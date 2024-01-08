@@ -215,6 +215,8 @@
 :- export start_sleeper_thread/1.
 :- export cancel_sleeper_thread/0.
 
+:- export prolog_db_bi/4.
+
 :- import assert/1, retract/1, (dynamic)/1 from assert.
 :- import write/1, writeln/1, is_attv/1, warning/1, (=..)/2 from standard.
 :- import incr_eval_builtin/3 from increval.
