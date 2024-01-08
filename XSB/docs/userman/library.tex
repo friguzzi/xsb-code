@@ -81,6 +81,12 @@ non-deterministically.
     of a given list.  {\tt List} must be a proper list.
     {\tt Perm} may be partly instantiated.
 
+\ourmoditem{atom\_prefix(?A1, ?A2)}{atom\_prefix/2}{basics} True if
+the atom {\tt A1} is a prefix of the atom {\tt A2}, i.e., if the
+length of {\tt A2} is $n>0$ then the first $n$ elements of {\tt A2}
+match the first $n$ elements of {\tt A1}, and {\tt A2} is empty
+iff {\tt A1} is empty.
+
 \ourmoditem{list\_prefix(?L1, ?L2)}{list\_prefix/2}{basics} True if
 the list {\tt L1} is a prefix of the list {\tt L2}, i.e., if the
 length of {\tt L2} is $n>0$ then the first $n$ elements of {\tt L2}
