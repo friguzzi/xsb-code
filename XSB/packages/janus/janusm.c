@@ -169,7 +169,7 @@ int prlist2pyList(CTXTdeclc prolog_term V, PyObject *pList, int count)
 }
 
 // Assumes error checking is done on Prolog side
-void free_python_object_int(CTXTdeclc prolog_term prTerm) {
+DllExport void free_python_object_int(CTXTdeclc prolog_term prTerm) {
   PyObject *pyObj;
   convert_prObj_pyObj(CTXTc prTerm, &pyObj);
   Py_CLEAR(pyObj);

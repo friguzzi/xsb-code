@@ -367,7 +367,7 @@ void call_conv xsb_domain_error(CTXTdeclc char *valid_domain,Cell culprit,
   xsb_throw_internal(CTXTc ball_to_throw,ball_len);
 }
 
-void call_conv xsb_domain_error_vargs(CTXTdeclc char *valid_domain,Cell culprit, char *description, ...) {
+DllExport void call_conv xsb_domain_error_vargs(CTXTdeclc char *valid_domain,Cell culprit, char *description, ...) {
   char message[MAXBUFSIZE];
   va_list args;
   prolog_term ball_to_throw;
