@@ -84,7 +84,8 @@ local_newerthan(File1,File2) :-
 	Time2 = time(_,_),
 	sys_system(STAT_FILE_TIME,File1,Time1,_,_,_,_),
 	sys_system(STAT_FILE_TIME,File2,Time2,_,_,_,_),
-	Time1 @>= Time2.
+%%	Time1 @>= Time2.  % dsw changed to below: 2/9/24
+	Time1 @> Time2.
 
 sys_system(Code,Arg1,Arg2, _,_,_,_) :-
 	sys_system(Code,Arg1,Arg2, _,_,_,_).
@@ -327,7 +328,8 @@ load_library_directories :-
 
 execute_command_module :-
 	stat_flag(CMD_LOOP_DRIVER, InputFilePtr_INT),
-	intern_string(InputFilePtr_INT,ModName),
+	intern_string(InputFilePtr_INT,ModName),  %Full qualified filename, added as module :-(
+%%	x_interp:interpreter().
 	load(ModName,1,0).	% command module from OBJEXT
 
 /*************************************************************************
