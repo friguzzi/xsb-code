@@ -224,7 +224,7 @@ file_strictly_older_than(Ofile,Nfile) :-
 :- mode needs_recompile(+,+,+).
 needs_recompile(XSB_SRC_EXTENSION_ATOM_SANS_DOT, Base, Obj) :-
 	( str_cat(Base, XSB_SRC_EXTENSION_ATOM, PFileName),
-	    path_sysop(newerthan,PFileName,Obj)
+	  file_strictly_older_than(Obj,PFileName)
 	)
 	;
 	(str_cat(Base, XSB_HDR_EXTENSION_ATOM, HFileName),
@@ -261,12 +261,12 @@ needs_recompile('c', Base, Obj) :-
 	(
 	 (file_exists_here_or_configbin_or_configlib(C_Obj,CC_Obj) -> 
 	      str_cat(Base, '.c', CFileName),
-	      path_sysop(newerthan, CFileName, CC_Obj)
+	      file_strictly_older_than(CC_Obj, CFileName)
 	  ; true
 	 )
 	; 
 	 str_cat(Base, XSB_HDR_EXTENSION_ATOM, HFileName),
-	 path_sysop(newerthan, HFileName, C_Obj)
+	 file_strictly_older_than(C_Obj, HFileName)
 	;
 	 (concat_atom([_,XSB_OBJ_EXTENSION_ATOM],Obj)
 	  -> object_file_magic_mismatch(Obj)
