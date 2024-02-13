@@ -214,6 +214,13 @@ i_want_compile(SExt, Base, Obj) :-
 	;
 	 needs_recompile(SExt, Base, Obj) ).
 
+file_strictly_older_than(Ofile,Nfile) :-
+    Otime = file(_,_),
+    Ntime = file(_,_),
+    file_time(Ofile,Otime),
+    file_time(Nfile,Ntime),
+    Otime @< Ntime.
+
 :- mode needs_recompile(+,+,+).
 needs_recompile(XSB_SRC_EXTENSION_ATOM_SANS_DOT, Base, Obj) :-
 	( str_cat(Base, XSB_SRC_EXTENSION_ATOM, PFileName),
@@ -221,41 +228,26 @@ needs_recompile(XSB_SRC_EXTENSION_ATOM_SANS_DOT, Base, Obj) :-
 	)
 	;
 	(str_cat(Base, XSB_HDR_EXTENSION_ATOM, HFileName),
-	  file_time(Obj, OTime),
-	  %% If no header file exists, then HTime = 0
-	  file_time(HFileName, HTime), 
-	  OTime =< HTime
+	 file_strictly_older_than(Obj,HFileName)
 	).	  
 needs_recompile(pl, Base, Obj) :-
 	( str_cat(Base, '.pl', PFileName),
-	  file_time(Obj, OTime), 
-	  file_time(PFileName, PTime),
-	  OTime =< PTime
+	  file_strictly_older_than(Obj,PFileName)
 	)
 	;
 	( str_cat(Base, XSB_HDR_EXTENSION_ATOM, HFileName),
-	  file_time(Obj, OTime),
-	  %% If no header file exists, then HTime = 0
-	  file_time(HFileName, HTime), 
-	  OTime =< HTime
+	  file_strictly_older_than(Obj,HFileName)
 	).	  
 needs_recompile(prolog, Base, Obj) :-
 	( str_cat(Base, '.prolog', PFileName),
-	  file_time(Obj, OTime), 
-	  file_time(PFileName, PTime),
-	  OTime =< PTime
+	  file_strictly_older_than(Obj,PFileName)
 	)
 	;
 	( str_cat(Base, XSB_HDR_EXTENSION_ATOM, HFileName),
-	  file_time(Obj, OTime),
-	  %% If no header file exists, then HTime = 0
-	  file_time(HFileName, HTime), 
-	  OTime =< HTime
+	  file_strictly_older_than(Obj,HFileName)
 	).	  
 needs_recompile('', Base, Obj) :-
-	file_time(Obj, OTime), 
-	file_time(Base, PTime),
-	OTime =< PTime.
+        file_strictly_older_than(Obj,Base).
 needs_recompile('c', Base, Obj) :-
 	xsb_configuration(os_type, OS_type), atom(OS_type),
 	( str_sub('solaris', OS_type) -> str_cat(Base, '.so', C_Obj)
