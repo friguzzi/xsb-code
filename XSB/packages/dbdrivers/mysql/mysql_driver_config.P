@@ -23,7 +23,7 @@
 
 :- import xsb_running_under/1, force_rename_file/2 from packaging.
 :- import slash/1, str_cat/3 from machine.
-:- import fmt_write_string/3, file_time/2 from file_io.
+:- import fmt_write_string/3 from file_io.
 :- import search_module/6 from consult.
 :- import xsb_configuration/2 from xsb_configuration.
 :- import mysql_info/2 from mysql_init.
