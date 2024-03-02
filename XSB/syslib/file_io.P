@@ -411,8 +411,15 @@ path_sysop(newerthan,Path1,Path2) :- !,
         file_time_ns(Path1,Time1,Time1ns),
 	check_atom(Path2,'path_sysop/3',3),
         file_time_ns(Path2,Time2,Time2ns),
-        (Time1 == Time2 -> Time1ns >= Time2ns
+        (Time1 == Time2 -> Time1ns > Time2ns
 	; Time1 > Time2
+        ).
+path_sysop(notolderthan,Path1,Path2) :- !,
+        file_time_ns(Path1,Time1,Time1ns),
+	check_atom(Path2,'path_sysop/3',3),
+        file_time_ns(Path2,Time2,Time2ns),
+        (Time1 == Time2 -> Time1ns >= Time2ns
+	; Time1 >= Time2
         ).
 path_sysop(size,Path,Size) :- !,
         file_size(Path, Size).
