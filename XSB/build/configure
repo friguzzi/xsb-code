@@ -1538,6 +1538,7 @@ Optional Packages:
   --with-stdcall		use the __stdcall call convention for DLLs in Windows
                                 Affects Win32 only. Ignored in Win64.
   --with-preferred-python=X      indicate the preferred version of python to build with
+                                  e.g. python3.11
   --with-pita       compile XSB with PITA
 
 Some influential environment variables:
@@ -8573,7 +8574,7 @@ $as_echo_n "checking whether loader understands -Wl,-export-dynamic... " >&6; }
 #AC_TRY_LINK([],[], __export_dynamic=yes, __export_dynamic=no)
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-main(){return 0;}
+int main(){return 0;}
 _ACEOF
 if ac_fn_c_try_link "$LINENO"; then :
   __export_dynamic=yes
@@ -11028,7 +11029,7 @@ if test -n "$xsbpy_config_failed" ; then
    echo
 fi
 
-if test -n "$xsbpy_config_failed" ; then
+if test -n "$janus_config_failed" ; then
    echo
    echo "***** Janus: Python integration failed: probably because pip is not installed"
    echo "***** To use this integration, install pip and reconfigure XSB"
