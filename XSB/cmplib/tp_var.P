@@ -207,6 +207,17 @@ choose_reg_not_in([UReg|STRList],N,Reg) :-
 	 ;	Reg = N
 	).
 
+/***
+%% get an avaiable register. Don't take a HoldR reg. (seems not nec?)
+%% DSW: not clear why don't seem to have to exclude Held regs
+:- mode getreg(?,?,?).  % 1st (list) is ground, but sometimes (rarely) Tin is open.
+getreg(TRList,HoldR,Reg) :-
+    check_ground(TRList,'getreg/2',1),
+    check_ground(HoldR,'getreg/2',2),
+    append(HoldR,TRList,THRList),
+    sort(THRList,STHRList),
+    choose_reg_not_in(STHRList,1,Reg). ***/
+
 /****getreg(TRList, Reg) :-
 	computil_choose(1,Reg),
 	\+ memberchk(Reg, TRList).

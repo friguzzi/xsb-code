@@ -169,7 +169,7 @@ tbody(if_then_else(Test,TGoal,FGoal),A,Pil,Pilr,Tin,Tout,M,N,HoldRegs,Tabled,Tab
      ->	tbody(TGoal,A,Pil,Pilr,Tin,Tout,M,N,HoldRegs,Tabled,Tabar,EPN)
      ;	gennum(TLabId), TLabel = label(then,(disj,TLabId)),
 	gennum(FLabId), FLabel = label(else,(disj,FLabId)),
-	%%HoldRegs0 = [],  NO?  Changes code, but still seems to work???
+	HoldRegs0 = [],  %%NO?  Changes code, but still seems to work???
 	tvar_hold(Test, HoldRegs0, HoldRegs1),
 	tcond(Test,TLabel,FLabel,Pil,[TLabel|Pil1],Tin,Tmid,HoldRegs1,EPN),
 	tbody(TGoal,A,Pil1,Pil2,Tmid,Tout0,M,no,HoldRegs1,Tabled,Tabar,EPN),

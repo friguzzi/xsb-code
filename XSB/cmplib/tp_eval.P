@@ -35,11 +35,23 @@ eval_relop(Op, Arg1, Arg2, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
 
 'eval relop'(Op, Arg1, Arg2, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
 	eval_exp(Arg1, R1, Pil, Pilm, HoldR, Tin, Tmid, EPN),
-	eval_exp(Arg2, R2, Pilm,[cmpreg(R2,R1),JumpInst|Pilr],
-		 HoldR, Tmid, Tout1, EPN),
-	eval_arithreloptab(Op, R1, Label, JumpInst),
-	release_if_done0(Arg1, R1, HoldR, Tout1, Tout2),
-	release_if_done0(Arg2, R2, HoldR, Tout2, Tout).
+	% cmpreg destroys second register, so get new one and move R1 if R1 is needed again.
+	(append(_,[R1|HoldRest],HoldR), member(R1,HoldRest) % not only hold occ
+	 -> getreg(Tmid,R1a), hold(R1a,Tmid,Tmid1), Pilm = [movreg(R1,R1a)|Pilm1]
+	 ;  R1a = R1, Tmid1 = Tmid, Pilm1 = Pilm
+	),
+	eval_exp(Arg2, R2, Pilm1,[cmpreg(R2,R1a),JumpInst|Pilr],
+		 HoldR, Tmid1, Tout1, EPN),
+
+	eval_arithreloptab(Op, R1a, Label, JumpInst),
+	(R1a \== R1
+	 -> release(R1a, Tout1, Tout2)
+	 ;  Tout2 = Tout1
+	),
+	release_if_done0(Arg1, R1, HoldR, Tout2, Tout3),
+	release_if_done0(Arg2, R2, HoldR, Tout3, Tout).
+	%%,standard:writeln(userout,leave_cmpreg(HoldR,Tout)).
+
 
 test_with_int(Op, Arg1, N, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
 	eval_exp(Arg1, R1, Pil, [JumpInst|Pilr], HoldR, Tin, Tmid, EPN),
@@ -77,13 +89,13 @@ int_eq(Op, integer(N), N) :-
 %:- import console_writeln/1 from standard.
 
 :- mode eval_exp(?,?,?,?,?,?,?,?).
-eval_exp(varocc(_,Prag),R,Pil,Pilr,_,Tin,Tout,EPN) :-
+eval_exp(varocc(_V,Prag),R,Pil,Pilr,_HoldR,Tin,Tout,EPN) :-
 	eval_var(Prag,R,Pil,Pilr,Tin,Tout,EPN).
-eval_exp(integer(N),R,[Inst|Pil],Pil,_,Tin,Tout,_) :- 
+eval_exp(integer(N),R,[Inst|Pil],Pil,_HoldR,Tin,Tout,_) :- 
 	getreg(Tin,R),
 	hold(R,Tin,Tout),
 	Inst = putnumcon(R,N).
-eval_exp(real(N),R,[Inst|Pil],Pil,_,Tin,Tout,_) :- 
+eval_exp(real(N),R,[Inst|Pil],Pil,_HoldR,Tin,Tout,_) :- 
 	getreg(Tin,R),
 	hold(R,Tin,Tout),
 	Inst = putdfloat(R,N).
