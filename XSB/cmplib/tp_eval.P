@@ -34,13 +34,13 @@ eval_relop(Op, Arg1, Arg2, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
 	).
 
 'eval relop'(Op, Arg1, Arg2, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
-	eval_exp(Arg1, R1, Pil, Pilm, HoldR, Tin, Tmid, EPN),
+	eval_exp(Arg1, R1, d, Pil, Pilm, HoldR, Tin, Tmid, EPN), % not nd!
 	% cmpreg destroys second register, so get new one and move R1 if R1 is needed again.
 	(append(_,[R1|HoldRest],HoldR), member(R1,HoldRest) % not only hold occ
 	 -> getreg(Tmid,R1a), hold(R1a,Tmid,Tmid1), Pilm = [movreg(R1,R1a)|Pilm1]
 	 ;  R1a = R1, Tmid1 = Tmid, Pilm1 = Pilm
 	),
-	eval_exp(Arg2, R2, Pilm1,[cmpreg(R2,R1a),JumpInst|Pilr],
+	eval_exp(Arg2, R2,nd, Pilm1,[cmpreg(R2,R1a),JumpInst|Pilr],
 		 HoldR, Tmid1, Tout1, EPN),
 
 	eval_arithreloptab(Op, R1a, Label, JumpInst),
@@ -54,7 +54,7 @@ eval_relop(Op, Arg1, Arg2, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
 
 
 test_with_int(Op, Arg1, N, HoldR, Label, Pil, Pilr, Tin, Tout, EPN) :-
-	eval_exp(Arg1, R1, Pil, [JumpInst|Pilr], HoldR, Tin, Tmid, EPN),
+	eval_exp(Arg1, R1, d, Pil, [JumpInst|Pilr], HoldR, Tin, Tmid, EPN),
 %	( N =:= 0 -> eval_arithreloptab(Op, R1, Label, JumpInst)
 	eval_arithreloptab(Op, R1, N, Label, JumpInst),
 %	),
@@ -64,10 +64,11 @@ int_eq(Op, integer(N), N) :-
 	( Op == =:= -> true ; Op == =\= ).
 
 /*======================================================================*/
-/* eval_exp(+Term, -R, -Inst, -InstTail, #HoldRegs, +Tin,-Tout,		*/
+/* eval_exp(+Term, -R, +DND, -Inst, -InstTail, #HoldRegs, +Tin,-Tout,	*/
 /*	    e(+PredSym,+NC))						*/
 /*	R is the register allocated for the result			*/
 /* Generate code for an evaluable term.					*/
+/* DND=d if this value may be destroyed, nd if not.			*/
 /* The code generated for different terms are listed below.		*/
 /*  integer(N):   putnumcon(R, N)			Res in R	*/
 /*  real(N):	  putdfloat(R, N)			in R		*/
@@ -88,18 +89,20 @@ int_eq(Op, integer(N), N) :-
 /*======================================================================*/
 %:- import console_writeln/1 from standard.
 
-:- mode eval_exp(?,?,?,?,?,?,?,?).
-eval_exp(varocc(_V,Prag),R,Pil,Pilr,_HoldR,Tin,Tout,EPN) :-
-	eval_var(Prag,R,Pil,Pilr,Tin,Tout,EPN).
-eval_exp(integer(N),R,[Inst|Pil],Pil,_HoldR,Tin,Tout,_) :- 
+:- mode eval_exp(?,?,?,?,?,?,?,?,?).
+%eval_exp(Term,_R,_DND,_Pil,_Pilr,_HoldR,Tin,_Tout,_EPN) :- 
+%    standard:writeln(userout,eval_exp(Term,_HoldR,Tin)),fail.
+eval_exp(varocc(_V,Prag),R,DND,Pil,Pilr,_HoldR,Tin,Tout,EPN) :-
+	eval_var(Prag,R,DND,Pil,Pilr,Tin,Tout,EPN).
+eval_exp(integer(N),R,_DND,[Inst|Pil],Pil,_HoldR,Tin,Tout,_) :- 
 	getreg(Tin,R),
 	hold(R,Tin,Tout),
 	Inst = putnumcon(R,N).
-eval_exp(real(N),R,[Inst|Pil],Pil,_HoldR,Tin,Tout,_) :- 
+eval_exp(real(N),R,_DND,[Inst|Pil],Pil,_HoldR,Tin,Tout,_) :- 
 	getreg(Tin,R),
 	hold(R,Tin,Tout),
 	Inst = putdfloat(R,N).
-eval_exp(structure(Sym,Args),R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
+eval_exp(structure(Sym,Args),R,_DND,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
 	sym_name(Sym, Op, Arity),
 	( Arity =:= 2 -> Args = [E1,E2],
 	 eval_binop(Op,E1,E2,R,Pil,Pilr,HoldR,Tin,Tout,EPN)
@@ -113,16 +116,16 @@ eval_exp(structure(Sym,Args),R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
 		 ' of predicate ', P, /, A,')'))
 	).
 % TLS: added this clause for pi, e and other constants we might like.
-eval_exp(constant(Sym),R,[Inst|Pil],Pil,HoldR,Tin,Tout,e(PredSym,NC)) :-
+eval_exp(constant(Sym),R,DND,[Inst|Pil],Pil,HoldR,Tin,Tout,e(PredSym,NC)) :-
 	sym_name(Sym,SymName,_),
 	eval_constant(SymName,Val),
 %	console_writeln(eval_exp(Val,R,[Inst|Pil],Pil,_,Tin,Tout,e(PredSym,NC))),
-	eval_exp(Val,R,[Inst|Pil],Pil,HoldR,Tin,Tout,e(PredSym,NC)).
-eval_exp(constant(Sym),_R,_,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
+	eval_exp(Val,R,DND,[Inst|Pil],Pil,HoldR,Tin,Tout,e(PredSym,NC)).
+eval_exp(constant(Sym),_R,_DND,_,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
 	sym_name(PredSym, P, A), sym_name(Sym, Const, _),
 	error(('non-numeric constant ', Const, ' in a numeric expression',
 	       ' (in clause #', NC, ' of predicate ', P,/,A,')')).
-eval_exp(string(Sym),_R,_Pilr,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
+eval_exp(string(Sym),_R,_DND,_Pilr,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
 	sym_name(PredSym, P, A),
 	error(('non-numeric string ', Sym, ' in a numeric expression',
 	       ' (in clause #', NC, ' of predicate ', P,/,A,')')).
@@ -187,25 +190,28 @@ eval_arithreloptab(>=,  R, Label, jumplt(R,Label)).
 eval_arithreloptab(=:=, R, N, Label, int_test_nz(R,N,Label)).
 eval_arithreloptab(=\=, R, N, Label, int_test_z(R,N,Label)).
 
-:- mode eval_var(?,?,?,?,?,?,?).
+/*:- mode eval_var(?,?,?,?,?,?,?).
 eval_var(Prag,R,Pil,Pilr,Tin,Tout,EPN) :-
+    eval_var(Prag,R,d,Pil,Pilr,Tin,Tout,EPN).*/
+
+:- mode eval_var(?,?,?,?,?,?,?,?).
+eval_var(Prag,R,DND,Pil,Pilr,Tin,Tout,EPN) :-
 	alloc_reg(Prag,Tin,Tmid),
 	vprag_occ(Prag,Occ),
 	(( Occ == s ; Occ == l)
-	 ->	eval_numgetinst(Prag,R,Pil,Pilr,Tmid,Tout)
+	 ->	eval_numgetinst(Prag,R,DND,Pil,Pilr,Tmid,Tout)
 	 ;	EPN = e(PredSym,NC),
 		sym_name(PredSym, P, A),
 		error(('Unbound variable in an arithmetic expression',
 		       ' (in clause #', NC, ' of predicate ', P, /, A, ')'))
 	).
 
-
-eval_numgetinst(VPrag,R,Pil,Pilr,Tin,Tout) :-
+eval_numgetinst(VPrag,R,DND,Pil,Pilr,Tin,Tout) :-
 	vprag_type(VPrag, Type),
 	(Type == t
 	 ->	vprag_loc(VPrag, Loc),
 		vprag_occ(VPrag, Occ),
-		(Occ == l
+		((Occ == l ; DND == nd)
 		 ->	R = Loc, Pil = Pilr, Tin = Tout
 		 ;	getreg(Tin,R), hold(R,Tin,Tout), Pil = [movreg(Loc,R)|Pilr]
 		)
@@ -254,12 +260,12 @@ isindeed_var(varocc(_LVid,LPrag),RPrag,HoldR,Pil,Pilr,Tin,Tout,EPN,RVid) :- !,
 	 ;	Instr = addintfastasgn(LLoc,RLoc,RInt)
 	).
 isindeed_var(integer(Int),RPrag,_HoldR,Pil,Pilr,Tin,Tout,EPN,_RVid) :- !,
-	eval_var(RPrag,R,Pil,Pilm,Tin,Tout1,EPN),
+	eval_var(RPrag,R,d,Pil,Pilm,Tin,Tout1,EPN),
 	getreg(Tin, R1), hold(R1, Tout1, Tout2),
 	Pilm = [putnumcon(R1,Int)|Pilr],
 	release(R1,Tout2,Tout3), release(R,Tout3,Tout).
 isindeed_var(real(Real),RPrag,_HoldR,Pil,Pilr,Tin,Tout,EPN,_RVid) :- !,
-	eval_var(RPrag,R,Pil,Pilm,Tin,Tout1,EPN),
+	eval_var(RPrag,R,d,Pil,Pilm,Tin,Tout1,EPN),
 	getreg(Tin, R1), hold(R1, Tout1, Tout2),
 	Pilm = [putdfloat(R1,Real)|Pilr],
 	release(R1,Tout2,Tout3), release(R,Tout3,Tout).
@@ -375,20 +381,20 @@ isindeed_unary(_LHS,_Op,_E,_HoldR,_Pilr,_Pil,_Tin,_Tout,e(PredSym,NC)) :-
 :- mode eval_binop(+,?,?,?,?,?,?,?,?,?).
 eval_binop(Op,E1,E2,R1,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
 	eval_binop(Op), !,
-	eval_exp_vc(E1,R1,Pil,Pilm,HoldR,Tin,Tmid1,EPN),
-	eval_exp_vc(E2,R2,Pilm,[Inst|Pilr],HoldR,Tmid1,Tmid2,EPN),
+	eval_exp_vc(E1,R1,d,Pil,Pilm,HoldR,Tin,Tmid1,EPN),  %must be d
+	eval_exp_vc(E2,R2,d,Pilm,[Inst|Pilr],HoldR,Tmid1,Tmid2,EPN), %must be d
 	eval_binoptab(Op,R1,R2,Inst),
 	release_if_done0(E2,R2,HoldR,Tmid2,Tout).
 eval_binop(rem,E1,E2,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
-	eval_exp_vc(E1,R0,Pil,Pilm0,HoldR,Tin,Tmid,EPN),
-	eval_exp_vc(E2,R1,Pilm0,Pilm1,HoldR,Tmid,Tmid1,EPN),
+	eval_exp_vc(E1,R0,nd,Pil,Pilm0,HoldR,Tin,Tmid,EPN),
+	eval_exp_vc(E2,R1,d,Pilm0,Pilm1,HoldR,Tmid,Tmid1,EPN),
 	getreg(Tmid1,R), hold(R,Tmid1,Tmid2),
 	Pilm1 = [movreg(R0,R),idivreg(R1,R0),mulreg(R1,R0),subreg(R0,R)|Pilr],
 	release_if_done0(E1,R0,HoldR,Tmid2,Tmid3),
 	release_if_done0(E2,R1,HoldR,Tmid3,Tout).
 eval_binop(mod,E1,E2,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-
-	eval_exp_vc(E1,R0,Pil,Pilm0,HoldR,Tin,Tmid,EPN),
-	eval_exp_vc(E2,R1,Pilm0,Pilm1,HoldR,Tmid,Tmid1,EPN),
+	eval_exp_vc(E1,R0,d,Pil,Pilm0,HoldR,Tin,Tmid,EPN),
+	eval_exp_vc(E2,R1,nd,Pilm0,Pilm1,HoldR,Tmid,Tmid1,EPN),
 	getreg(Tmid1,R), hold(R,Tmid1,Tmid2),
 	Pilm1 = [movreg(R0,R),divreg(R1,R0),unifunc(14,R0),
 		 mulreg(R1,R0),subreg(R0,R)|Pilr],
@@ -400,41 +406,41 @@ eval_binop(Op,_,_,_,_Pilr,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
 	       ' using is/2 (in clause #', NC, ' of predicate ', P,/,A,')')).
 
 eval_uniop(+,E,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :- !, /* unary plus */
-	eval_exp_vc(E,R,Pil,Pilr,HoldR,Tin,Tout,EPN).
+	eval_exp_vc(E,R,d,Pil,Pilr,HoldR,Tin,Tout,EPN).
 eval_uniop(-,E,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-  !, /* unary minus */
 	getreg(Tin,R), hold(R,Tin,Tmid1),
 	Pil = [putnumcon(R,0)|Pilm],
-	eval_exp_vc(E,R1,Pilm,[subreg(R1,R)|Pilr],HoldR,Tmid1,Tmid2,EPN),
-	release(R,Tmid2,Tmid3),
+	eval_exp_vc(E,R1,nd,Pilm,[subreg(R1,R)|Pilr],HoldR,Tmid1,Tmid2,EPN),  % can be nd ? tested ok but...
+	release(R,Tmid2,Tmid3),  % why releasing R if being returned with value?
 	release_if_done0(E,R1,HoldR,Tmid3,Tout).
 eval_uniop(\,E,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-  !, /* negation */
-	eval_exp_vc(E,R,Pil,[negate(R)|Pilr],HoldR,Tin,Tout,EPN).
+	eval_exp_vc(E,R,d,Pil,[negate(R)|Pilr],HoldR,Tin,Tout,EPN).
 eval_uniop(Op,E,R,Pil,Pilr,HoldR,Tin,Tout,EPN) :-   /* others */
 	builtin_function(Op, 1, Num),
 	!,
-	eval_exp_vc(E,R,Pil,[unifunc(Num,R)|Pilr],HoldR,Tin,Tout,EPN).
+	eval_exp_vc(E,R,d,Pil,[unifunc(Num,R)|Pilr],HoldR,Tin,Tout,EPN).
 eval_uniop(Op,_,_,_Pilr,_Pil,_,_Tin,_Tout,e(PredSym,NC)) :-
 	sym_name(PredSym, P, A),
 	error(('Unknown function ', Op, '/1 in an arithmetic expression',
 	       ' using is/2 (in clause #', NC, ' of predicate ', P,/,A.')')).
 
-:- mode eval_exp_vc(?,?,?,?,?,?,?,?).
-eval_exp_vc(varocc(_,Prag),R,Pil,Pilr,_,Tin,Tout,EPN) :-
-	eval_var(Prag,R,Pil,Pilr,Tin,Tout,EPN).
-eval_exp_vc(integer(N),R,[Inst|Pil],Pil,_,Tin,Tout,_) :- 
+:- mode eval_exp_vc(?,?,?,?,?,?,?,?,?).
+eval_exp_vc(varocc(_,Prag),R,DND,Pil,Pilr,_,Tin,Tout,EPN) :-
+	eval_var(Prag,R,DND,Pil,Pilr,Tin,Tout,EPN).
+eval_exp_vc(integer(N),R,_DND,[Inst|Pil],Pil,_,Tin,Tout,_) :- 
 	getreg(Tin,R),
 	hold(R,Tin,Tout),
 	Inst = putnumcon(R,N).
-eval_exp_vc(real(N),R,[Inst|Pil],Pil,_,Tin,Tout,_) :- 
+eval_exp_vc(real(N),R,_DND,[Inst|Pil],Pil,_,Tin,Tout,_) :- 
 	getreg(Tin,R),
 	hold(R,Tin,Tout),
 	Inst = putdfloat(R,N).
 % TLS: added this clause for pi, e and other constants we might like.
-eval_exp_vc(constant(C),R,Pil1,Pil2,HoldR,Tin,Tout,EPN) :-
+eval_exp_vc(constant(C),R,_DND,Pil1,Pil2,HoldR,Tin,Tout,EPN) :-
 	sym_name(C,Const,_),
 	eval_constant(Const,Val),
-	eval_exp_vc(Val,R,Pil1,Pil2,HoldR,Tin,Tout,EPN).
-eval_exp_vc(_,0,_Pilr,_Pil,_HoldR,_Tin,_Tout,e(PredSym,NC)) :-
+	eval_exp_vc(Val,R,d,Pil1,Pil2,HoldR,Tin,Tout,EPN).
+eval_exp_vc(_,0,_Pilr,_DND,_Pil,_HoldR,_Tin,_Tout,e(PredSym,NC)) :-
 	sym_name(PredSym, P, A),
 	error(('variable or numerical constant expected in 2nd arg of is/2',
 	       ' (in clause #', NC, ' of predicate ', P,/,A,')' )).
