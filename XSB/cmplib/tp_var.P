@@ -317,8 +317,8 @@ release_if_done(Vid,R,VPrag,HoldR,Tin,Tout) :-
    %write('  Tin= '),write(Tin),write('  Tout= '),write(Tout),nl,told,tell(X).
 release_if_done(_,_,_,_,T,T).
 
-release_if_done1(Vid,R,HoldR,Tin,Tout,L,Occ) :-
-	\+ memberchk(Vid,HoldR),
+release_if_done1(_Vid,R,HoldR,Tin,Tout,L,Occ) :-
+	\+ memberchk(R,HoldR),
 	(Occ == l
 	 ->	release(R,Tin,Tmid),
 		(R =:= L
