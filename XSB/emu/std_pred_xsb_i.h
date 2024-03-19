@@ -362,8 +362,9 @@ inline static xsbBool univ_builtin(CTXTdecl)
       } else xsb_instantiation_error(CTXTc "=../2",2);
     }
     new_list = makelist(hreg);
-    if (isstring(term) || isointeger(term)) { follow(hreg) = term; hreg += 2; }
-    else if (isconstr(term)) {
+    if (isstring(term) || isointeger(term) || isofloat(term)) {
+      follow(hreg) = term; hreg += 2;
+    } else if (isconstr(term)) {
       arity = (get_arity(get_str_psc(term)));
       follow(hreg) = makestring(get_name(get_str_psc(term)));
       hreg += 2;
@@ -639,7 +640,7 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
   Cell heap_addr, term, term2;
   Cell list;
   CPtr new_list;
-  char hack_char;	
+  //  char hack_char;	no longer necessary since strto? instead of sscanf
   char *call_name =
     (call_type == NUMBER_CODES ?
      "number_codes/2" : (call_type == NUMBER_DIGITS?
@@ -702,7 +703,9 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
       }
     } while (1);
 
-    if (sscanf(str, "%" Intfmt "%c", &c, &hack_char) == 1) {
+    c = strtoll(str,&tmpstr_interned,0);
+    if (*tmpstr_interned == '\0' && *str != '\0') {  
+      //    if (sscanf(str, "%" Intfmt "%c", &c, &hack_char) == 1) {
       if (isointeger(term)) {
 	if (oint_val(term) != c) return FALSE;
       } else if (isref(term)) {bind_oint((CPtr)(term), c);}
@@ -711,16 +714,20 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
       Float float_temp;
       //TODO: Refactor the below few lines of code once the "Floats are always double?" 
       //situation is resolved.
+      float_temp = strtod(str,&tmpstr_interned);
+      if (*str != '\0' && *tmpstr_interned == '\0')
+/***********  replaced by previous 2 lines...
 #ifndef FAST_FLOATS
       if (sscanf(str, "%lf%c", &float_temp, &hack_char) == 1)
 #else
       if (sscanf(str, "%f%c", &float_temp, &hack_char) == 1)
-#endif
+#endif ********/
 	{
 	  if (isofloat(term)) {
 	    if (ofloat_val(term) != float_temp) return FALSE;
 	  } else if (isref(term)) {bind_boxedfloat((CPtr)(term), float_temp);}
-	  else return FALSE;
+	  //	  else return FALSE;  replace with following...
+	  else xsb_syntax_error_non_compile(CTXTc list,call_name,2);
 	}
       // TLS: changed to fail to syntax error to conform w. ISO.  
       else xsb_syntax_error_non_compile(CTXTc list,call_name,2);

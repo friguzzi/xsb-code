@@ -1638,6 +1638,7 @@ int builtin_call(CTXTdeclc byte number)
     }
     termpsc = term_psc(term);
     modname = ptoc_string(CTXTc 1);
+    //    if (!strcmp(modname,"user")) { modname = "usermod"; }
     if (!strncmp(modname,"usermod",7)) {
       //	/*||!strncmp(modname,"usermod(",strlen("usermod(")*/
       import_from_usermod = TRUE;
