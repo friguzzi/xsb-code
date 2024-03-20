@@ -1616,9 +1616,11 @@ contcase:     /* the main loop */
       break;
     case XSB_FLOAT:  /* cvt to double and use that indexing.... */
 #ifndef FAST_FLOATS
-      {Float tempFloat = (Float)float_val(op1);
-	op1 = ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempFloat) )
-	  ^ FLOAT_MIDDLE_24_BITS(tempFloat) ^ FLOAT_LOW_24_BITS(tempFloat);
+      {UInteger tempUIFloat;
+	Float tempFloat = (Float)float_val(op1);
+	memcpy(&tempUIFloat,&tempFloat,sizeof(tempUIFloat));
+	op1 = ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempUIFloat) )
+	  ^ FLOAT_MIDDLE_24_BITS(tempUIFloat) ^ FLOAT_LOW_24_BITS(tempUIFloat);
       }
 #else 
       op1 = (Cell)int_val(op1);

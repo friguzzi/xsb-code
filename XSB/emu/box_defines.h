@@ -53,12 +53,13 @@
 
 #ifdef BITS64
 
-#define FLOAT_HIGH_16_BITS(float) ((((UInteger)(*((UInteger *)((void *)(& float)))))>>48) & LOW_16_BITS_MASK)
+//#define FLOAT_HIGH_16_BITS(float) ((((UInteger)(*((UInteger *)((void *)(& float)))))>>48) & LOW_16_BITS_MASK)
+/* float must be UInteger; memcpy-ed from a double float */
+#define FLOAT_HIGH_16_BITS(float) ((float>>48) & LOW_16_BITS_MASK)
 
-#define FLOAT_MIDDLE_24_BITS(float)					\
-  (	(((UInteger)(*(((UInteger *)((void *)(& float))))))>>24) & LOW_24_BITS_MASK)
+#define FLOAT_MIDDLE_24_BITS(float) ((float>>24) & LOW_24_BITS_MASK)
 
-#define FLOAT_LOW_24_BITS(float) (((UInteger)(*(((UInteger *)((void *)(& float)))))) & LOW_24_BITS_MASK)
+#define FLOAT_LOW_24_BITS(float) (float & LOW_24_BITS_MASK)
 
 #else
 

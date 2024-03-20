@@ -3209,6 +3209,7 @@ case WRITE_OUT_PROFILE:
   {
     char * operator = ptoc_string(CTXTc 1);
     Float result;
+    UInteger UIresult;
     switch((*operator))
     {
     case '+':
@@ -3243,9 +3244,11 @@ case WRITE_OUT_PROFILE:
 	bind_boxedfloat(((CPtr)addr), result);
       } else {
 	result = ptoc_float(CTXTc 5);
-	ctop_int(CTXTc 2, (FLOAT_HIGH_16_BITS(result)));
-	ctop_int(CTXTc 3, (FLOAT_MIDDLE_24_BITS(result)));
-	ctop_int(CTXTc 4, (FLOAT_LOW_24_BITS(result)));
+	memcpy(&UIresult,&result,sizeof(UIresult));
+
+	ctop_int(CTXTc 2, (FLOAT_HIGH_16_BITS(UIresult)));
+	ctop_int(CTXTc 3, (FLOAT_MIDDLE_24_BITS(UIresult)));
+	ctop_int(CTXTc 4, (FLOAT_LOW_24_BITS(UIresult)));
       }
       return TRUE;
     }
@@ -3254,9 +3257,10 @@ case WRITE_OUT_PROFILE:
         xsb_abort("[float_op] unsupported operator: %s\n", operator);
         return FALSE;
     }
-    ctop_int(CTXTc 8, ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(result) ));
-    ctop_int(CTXTc 9, (FLOAT_MIDDLE_24_BITS(result)));
-    ctop_int(CTXTc 10, (FLOAT_LOW_24_BITS(result)));
+    memcpy(&UIresult,&result,sizeof(UIresult));
+    ctop_int(CTXTc 8, ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(UIresult) ));
+    ctop_int(CTXTc 9, (FLOAT_MIDDLE_24_BITS(UIresult)));
+    ctop_int(CTXTc 10, (FLOAT_LOW_24_BITS(UIresult)));
     return TRUE;
   }
 #endif
