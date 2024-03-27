@@ -634,8 +634,9 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
 {
   int i, tmpval;
   Integer c;
-  char tmpstr[2], *tmpstr_interned;
-  char str[MAXNUMCHARLEN];	
+  char tmpstr[2], *tmpstr_interned, *str0;
+  int base;
+  char str[MAXNUMCHARLEN];
   int StringLoc = 0;
   Cell heap_addr, term, term2;
   Cell list;
@@ -703,7 +704,16 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
       }
     } while (1);
 
-    c = strtoll(str,&tmpstr_interned,0);
+    str0 = strchr(str,'0');
+    base = 10;
+    if (str0 != NULL && str0[1] != '\0' && str0[2] != '\0' &&
+	(str0==str || str0[-1] < '0')) {
+      if (str0[1] == 'x') {str0[1] = '0'; base = 16;}
+      else if (str0[1] == 'o') {str0[1] = '0'; base = 8;}
+      else if (str0[1] == 'b') {str0[1] = '0'; base = 2;}
+    }
+
+    c = strtoll(str,&tmpstr_interned,base);
     if (*tmpstr_interned == '\0' && *str != '\0') {  
       //    if (sscanf(str, "%" Intfmt "%c", &c, &hack_char) == 1) {
       if (isointeger(term)) {
