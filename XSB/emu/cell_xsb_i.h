@@ -1,3 +1,4 @@
+#include <string.h>
 #include "register.h"
 
 static inline float getfloatval(Cell w)
