@@ -705,9 +705,10 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
     } while (1);
 
     str0 = strchr(str,'0');
-    base = 10;
+    base = 10; tmpval = 0;
     if (str0 != NULL && str0[1] != '\0' && str0[2] != '\0' &&
 	(str0==str || str0[-1] < '0')) {
+      tmpval = str0[1];
       if (str0[1] == 'x') {str0[1] = '0'; base = 16;}
       else if (str0[1] == 'o') {str0[1] = '0'; base = 8;}
       else if (str0[1] == 'b') {str0[1] = '0'; base = 2;}
@@ -722,8 +723,7 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
       else return FALSE;
     } else {
       Float float_temp;
-      //TODO: Refactor the below few lines of code once the "Floats are always double?" 
-      //situation is resolved.
+      if (tmpval) str0[1] = tmpval; // restore possible changed char
       float_temp = strtod(str,&tmpstr_interned);
       if (*str != '\0' && *tmpstr_interned == '\0')
 /***********  replaced by previous 2 lines...
