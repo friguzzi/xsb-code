@@ -20,8 +20,7 @@
 
 %:- import term_to_atom/2 from string.
 :- import member/2,memberchk/2 from basics.
-:- import check_callable/3,check_nonvar/2,domain_error/4
-   %,type_error/4
+:- import check_callable/3,check_nonvar/2,domain_error/4,type_error/4
    from error_handler.
 
 
@@ -158,7 +157,7 @@ check_installation.
 py_free(Obj):-
     (Obj = pyObj(_) ->
 	 free_python_object_int(Obj)
-      ;  abort(['Argument for free_python_object/1 is not a Python object: ',Obj]) ).
+      ;  type_error(python_object_reference,Obj,py_free/1,1)).
 
 janus_python_version(PYTHON_BIN_QUOTED).
 
@@ -200,20 +199,29 @@ obj_dir(Obj,Dir):-
 
 :- import pyObj/1 from usermod.
 py_call(pyObj(O):Call,Ret):- !,
+   writeln(py_call(pyObj(O):Call,Ret)),
     (Call = _C1:_C2 ->
 	 pcpo(pyObj(O),Call,Ret)
       ;  py_dot(pyObj(O),Call,Ret) ).
 py_call(Mod:Call,Ret):-
-    (atom(Call) -> 
-	 py_dot(Mod,Call,Ret)
-    ;    pc_eval(Call,NewCall),
-         py_func(Mod,NewCall,Ret) ).
+    (Call = _C1:_C2 ->
+	 pcpo(Mod,Call,Ret)
+      ;  py_func(Mod,Call,Ret) ).
 
 pcpo(pyObj(O),Call:Rest,Ret):- !,
     py_dot(pyObj(O),Call,O1),
-    pcpo(O1,Rest,Ret).
+   py_call(O1:Rest,Ret).
 pcpo(pyObj(O),Call,Ret):- !,
-    py_dot(pyObj(O),Call,Ret).
+   py_dot(pyObj(O),Call,Ret).
+pcpo(Mod,Call:Rest,Ret):- !,
+   (atom(Call) -> 
+      py_dot(Mod,Call,O1)
+    ; py_func(Mod,Call,O1)),
+   py_call(O1:Rest,Ret).
+pcpo(Mod,Call,Ret):- !,
+   (atom(Call) -> 
+      py_dot(Mod,Call,Ret)
+    ; py_func(Mod,Call,Ret) ).
 
 pc_eval(Call,NewCall):-
     Call =.. [Func|L],
