@@ -58,7 +58,7 @@ introductory examples.  Next is a more precise description of its
 functions and its current limitations followed by applications and
 further examples.
 
-%\input{janus-plg-config.tex}
+\input{janus-plg-config.tex}
 
 \section{Introductory Examples}
 
@@ -721,6 +721,23 @@ viewpoint of Python types as follows:
 %all be redefined my modifying the file {\tt xsbpy\_defs.h} in the {\tt
 %  xsbpy} directory.
 
+\subsection{The Prolog-Python API}
+
+The philosophy of \janusplg{} is that errors that occur within Prolog
+execution are raised as Prolog exceptions, while those that occur
+during Python execution are raised as Python exceptions.  This means
+that
+\begin{itemize}
+  \item during a call to, say {\tt py\_func(Mod,Func,Ret,Opts)}, any
+    exception raised in checking the instantiation, types, and domains
+    of its arguments are Prolog errors.  This behavior and the errors
+    thrown are similar to predicates written entirely in Prolog.
+  \item 
+\end{itemize}
+
+various aruments and that Python
+function call and in translating {\tt Func} to Python
+
 \section{The Prolog-Python API}
 
 \begin{description}
@@ -813,45 +830,45 @@ Currently supported options are:
 \ei
 \item {\tt Module} cannot be found in the current Python search paths:
 \bi
-\item {\tt existence\_error}
+\item {\tt python\_error}
 \ei
-\item {\tt Function} is not a callable term
+\item {\tt Function} is not a Prolog term of type {\tt callable}
 \bi
 \item {\tt type\_error}
   \ei
-\item {\tt Function} does not correspond to a Python function in {\tt Module}
+\item {\tt Function} does not correspond to a callabe Python function in {\tt Module}
 \bi
-\item {\tt existence\_error}
+\item {\tt python\_error}
   \ei
 \item When translating an argument of function:
   \begin{itemize}
   \item A set ({\tt py\_set/1}) term has an argument that is not a list
     \begin{itemize}
-    \item {\tt type\_error}
+    \item {\tt domain\_error}
     \end{itemize}
   \item The list in a set term ({\tt py\_set/1} contains a non-hashable term
     \begin{itemize}
-    \item {\tt type\_error}
+    \item {\tt domain\_error}
     \end{itemize}
   \item A dictionary ({\tt {}/1}) term has an argument that is not a
       comma-list
     \begin{itemize}
-    \item {\tt type\_error}
+    \item {\tt domain\_error}
     \end{itemize}
   \item An element of a dictionary comma-list is not of the form {\tt
     :/2} or the structure contains a non-hashable key (first argument)
     \begin{itemize}
-    \item {\tt type\_error}
+    \item {\tt domain\_error}
     \end{itemize}
   \item An argument of {\tt Function} is otherwise non-translatable to Python
     \begin{itemize}
-    \item {\tt misc\_error}
+    \item {\tt domain\_error}
     \end{itemize}
   \end{itemize}
 \end{itemize}
 %
-  In addition, errors thrown by Python are caught by XSB and re-thrown
-  as {\tt misc\_error} errors.
+  In addition, an error $S$ hrown by Python are caught by XSB and re-thrown
+  with the tag {\tt python\_error($E$)}
 
 \indourrepeatjnsitem{py\_dot(+ObjRef,+MethAttr,?Ret,+Prolog\_Opts)}{py\_dot/4}
 \indourjnsitem{py\_dot(+ObjRef,+MethAttr,?Ret)}{py\_dot/3}
@@ -920,8 +937,8 @@ paths is as with {\tt py\_func/[3,4]}.
 
 %\end{itemize}
 %
-In addition, errors thrown by Python are
-  caught by XSB and re-thrown as {\tt misc\_error} errors.
+In addition, if an error $E$ is thrown by Python are
+  caught by XSB and re-thrown as an error with tag {\tt python\_error($E$)}.
 
   \indourjnsitem{py\_setattr(+ModObj,+Attr,+Val)}{py\_setattr/3}
     %
