@@ -22,7 +22,7 @@
 read_rdf(File,Format,TripleList):-
     member(Format,[turtle,nt,jsonld]),!,
     writeln(py_func(xp_rdflib,rdflib_parse(File,format=Format),TripleList)),
-    py_func(xp_rdflib,rdflib_parse(File,format=Format),TripleList),
+    py_func(jns_rdflib,rdflib_parse(File,format=Format),TripleList),
     length(TripleList,Len),write(Len),writeln(' lines read.').
 read_rdf(File,nquads,TripleList):- !,
     py_func(xp_rdflib,rdflib_parse_nquads(File),TripleList),
