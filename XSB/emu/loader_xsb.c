@@ -95,19 +95,19 @@ extern char *expand_filename(char *filename);
 #define st_pscname(i_addr) (cell(i_addr) = \
 	(Cell) get_name((Psc)(*reloc_table[cell(i_addr)])))
 
-#define gentry(opcode, arg1, arg2, ep) {	\
+#define gentry(opcode, arg1, arg2, ep) do {	\
         (cell_opcode(ep)) = (opcode);      	\
         (cell_operand1(ep)) = 0;              	\
         (cell_operand2(ep)) = 0;              	\
         (cell_operand3(ep)) = (arg1);         	\
 	(ep)++;				 	\
         cell(ep) = (Cell) (arg2);        	\
-        (ep)++; }
+        (ep)++; } while (0)
 
-#define gentabletry(opcode, arg1, arg2, arg3, ep)     { \
+#define gentabletry(opcode, arg1, arg2, arg3, ep)  do { \
         gentry(opcode, arg1, arg2, ep);  		\
         cell(ep) = (Cell) (arg3);          		\
-        (ep)++; }
+        (ep)++; } while (0)
 
 #define reloc_addr(offset, base) ((CPtr)((offset)<0 ? \
        		(pb)&fail_inst : ((pb)(base))+(Integer)(offset)*ZOOM_FACTOR))
@@ -120,16 +120,23 @@ extern char *expand_filename(char *filename);
 #define get_obj_word(x)		(get_obj_data((x),OBJ_WORD_SIZE))
 #define get_obj_string(x,len)	(get_obj_data((x),(len)))
 
-#define get_obj_word_bb(x)  \
-  {Integer dummy; dummy = get_obj_word(x) ; fix_bb(x) ; \
-    SQUASH_LINUX_COMPILER_WARN(dummy) ; }
-#define get_obj_word_bbsig(x) {dummy = get_obj_word(x) ; fix_bb4(x) ;\
-			       *(Cell *)(x) = makeint(*(int *)(x));}
+#define get_obj_word_bb(x)				   \
+  do {Integer dummy; dummy = get_obj_word(x) ; fix_bb(x) ; \
+    SQUASH_LINUX_COMPILER_WARN(dummy) ; } while (0)
+#define get_obj_word_bbsig(x)				\
+  do {tempInt Integer;					\
+    dummy = get_obj_word(x) ; fix_bb4(x) ;		\
+    tempInt = makeint(*(int *)(x));			\
+    memcpy(x,&tempInt,sizeof(tempInt));			\
+  } while (0)
+//    *(Cell *)(x) = makeint(*(int *)(x));} while (0)
 #define get_obj_word_bbsig_notag(x) \
-  {Integer dummy; dummy = get_obj_word(x) ; fix_bb4(x) ;      \
-    *(Integer *)(x) = *(int *)(x);					\
-    SQUASH_LINUX_COMPILER_WARN(dummy) ; }
-                   
+  do {Integer tempInt;							\
+    Integer dummy; dummy = get_obj_word(x) ; fix_bb4(x) ;		\
+    tempInt = *(int *)(x);						\
+    memcpy(x,&tempInt,sizeof(tempInt));					\
+    SQUASH_LINUX_COMPILER_WARN(dummy) ; } while (0)
+//    *(Integer *)(x) = *(int *)(x);                   
 
 /* === local declarations =============================================	*/
 /* TLS: I think that l is the length of the indextab bucket chain when
@@ -232,11 +239,14 @@ inline static void inserth(CPtr label, struct hrec *bucket)
 
 /*----------------------------------------------------------------------*/
 
+
 UInteger float_val_to_hash(Float Flt) {
   //  Float Fltval = Flt;
 #ifndef FAST_FLOATS
-  return ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | (FLOAT_HIGH_16_BITS(Flt))) ^
-    FLOAT_MIDDLE_24_BITS(Flt) ^ FLOAT_LOW_24_BITS(Flt);
+  UInteger UIFlt;
+  memcpy(&UIFlt,&Flt,sizeof(UIFlt));
+  return ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | (FLOAT_HIGH_16_BITS(UIFlt))) ^
+    FLOAT_MIDDLE_24_BITS(UIFlt) ^ FLOAT_LOW_24_BITS(UIFlt);
 #else
   return 0;  /* never called */
 #endif
@@ -679,7 +689,8 @@ unsigned int read_magic(FILE *fd)
   unsigned int num;
 
   if (get_obj_word(&num) < 4) return 0;
-  fix_bb4((byte *)&num);
+  //  fix_bb4((byte *)&num);
+  fix_bb4(&num);
   return num;
 }
 

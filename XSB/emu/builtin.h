@@ -129,6 +129,7 @@
 
 #define GET_DATE                 80
 #define STAT_WALLTIME            81
+#define PROLOG_DB_BI		 82
 
 #define PSC_FIND		 97
 #define PSC_INIT_INFO		 98

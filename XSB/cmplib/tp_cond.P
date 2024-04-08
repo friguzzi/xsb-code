@@ -27,8 +27,8 @@
 /*======================================================================*/
 /* tvar_hold(+TestGoal,	+HoldRegsIn, -HoldRegsOut)			*/
 /*	It collects all the temp vars used in the test and append	*/
-/*	their id in HoldRegs, since these temp vars should not be	*/
-/*	released in the "then" part until the next chunk.		*/
+/*	their Locations in HoldRegs, since these temp vars should not	*/
+/*	be released in the "then" part until the next chunk.		*/
 /*======================================================================*/
 :- mode tvar_hold(?,?,?).  % HoldRegsIn can be variable!
 tvar_hold(and(Goal,Goals), HoldIn, HoldOut) :-
@@ -53,7 +53,15 @@ tvar_hold_arg(structure(_,Args), HoldIn, HoldOut) :-
 	tvar_hold_args(Args, HoldIn, HoldOut).
 tvar_hold_arg(varocc(Vid,Prag), HoldIn, HoldOut) :-
 	vprag_type(Prag, Type),
-	( Type == t -> check_integer(Vid,'tvar_hold_arg/3',1),HoldOut=[Vid|HoldIn] ; HoldOut=HoldIn ).
+	( Type == t
+	 -> check_integer(Vid,'tvar_hold_arg/3',1),
+	    vprag_loc(Prag,Loc),
+	    (integer(Loc)
+	     -> HoldOut=[Loc|HoldIn]  % must hold Loc! not Vid
+	     ;  HoldOut=HoldIn
+	    )
+	 ;  HoldOut=HoldIn
+	).
 
 /*======================================================================*/
 /* tcond(+TestGoal, +SuccessLabel, +FailLabel, 				*/

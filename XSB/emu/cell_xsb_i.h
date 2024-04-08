@@ -1,3 +1,4 @@
+#include <string.h>
 #include "register.h"
 
 static inline float getfloatval(Cell w)
@@ -37,14 +38,16 @@ static inline Float make_float_from_ints(UInteger high, UInteger low)
 
 static inline void bld_boxedfloat(CTXTdeclc CPtr addr, Float value)
 {
-    Float tempFloat = value;
+    UInteger tempUIFloat;
+    //    Float tempFloat = value;
+    memcpy(&tempUIFloat,&value,sizeof(tempUIFloat));
     cell(addr) = makecs(hreg);
     bld_functor(hreg,box_psc);
-    bld_int(hreg+1,((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempFloat) ));
-    //    printf("high %x %x %x",FLOAT_HIGH_16_BITS(tempFloat),
-    //	   FLOAT_MIDDLE_24_BITS(tempFloat),FLOAT_LOW_24_BITS(tempFloat));
-    bld_int(hreg+2,FLOAT_MIDDLE_24_BITS(tempFloat));
-    bld_int(hreg+3,FLOAT_LOW_24_BITS(tempFloat));
+    bld_int(hreg+1,((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempUIFloat) ));
+    //    printf("high %x %x %x",FLOAT_HIGH_16_BITS(tempUIFloat),
+    //	   FLOAT_MIDDLE_24_BITS(tempUIFloat),FLOAT_LOW_24_BITS(tempUIFloat));
+    bld_int(hreg+2,FLOAT_MIDDLE_24_BITS(tempUIFloat));
+    bld_int(hreg+3,FLOAT_LOW_24_BITS(tempUIFloat));
     hreg += 4;
 }
 

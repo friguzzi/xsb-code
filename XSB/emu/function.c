@@ -435,19 +435,55 @@ int xsb_eval_bin_op(char *op, Cell expr, FltInt fiop1, FltInt fiop2, FltInt *val
   case 'r':
     if (strcmp(op,"rem")==0) { /* % is C rem */
       if (isfiint(fiop1)) {
-	if (isfiint(fiop2)) set_int_val(value,fiint_val(fiop1)%fiint_val(fiop2));
-	else set_int_val(value,fiint_val(fiop1)%(Integer)fiflt_val(fiop2));
+	if (isfiint(fiop2)) {
+	  if (fiint_val(fiop2) != 0) {
+	    set_int_val(value,fiint_val(fiop1)%fiint_val(fiop2));
+	  } else {
+	    err_handle(CTXTc ZERO_DIVIDE, 2,
+		       "arithmetic expression involving rem/2",
+		       2, "non-zero number", makeint(0));
+	  }
+	}
+	else {
+	  if ((Integer)fiflt_val(fiop2) != 0) {
+	    set_int_val(value,fiint_val(fiop1)%(Integer)fiflt_val(fiop2));
+	  } else {
+	    err_handle(CTXTc ZERO_DIVIDE, 2,
+		       "arithmetic expression involving rem/2",
+		       2, "non-zero number", makeint(0));
+	  }
+	}
       } else
-	if (isfiint(fiop2)) set_int_val(value,(Integer)fiflt_val(fiop1)%fiint_val(fiop2));
-	else set_int_val(value,(Integer)fiflt_val(fiop1)%(Integer)fiflt_val(fiop2));
+	if (isfiint(fiop2)) {
+	  printf("%lld rem %lld\n",fiint_val(fiop1),fiint_val(fiop2));
+	  if (fiint_val(fiop2) != 0) {
+	    set_int_val(value,(Integer)fiflt_val(fiop1)%fiint_val(fiop2));
+	  } else {
+	    err_handle(CTXTc ZERO_DIVIDE, 2,
+		       "arithmetic expression involving rem/2",
+		       2, "non-zero number", makeint(0));
+	  }
+	}
+	else {
+	  if (fiflt_val(fiop2) != 0.0) {
+	    set_int_val(value,(Integer)fiflt_val(fiop1)%(Integer)fiflt_val(fiop2));
+	  } else {
+	    err_handle(CTXTc ZERO_DIVIDE, 2,
+		       "arithmetic expression involving rem/2",
+		       2, "non-zero number", makeint(0)); //really float 0, but....
+	  }
+	}
       break;
     } else set_and_return_fail(value);
     
   case 'd':
     if (strcmp(op,"div")==0) {
-      if (isfiint(fiop1) && isfiint(fiop2)) {
+      if (isfiint(fiop1) && isfiint(fiop2) && fiint_val(fiop2) != 0) {
+	printf("div by %lld\n",fiint_val(fiop2));
 	set_int_val(value,(Integer)floor((Float)fiint_val(fiop1) / (Float)fiint_val(fiop2)));
-      } else arithmetic_abort(CTXTc get_str_arg(expr,2),"div",get_str_arg(expr,1));
+      } else {
+	arithmetic_abort(CTXTc get_str_arg(expr,1),"div",get_str_arg(expr,2));
+      }
       break;
     } else set_and_return_fail(value);
     

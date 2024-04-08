@@ -911,12 +911,14 @@ Cell read_canonical_return_var(CTXTdeclc int code) {
 #ifndef FAST_FLOATS
 static inline void bld_boxedfloat_here(CTXTdeclc CPtr *h, CPtr addr, Float value)
 {
+    UInteger tempUIFloat;
     Float tempFloat = value;
+    memcpy(&tempUIFloat,&value,sizeof(tempUIFloat));
     new_heap_functor((*h),box_psc);
-    bld_int(*h,((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempFloat) ));
+    bld_int(*h,((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempUIFloat) ));
     (*h)++;
-    bld_int(*h,FLOAT_MIDDLE_24_BITS(tempFloat)); (*h)++;
-    bld_int(*h,FLOAT_LOW_24_BITS(tempFloat)); (*h)++;
+    bld_int(*h,FLOAT_MIDDLE_24_BITS(tempUIFloat)); (*h)++;
+    bld_int(*h,FLOAT_LOW_24_BITS(tempUIFloat)); (*h)++;
     cell(addr) = makecs((*h)-4);
 }
 #else

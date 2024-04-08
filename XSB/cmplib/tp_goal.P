@@ -120,7 +120,7 @@ tputstring([I|String],N,[putlist(N),bldnumcon(I)|Pil0],Pil) :-
 tputstring0([],[bldnil|Pil],Pil).
 tputstring0([I|String],[bldtvar_list_numcon(0,I1,I2)|Pil0],Pil) :-
 	I1 is I >> 8,
-	I2 is I /\ 16'ff',
+	I2 is I /\ 16'ff',  %'
 	tputstring0(String,Pil0,Pil).
 
 %:- import tell/1, telling/1, told/0, write/1, nl/0 from standard.
@@ -153,11 +153,15 @@ temp_and_releasable(Prag,Loc) :-
 /*	Generates head-get* instructions for the case where no or hash	*/
 /*	based indexing is used.						*/
 /*======================================================================*/
+:- import release/3 from tp_var.
 :- mode tgetpar(?,+,?,?,?,?).
-tgetpar(integer(V), N, [getnumcon(N,V)|Pil], Pil, Tin, Tin).
+tgetpar(integer(V), N, [getnumcon(N,V)|Pil], Pil, Tin, Tout) :-
+    release(N,Tin,Tout).
 %%tgetpar(real(V), N, [getfloat(N,V)|Pil], Pil, Tin, Tin).
-tgetpar(real(V), N, [getdfloat(N,V)|Pil], Pil, Tin, Tin).
-tgetpar(constant(Sym), N, [getcon(N,Sym)|Pil], Pil, Tin, Tin).
+tgetpar(real(V), N, [getdfloat(N,V)|Pil], Pil, Tin, Tout) :-
+    release(N,Tin,Tout).
+tgetpar(constant(Sym), N, [getcon(N,Sym)|Pil], Pil, Tin, Tout) :- 
+    release(N,Tin,Tout).
 tgetpar(string(String), N, Pil0, Pil, Tin, Tin) :-
 	getreg(Tin,TReg),
 	tgetstring(String,N,TReg,Pil0,Pil).

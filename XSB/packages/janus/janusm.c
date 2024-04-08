@@ -168,9 +168,7 @@ int prlist2pyList(CTXTdeclc prolog_term V, PyObject *pList, int count)
 	return TRUE;
 }
 
-// Assumes type hecking is done on Prolog side
-// Should be a decrement, but I got into  trouble that way.
-void free_python_object_int(CTXTdeclc prolog_term prTerm) {
+DllExport void free_python_object_int(CTXTdeclc prolog_term prTerm) {
   PyObject *pyObj;
   convert_prObj_pyObj(CTXTc prTerm, &pyObj);
   if (PyLong_Check(pyObj)) {

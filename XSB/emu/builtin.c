@@ -252,7 +252,9 @@ Cell pflags[MAX_PRIVATE_FLAGS];		  /* Thread private flags */
 #endif
 
 /* ------- utility routines -------------------------------------------	*/
-
+int next_prefix_symbol(prolog_term, prolog_term, prolog_term);
+prolog_term lookup_radix_dict_det(prolog_term, prolog_term);
+UInteger hash_key(Cell term);
 
 #include "ptoc_tag_xsb_i.h"
 
@@ -1236,6 +1238,7 @@ void init_builtin_table(void)
 
   set_builtin_table(GET_DATE, "get_date");
   set_builtin_table(STAT_WALLTIME, "stat_walltime");
+  set_builtin_table(PROLOG_DB_BI, "prolog_db_bi");
 
   set_builtin_table(PSC_INIT_INFO, "psc_init_info");
   set_builtin_table(PSC_GET_SET_ENV_BYTE, "psc_get_set_env_byte");
@@ -1635,6 +1638,7 @@ int builtin_call(CTXTdeclc byte number)
     }
     termpsc = term_psc(term);
     modname = ptoc_string(CTXTc 1);
+    //    if (!strcmp(modname,"user")) { modname = "usermod"; }
     if (!strncmp(modname,"usermod",7)) {
       //	/*||!strncmp(modname,"usermod(",strlen("usermod(")*/
       import_from_usermod = TRUE;
@@ -2029,6 +2033,21 @@ int builtin_call(CTXTdeclc byte number)
     value = (int) ((real_time() - realtime_count_gl) * 1000);
     ctop_int(CTXTc 1, value);
     break;
+  }
+  case PROLOG_DB_BI: {
+    switch (ptoc_int(CTXTc 1)) {
+    case 1:   // R1=+1, R2=+Term, R3=-Key, R4=-Remaining
+      return next_prefix_symbol(ptoc_tag(CTXTc 2),
+				ptoc_tag(CTXTc 3),
+				ptoc_tag(CTXTc 4));
+    case 2:   // R1=+2, R2=+Key, R3=-RTL, R4=Tree
+      return unify(ptoc_tag(CTXTc 3),
+		   lookup_radix_dict_det(ptoc_tag(CTXT 2),ptoc_tag(CTXTc 4)));
+    case 3:   // R1=+3, R2=+Term, R3=-HashCode
+      return unify(ptoc_tag(CTXTc 3),makeint(hash_key(ptoc_tag(CTXTc 2))));
+    default: xsb_abort("ILLEGAL PROLOG_DB Builtin selector integer: %s\n",
+		       ptoc_int(CTXTc 1));
+    }
   }
   case XWAM_STATE: { /* return info about xwam state: R1: +InfoCode, R2: -ReturnedValue */
     switch (ptoc_int(CTXTc 1)) { /* extend as needed */
@@ -3190,6 +3209,7 @@ case WRITE_OUT_PROFILE:
   {
     char * operator = ptoc_string(CTXTc 1);
     Float result;
+    UInteger UIresult;
     switch((*operator))
     {
     case '+':
@@ -3224,9 +3244,11 @@ case WRITE_OUT_PROFILE:
 	bind_boxedfloat(((CPtr)addr), result);
       } else {
 	result = ptoc_float(CTXTc 5);
-	ctop_int(CTXTc 2, (FLOAT_HIGH_16_BITS(result)));
-	ctop_int(CTXTc 3, (FLOAT_MIDDLE_24_BITS(result)));
-	ctop_int(CTXTc 4, (FLOAT_LOW_24_BITS(result)));
+	memcpy(&UIresult,&result,sizeof(UIresult));
+
+	ctop_int(CTXTc 2, (FLOAT_HIGH_16_BITS(UIresult)));
+	ctop_int(CTXTc 3, (FLOAT_MIDDLE_24_BITS(UIresult)));
+	ctop_int(CTXTc 4, (FLOAT_LOW_24_BITS(UIresult)));
       }
       return TRUE;
     }
@@ -3235,9 +3257,10 @@ case WRITE_OUT_PROFILE:
         xsb_abort("[float_op] unsupported operator: %s\n", operator);
         return FALSE;
     }
-    ctop_int(CTXTc 8, ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(result) ));
-    ctop_int(CTXTc 9, (FLOAT_MIDDLE_24_BITS(result)));
-    ctop_int(CTXTc 10, (FLOAT_LOW_24_BITS(result)));
+    memcpy(&UIresult,&result,sizeof(UIresult));
+    ctop_int(CTXTc 8, ((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(UIresult) ));
+    ctop_int(CTXTc 9, (FLOAT_MIDDLE_24_BITS(UIresult)));
+    ctop_int(CTXTc 10, (FLOAT_LOW_24_BITS(UIresult)));
     return TRUE;
   }
 #endif
@@ -3958,6 +3981,126 @@ prolog_term build_xsb_backtrace(CTXTdecl) {
   return backtrace;
 }
 
+/*----------------------------------------------------------------------*/
+/* C functions to speed up prolog_db operations DSW */
+/* next_prefix_symbol([Term|Terms],Key,NTerms) :-
+    (var(Term)
+     ->	NTerms = Terms,
+	Key = Term
+     ; atomic(Term)
+     ->	NTerms = Terms,
+	Key = Term
+     ; varno(Term)
+     -> NTerms = Terms,
+	Key = Term
+     ;  functor(Term,Mod,Fun,Ari),
+	Key = functor(Mod,Fun,Ari),
+	Term =.. [Fun|SubTerms],
+	append(SubTerms,Terms,NTerms)
+    ).
+****/
+
+Psc dvard_psc = 0;
+Psc functor3_psc = 0;
+Psc rt_psc = 0;
+
+void init_pdb_pscs() {
+  int new;
+  dvard_psc = pair_psc(insert("_$Var$",1,global_mod,&new));
+  functor3_psc = pair_psc(insert("functor",3,global_mod,&new));
+  rt_psc = pair_psc(insert("rt",4,global_mod,&new));
+}  
+
+
+int next_prefix_symbol(prolog_term aterms, prolog_term key, prolog_term nterms) {
+  prolog_term term, terms;
+  if (dvard_psc == 0) init_pdb_pscs();
+  XSB_Deref(aterms);
+  term = get_list_head(aterms);
+  XSB_Deref(term);
+  terms = get_list_tail(aterms);
+  if (isref(term) /* var(Term) */ ||
+      (isatomic(term) || isboxedinteger(term) || isboxedfloat(term)) /* atomic(Term) */ ||
+      (isconstr(term) && get_str_psc(term)==dvard_psc &&
+       isinteger(get_str_arg(term,1))) /* varno(Term) */
+      ) {
+    return (unify(key,term) && unify(nterms,terms));
+  } else {
+    /* functor(Term,Mod,Fun,Ari) */
+    /* Key = functor(Mod,Fun,Ari) */
+    int arity;
+    sreg = hreg;
+    new_heap_functor(hreg,functor3_psc);
+    if (islist(term)) {
+      arity = 2;
+      follow(hreg) = usermod_cell; hreg++;
+      follow(hreg) = list_dot_cell; hreg++;
+    } else {
+      Psc funpsc = get_str_psc(term);
+      char *name = get_name(funpsc);
+      char *modname = get_name(get_mod_for_psc(funpsc));
+      arity = get_arity(funpsc);
+      bld_string(hreg,modname); hreg++;
+      bld_string(hreg,name); hreg++;
+    }
+    bld_int(hreg,arity); hreg++;
+    if (!unify(key,makecs(sreg))) return FALSE;
+    /* append(SubTerms,Terms,NTerms) */
+    sreg = hreg;
+    if (arity > 0) {
+      if (islist(term)) {
+	follow(hreg) = get_list_head(term);
+	hreg += 2;
+	follow(hreg-1) = makelist(hreg);
+	follow(hreg) = get_list_tail(term);
+	hreg += 2;
+      } else {
+	int i;
+	for (i = 1 ; i <= arity ; i++) {
+	  follow(hreg) = get_str_arg(term,i); 
+	  hreg += 2;
+	  follow(hreg-1) = makelist(hreg);
+	}
+      }
+      follow(hreg-1) = terms;
+      return unify(nterms,makelist(sreg));
+    } else {
+      return unify(nterms,terms);
+    }
+  }
+}
+
+const int pdb_ht_size = 536870027;
+
+UInteger hash_key(Cell term) {
+  if (dvard_psc == 0) init_pdb_pscs();
+  XSB_Deref(term);
+  if (isconstr(term) && get_str_psc(term) == functor3_psc) {
+    UInteger hashcode0;
+    hashcode0 = ihash(det_val_to_hash(get_str_arg(term,2)),pdb_ht_size);
+    return ((hashcode0 + int_val(get_str_arg(term,3))) % pdb_ht_size);
+  } else {  /* atomic of dvar */
+    return ihash(det_val_to_hash(term),pdb_ht_size);
+  }
+}
+
+
+prolog_term lookup_radix_dict_det(prolog_term key, prolog_term rt) {
+  UInteger hashcode;
+  Integer index;
+
+  if (!rt_psc) init_pdb_pscs();
+
+  XSB_Deref(rt);
+  hashcode = hash_key(ptoc_tag(CTXTc 2));
+  while (get_str_psc(rt) == rt_psc) {
+    index = (hashcode & 3) + 1;
+    hashcode = hashcode >> 2;
+    rt = get_str_arg(rt,index);
+    XSB_Deref(rt);
+  }
+  return rt;
+}
 
 /*------------------------- end of builtin.c -----------------------------*/
 

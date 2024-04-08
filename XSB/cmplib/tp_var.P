@@ -171,14 +171,13 @@ hold(N, In, Out) :-
 
 :- index release/3-2.
 
-/* Disturbing property... If we delete all copies of the register here
-in release/3, instead of just the first as here, then it doesn't pass
-the testsuite, several ai_tests in particular.  Note the sort above in
-getreg is OK, since it doesn't return the de-duplicated list it
-generates.  Next time I'm here, I should try to figure out why this
-is.... dsw - look at Kostis's comment in release_if_done/6. */
+/* Note we cannot delete all copies of the register here in release/3,
+instead of just the first as here. A register may be in the reserved
+list multiple times if that register contains the value of multiple
+variables.  So we need to keep duplicates! */
 
 :- mode release(?,?,?).
+:- index release/3-2.
 release(_, [], []).
 release(N, [Reg|R], Rest) :-
 	( N =:= Reg -> Rest = R ; Rest = [Reg|T], release(N, R, T) ).
@@ -206,6 +205,17 @@ choose_reg_not_in([UReg|STRList],N,Reg) :-
 		choose_reg_not_in(STRList,N1,Reg)
 	 ;	Reg = N
 	).
+
+/***
+%% get an avaiable register. Don't take a HoldR reg. (seems not nec?)
+%% DSW: not clear why don't seem to have to exclude Held regs
+:- mode getreg(?,?,?).  % 1st (list) is ground, but sometimes (rarely) Tin is open.
+getreg(TRList,HoldR,Reg) :-
+    check_ground(TRList,'getreg/2',1),
+    check_ground(HoldR,'getreg/2',2),
+    append(HoldR,TRList,THRList),
+    sort(THRList,STHRList),
+    choose_reg_not_in(STHRList,1,Reg). ***/
 
 /****getreg(TRList, Reg) :-
 	computil_choose(1,Reg),
@@ -307,8 +317,8 @@ release_if_done(Vid,R,VPrag,HoldR,Tin,Tout) :-
    %write('  Tin= '),write(Tin),write('  Tout= '),write(Tout),nl,told,tell(X).
 release_if_done(_,_,_,_,T,T).
 
-release_if_done1(Vid,R,HoldR,Tin,Tout,L,Occ) :-
-	\+ memberchk(Vid,HoldR),
+release_if_done1(_Vid,R,HoldR,Tin,Tout,L,Occ) :-
+	\+ memberchk(R,HoldR),
 	(Occ == l
 	 ->	release(R,Tin,Tmid),
 		(R =:= L

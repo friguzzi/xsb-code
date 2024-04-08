@@ -292,11 +292,13 @@ copy_again : /* for tail recursion optimisation */
     case XSB_FLOAT :
 #ifndef FAST_FLOATS
       {
+	UInteger tempUIFloat;
 	Float tempFloat = getfloatval(from);
+	memcpy(&tempUIFloat,&tempFloat,sizeof(tempUIFloat));
 	bld_functor((*h),box_psc);
-	bld_int(((*h)+1),((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempFloat) ));
-	bld_int(((*h)+2),FLOAT_MIDDLE_24_BITS(tempFloat));
-	bld_int(((*h)+3),FLOAT_LOW_24_BITS(tempFloat));
+	bld_int(((*h)+1),((ID_BOXED_FLOAT << BOX_ID_OFFSET ) | FLOAT_HIGH_16_BITS(tempUIFloat) ));
+	bld_int(((*h)+2),FLOAT_MIDDLE_24_BITS(tempUIFloat));
+	bld_int(((*h)+3),FLOAT_LOW_24_BITS(tempUIFloat));
 	cell(to) = makecs((*h));
 	(*h) += 4;
       }

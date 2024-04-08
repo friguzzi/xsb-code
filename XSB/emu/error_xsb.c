@@ -367,7 +367,7 @@ void call_conv xsb_domain_error(CTXTdeclc char *valid_domain,Cell culprit,
   xsb_throw_internal(CTXTc ball_to_throw,ball_len);
 }
 
-void call_conv xsb_domain_error_vargs(CTXTdeclc char *valid_domain,Cell culprit, char *description, ...) {
+DllExport void call_conv xsb_domain_error_vargs(CTXTdeclc char *valid_domain,Cell culprit, char *description, ...) {
   char message[MAXBUFSIZE];
   va_list args;
   prolog_term ball_to_throw;
@@ -1328,7 +1328,9 @@ DllExport void arithmetic_abort(CTXTdeclc Cell op1, char *OP, Cell op2) {
     } else if (!isointeger(op2)) {
       xsb_type_error_vargs(CTXTc "integer",op2, "NULL", "Wrong type in evaluable function %s/2 (Goal: %s(%s,%s)",
 			   OP,OP,str_op3.string,str_op4.string);
-    }
+    } else if (isointeger(op2) && oint_val(op2) == 0) {
+      xsb_domain_error_vargs(CTXTc "non-zero",op2,"divide by zero");
+    } else xsb_evaluation_error(CTXTc EVALUATION_DOMAIN_ERROR,"in expression evaluation");
   }
   else { // Delay on Exception 
     undefPair = insert("floundered_undefined",1,pair_psc(insert_module(0,"xsbbrat")),&isNew); 
@@ -1562,7 +1564,7 @@ void err_handle(CTXTdeclc int description, int arg, char *f,
   case ZERO_DIVIDE:
     snprintf(message,ERRMSGLEN,
 	    "! %s error in %s\n! %s expected, but %lx found",
-             err_msg_table[description], f, expected, (unsigned long) found);
+             err_msg_table[description], f, expected, (unsigned long) int_val(found));
     break;
   default:
     snprintf(message,ERRMSGLEN,

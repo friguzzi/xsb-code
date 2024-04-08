@@ -78,18 +78,22 @@ typedef struct text_segment text_seg, seg_hdr, *pseg ;
 /*									*/
 /************************************************************************/
 
-#define fix_bb(lptr) (cell((CPtr)(lptr)) = \
+#define fix_bb(lptr) do {cell(lptr) =				\
 		    (((((Cell)(*(pb)(lptr)) << 8  | (Cell)(*((pb)(lptr)+1)))\
-           << 8) | (Cell)(*((pb)(lptr)+2))) << 8) | (Cell)(*((pb)(lptr)+3)) \
-		     )
+		       << 8) | (Cell)(*((pb)(lptr)+2))) << 8) | (Cell)(*((pb)(lptr)+3)); \
+  			} while (0)
 
 /* experimental */
-#define fix_bb4(lptr) (*(unsigned int *)(lptr) = \
-		       (((((unsigned int)(*(pb)(lptr)) \
-			<< 8  | (unsigned int)(*((pb)(lptr)+1)))\
-			<< 8) | (unsigned int)(*((pb)(lptr)+2)))\
-			<< 8) | (unsigned int)(*((pb)(lptr)+3)) \
-		       )
+/*#define fix_bb4(lptr) do {*(unsigned int *)(lptr) =	\ */
+#define fix_bb4(lptr) do { \
+    unsigned int temp;						       \
+    temp =							       \
+      (((((unsigned int)(*(pb)(lptr))				       \
+	  << 8  | (unsigned int)(*((pb)(lptr)+1)))		       \
+	 << 8) | (unsigned int)(*((pb)(lptr)+2)))		       \
+       << 8) | (unsigned int)(*((pb)(lptr)+3));			       \
+    memcpy(lptr,&temp,sizeof(temp));				       \
+  } while (0)
 
 /* === functions used in other parts of the system ====================== */
 

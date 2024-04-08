@@ -38,3 +38,4 @@
 :- import tgetpar/6 from tp_goal.
 :- import eval/2 from eval.
 :- import check_integer/3 from error_handler.
+:- import append/3, member/2 from basics.

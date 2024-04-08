@@ -858,11 +858,6 @@ char *init_para(CTXTdeclc int flag, int argc, char *argv[]) {
 	   xsb_warn(CTXTc "Missing command line goal");
       }
 
-      if (strchr(tmp_goal, '.') == NULL) {
-	xsb_initialization_exit("\n\nTerminating `.' missing in command line goal:\n\t`%s'",
-		 tmp_goal);
-      }
-
       if ((strlen(cmd_line_goal) + strlen(tmp_goal)) >= MAXBUFSIZE)
 	xsb_initialization_exit("\n\nCommand line goal is too long (> %d)\n\n", MAXBUFSIZE);
       strcat(cmd_line_goal, " ");
@@ -894,6 +889,12 @@ char *init_para(CTXTdeclc int flag, int argc, char *argv[]) {
     } /* switch */
   } /* for */
   /* Done with command line arguments */
+
+  if (cmd_line_goal[0] != '\0' && strchr(cmd_line_goal, '.') == NULL) {
+    xsb_initialization_exit("\n\nTerminating `.' missing in command line goal:\n\t`%s'",
+			    cmd_line_goal);
+  }
+
 
   /* User home dir or install dir, if home is undefined */
   flags[USER_HOME] = (Cell) mem_alloc(strlen(user_home_gl) + 1,OTHER_SPACE);
