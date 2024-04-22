@@ -959,6 +959,15 @@ trie_retract_all(X) :- retractall(X).
 
 /*======================================================================*/
 /* builtins to get (and change) trie nodes - they belong somewhere else */
+/*									*/
+/* NOTE: These routines call XSB's underlying simplification C		*/
+/* routines.  They do Well-Founded simplification, and *not* Stable	*/
+/* Model simplification and so cannot be used for that purpose.  A	*/
+/* particular example of the difference is that WF simplification	*/
+/* deletes all rules whose head is found to be true, leaving only a	*/
+/* fact.  But SM simplification must keep alternate rules since they	*/
+/* may impose future constraints.					*/
+/*									*/
 /*======================================================================*/
 
 :- mode force_answer_true(?).
@@ -972,6 +981,7 @@ force_answer_true(Goal) :-
 		)
 	).
 
+% could probably improve efficiency by not fully retrieving all DLs
 :- mode force_answer_false(?).
 force_answer_false(Goal) :-
 	findall(p(Leaf,DLs),get_leaves_and_dls(Goal,Leaf,DLs),Leaves),
