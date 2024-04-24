@@ -80,19 +80,24 @@
 	  sprintf(msg,"Illegal cut over incomplete tabled predicate: %s/%d, from within a call to %s/%d", \
 		    get_name(psc), get_arity(psc),          \
 		    get_name(call_psc), get_arity(call_psc));          \
-	  xsb_table_error(CTXTc msg);  \
+  xsb_table_error_vargs(CTXTc "NULL", \
+				"Illegal cut over incomplete tabled subgoal: %s, from within a call to %s/%d", \
+				forest_log_buffer_1->fl_buffer,get_name(calling_psc), get_arity(calling_psc));\
+
   }
 */
 
 #define CHECK_TABLE_CUT(instruc)       \
-  if (IS_TABLE_INSTRUC(instruc) && !is_completed(tcp_subgoal_ptr(breg)))  {\
-  Psc calling_psc = *(*((Psc **)ereg-1)-1);				\
-  sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF) tcp_subgoal_ptr(breg));	\
-  printf("Illegal cut over incomplete tabled subgoal: %s, from within a call to %s/%d", \
-	 forest_log_buffer_1->fl_buffer,get_name(calling_psc), get_arity(calling_psc));	\
-  xsb_table_error_vargs(CTXTc "NULL", \
-				"Illegal cut over incomplete tabled subgoal: %s, from within a call to %s/%d", \
-				forest_log_buffer_1->fl_buffer,get_name(calling_psc), get_arity(calling_psc));\
+  if (IS_TABLE_INSTRUC(instruc) && !is_completed(tcp_subgoal_ptr(breg)))  { \
+    Psc calling_psc = *(*((Psc **)ereg-1)-1);				\
+    sprint_subgoal(CTXTc forest_log_buffer_1,0,(VariantSF) tcp_subgoal_ptr(breg)); \
+    /* printf("Illegal cut over incomplete tabled subgoal: %s, from within a call to %s/%d",*/ \
+    /*   forest_log_buffer_1->fl_buffer,get_name(calling_psc), get_arity(calling_psc));  */ \
+    build_xsb_backtrace(); \
+    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer, \
+			  "illegal cut over incomplete tabled sybgoal: %s, from within a call to %s/%d", \
+			  forest_log_buffer_1->fl_buffer,		\
+			  get_name(calling_psc), get_arity(calling_psc)); \
   }
 
 extern CPtr call_cleanup_gl;
