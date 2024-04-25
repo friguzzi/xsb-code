@@ -2545,7 +2545,9 @@ int variant_call_search(CTXTdeclc TabledCallInfo *call_info,
     vcs_tnot_call = 0;
     sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(CallInfo_TableInfo(*call_info)));
     clean_up_subgoal_table_structures_for_throw; 
-    xsb_abort("Floundering goal in tnot/1 %s\n",forest_log_buffer_1->fl_buffer);
+    xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer, 
+			  "Floundering goal in tnot/1 %s\n",forest_log_buffer_1->fl_buffer);
+    //    xsb_abort("Floundering goal in tnot/1 %s\n",forest_log_buffer_1->fl_buffer);
   }
     
   vcs_tnot_call = 0;
