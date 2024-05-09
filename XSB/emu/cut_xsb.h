@@ -95,7 +95,7 @@
 	   forest_log_buffer_1->fl_buffer,get_name(calling_psc), get_arity(calling_psc)); \
     build_xsb_backtrace(); \
     xsb_table_error_vargs(CTXTc forest_log_buffer_1->fl_buffer, \
-			  "illegal cut over incomplete tabled sybgoal: %s, from within a call to %s/%d", \
+			  "illegal cut over incomplete tabled subgoal: %s, from within a call to %s/%d", \
 			  forest_log_buffer_1->fl_buffer,		\
 			  get_name(calling_psc), get_arity(calling_psc)); \
   }
