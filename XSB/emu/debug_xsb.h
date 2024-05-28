@@ -101,6 +101,7 @@ extern  forestLogBuffer forest_log_buffer_3;
 extern void print_delay_list_heap(FILE *, CPtr);
 extern void print_delay_element_heap(FILE *, Cell);
 extern void print_registers(FILE *,Psc,long);
+extern void sprint_registers(forestLogBuffer,Psc,long);
 extern int  sprint_subgoal(forestLogBuffer, int, VariantSF );
 extern void sprintAnswerTemplate(forestLogBuffer, CPtr, int);
 extern void sprintNonCyclicRegisters(forestLogBuffer,Psc);

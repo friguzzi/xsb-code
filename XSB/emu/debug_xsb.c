@@ -715,7 +715,8 @@ xsbBool cyclic_registers(CTXTdeclc Psc psc) {
 //-----------
 /* Should usually be set to MAXTERMBUFSIZE */
 
-static void sprint_registers(CTXTdeclc forestLogBuffer fl_buf,Psc psc,long depth) {
+//static void sprint_registers(CTXTdeclc forestLogBuffer fl_buf,Psc psc,long depth) {
+void sprint_registers(CTXTdeclc forestLogBuffer fl_buf,Psc psc,long depth) {
   int i, arity,size;
   char * buffer = fl_buf->fl_buffer;
 
