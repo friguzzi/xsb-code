@@ -967,7 +967,7 @@ assert1_in_db_b(Clause,DB0,DB) :-
      ;	Head = Clause,
 	Body = true
     ),
-    add_to_trie_dict(Head,Body,DB0,DB).
+    add_to_trie_dict(Head,Body,0,_,DB0,DB).
 
 :- comment(assert_in_db/2, "@pred{assert_in_db(+Clause,?DB)} adds a
 clause, @var{Clause}, (or a sequence of clauses, if @var{Clause} is a
@@ -983,11 +983,12 @@ assert_in_db(Clauses,H) :-
 :- mode add(+,-).
 add(Clauses,H) :- assert_in_db(Clauses,H).
 
-add_to_trie_dict(Head,Body,Dict0,Dict) :-
+:- export add_to_trie_dict/6.
+add_to_trie_dict(Head,Body,Ni,No,Dict0,Dict) :-
     (ground([Head|Body])
      ->	add_trie_dict([Head],Body,Dict0,Dict)
      ;	copy_term([Head|Body],[Head1|Body1]),
-	my_numbervars([Head1|Body1],0,_),
+	my_numbervars([Head1|Body1],Ni,No),
 	add_trie_dict([Head1],Body1,Dict0,Dict)
     ).
 
@@ -2053,11 +2054,14 @@ subset_with_rtl(RTLA,RTB,Depth,Key) :- RTB = rt(_,_,_,_),
     subset_tries_ind_recur_l(RTLA,RTB,Depth1,NInd).
     
 :- index subset_with_rt/3-2.
+/*** rt structure can never! be subset of rtl structure
 subset_with_rt(RTA,RTLB,Depth) :- RTLB = rtl(Key,_,_),
+    fail, % multiple cant be subset of one.
     hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
     subset_tries_ind_recur_r(RTA,RTLB,Depth1,NInd).
+  **/
 subset_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth) :-
     Depth1 is Depth + 2,
     subset_tries(RT01,RT11,Depth1),
@@ -2122,6 +2126,7 @@ subset_tries_ind_recur_l(RTL,rt(_,_,RT3,_),D,2) :-
 subset_tries_ind_recur_l(RTL,rt(_,_,_,RT4),D,3) :-
     subset_tries(RTL,RT4,D).
 
+/** not make sense...
 :- index subset_tries_ind_recur_r/4-4.
 subset_tries_ind_recur_r(rt(RT1,_,_,_),RTL,D,0) :-
     subset_tries(RT1,RTL,D).
@@ -2131,6 +2136,7 @@ subset_tries_ind_recur_r(rt(_,_,RT3,_),RTL,D,2) :-
     subset_tries(RT3,RTL,D).
 subset_tries_ind_recur_r(rt(_,_,_,RT4),RTL,D,3) :-
     subset_tries(RT4,RTL,D).
+*****/
 
 /********************************************************/
 
@@ -2883,44 +2889,6 @@ the form '_$Var$'(i) to the i^th element in the log_ith list
 :- mode pdb_unnumbervars(?,+,?,?).
 pdb_unnumbervars(TermIn,FirstN,TermOut,Vars) :-
     unnumbervars(TermIn,FirstN,TermOut,Vars,'_$Var$'(_)).
-%%    pdb_unnumbervars00(TermIn,FirstN,TermOut,Vars).
-
-/**:- import term_new/2 from machine.
-pdb_unnumbervars00(TermIn,FirstN,TermOut,Vars) :-
-    term_type(TermIn,Type),
-    (Type =:= 1 %XSB_STRUCT
-     ->	(TermIn = '_$Var$'(I), integer(I)
-	 -> (I >= FirstN
-	     ->	log_ith(I,Vars,TermOut)
-	     ;	TermOut = TermIn
-	    )
-         ;  term_psc(TermIn,PSC),
-	    term_new(PSC,NTermOut),
-	    NTermOut=TermOut,
-	    psc_arity(PSC,Arity),
-	    pdb_unnumbervars(TermIn,FirstN,TermOut,Vars,1,Arity)
-	)
-     ;	Type =:= 3 %XSB_LIST
-     ->	TermIn = [A1|A2],
-	TermOut = [B1|B2],
-	pdb_unnumbervars_list(A1,FirstN,B1,Vars,A2,B2) % avoid allocate
-     ;	TermOut = TermIn
-    ).
-
-pdb_unnumbervars_list(A1,FirstN,B1,Vars,A2,B2) :-
-    pdb_unnumbervars00(A1,FirstN,B1,Vars),
-    pdb_unnumbervars00(A2,FirstN,B2,Vars).
-
-pdb_unnumbervars(TermIn,FirstN,TermOut,Vars,I,Arity) :-
-	(I =< Arity
-         ->     term_arg(TermIn,I,ArgIn),
-		term_arg(TermOut,I,ArgOut),
-	        pdb_unnumbervars00(ArgIn,FirstN,ArgOut,Vars),
-		I1 is I+1,
-		pdb_unnumbervars(TermIn,FirstN,TermOut,Vars,I1,Arity)
-	 ;      true
-        ).
-***/
 
 my_functor(Term,Mod,Fun,Ari) :-
     (var(Term)
@@ -2928,7 +2896,8 @@ my_functor(Term,Mod,Fun,Ari) :-
      ;	functor(Term,Mod,Fun,Ari)
     ).
 
-:- table my_tab_functor/4.
+%% crashes with 0-ary functor??
+%%:- table my_tab_functor/4.
 my_tab_functor(Term,Mod,Fun,Ari) :-
     functor(Term,Mod,Fun,Ari).
 
@@ -2961,22 +2930,24 @@ in_db(Goal,H,H) :-
 in_db_b(true,_DB) :- !.
 in_db_b((A,B),DB) :- !, in_db_b(A,DB), in_db_b(B,DB).
 in_db_b(\+(G),DB) :- !, \+ in_db_b(G,DB).
-in_db_b(tnot(G),DB) :- !, tnot db_table_call(DB,G).
+in_db_b(tnot(G),DB) :- !, tnot in_db_table(G,DB).
 in_db_b(findall(T,G,L),DB) :- !, findall(T,in_db_b(G,DB),L).
 in_db_b((do_all G),DB) :- !, (do_all in_db_b(G,DB)).
 in_db_b((C->A;B),DB) :- !,
     (in_db_b(C,DB) -> in_db_b(A,DB) ; in_db_b(B,DB)).
 in_db_b((A;B),DB) :- !, (in_db_b(A,DB) ; in_db_b(B,DB)).
-in_db_b(table(Goal),DB) :- !, db_table_call(DB,Goal).
+in_db_b(table(G),DB) :- !, in_db_table(G,DB).
 in_db_b(xact(G),DB) :- !, phrase(G,DB,DB).  % for transaction logic, if useful.
 in_db_b(G,_DB) :- functor(G,F,A), standard_symbol(F,A,_), !,
     call0(G).
+in_db_b(G,DB) :- lookup_trie_vdict([table(G)],true,_,DB), !,
+    in_db_table(G,DB).
 in_db_b(G,DB) :-
     clause_in_db_b(G,B,DB),
     in_db_b(B,DB).
    
-:- table db_table_call/2.
-db_table_call(DB,Goal) :-
+:- table in_db_table/2.
+in_db_table(Goal,DB) :-
     in_db_b(Goal,DB).
 
 
@@ -3849,6 +3820,68 @@ gdb(DB) :-
 %%prolog_db_bi(_,_,_,_) :- '_$builtin'(82).
 
 /********************************************************/
+
+/* test predicates to support "existential" variables in clauses.
+   Every veriable is treated aa an existention.  Such a DB will be
+   called as DBE, and will be of the form dbe(PDB,N,Vars) where PDB is
+   a prolog db, N is the maximum number of variables in Vars, a
+   log-list of variables/values. 
+   Note (maybe bug?) cannot have variables as body.
+*/
+
+:- export assert_in_dbe/3.
+:- mode assert_in_dbe(?,+,?).
+assert_in_dbe(Clauses,dbe(H0,M0,Vars),dbe(H,M,Vars)) :-
+    intern_termhash(DB0,H0),
+    term_variables(Clauses,NewVars),
+    add_new_vars(NewVars,M0,M,Vars),
+    copy_term(Clauses,NClauses),
+    my_numbervars(NClauses,M0,M),
+    assert_in_dbe_b(Clauses,DB0,DB),
+    intern_termhash(DB,H).
+
+:- export empty_dbe/1.
+empty_dbe(dbe([],0,_)).
+
+:- export assert_in_dbe/2.
+assert_in_dbe(Clauses,dbe(H,M,Vars)) :-
+    term_variables(Clauses,NewVars),
+    add_new_vars(NewVars,0,M,Vars),
+    copy_term(Clauses,NClauses),
+    my_numbervars(NClauses,0,M),
+    assert_in_dbe_b(NClauses,[],DB),
+    intern_termhash(DB,H).
+
+assert_in_dbe_b(Clauses,DB0,DB) :-
+    (Clauses == []
+     ->	DB0 = DB
+     ; Clauses = [Clause|MClauses]
+     ->	assert1_in_dbe_b(Clause,DB0,DB1),
+	assert_in_dbe_b(MClauses,DB1,DB)
+     ;	assert1_in_dbe_b(Clauses,DB0,DB)
+    ).
+
+assert1_in_dbe_b(Clause,DB0,DB) :-
+    (Clause = (Head :- Body)
+     ->	true
+     ;	Head = Clause,
+	Body = true
+    ),
+    add_to_trie_dict(Head,Body,0,_,DB0,DB).
+
+add_new_vars([],M,M,_).
+add_new_vars([V|Vs],M0,M,Vars) :-
+    log_ith(M0,Vars,V),
+    M1 is M0+1,
+    add_new_vars(Vs,M1,M,Vars).
+
+:- export fact_in_dbe/2.
+fact_in_dbe(Head,dbe(H,_M,Vars)) :-
+    intern_termhash(DB,H),
+    lookup_trie_vdict([Head],true,Vars,DB).
+
+/********************************************************/
+
 
 end_of_file.
 
