@@ -49,6 +49,7 @@
 #define IMMED_AFFECTS_CALLNODE_PTRLIST     26
 #define CN_TO_SF                27
 #define ROOT_SUBGOAL_IS_INCR    28
+#define ADD_INCR_DEPENDENCY     29
 
 // for psc hacking
 #define NONINCREMENTAL 0

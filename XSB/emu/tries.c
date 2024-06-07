@@ -1084,10 +1084,10 @@ static int *depth_stack;
   }
 
 #define CHECK_ANSWER_LIST_METRIC {				\
-  if (++answer_depth_ctr >= working_answer_depth_limit) {		\
-    if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
-      /*      printf("about to cyclecheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
-      if (is_cyclic(CTXTc (Cell) (ans_sf_ptr -i))) {				\
+    if (++answer_depth_ctr >= working_answer_depth_limit) {		\
+      if (working_answer_depth_limit == flags[CYCLIC_CHECK_SIZE]) {	\
+	printf("about to cyclecheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); \
+	if (is_cyclic(CTXTc (Cell) (ans_sf_ptr -i))) {			\
 	  sprintCyclicRegisters(CTXTc forest_log_buffer_1,TIF_PSC(subg_tif_ptr(subgoal_ptr))); \
 	  safe_delete_branch(Paren);					\
 	  xsb_abort("Cyclic term in arg %lu of tabled answer %s\n",i+1,forest_log_buffer_1->fl_buffer); \
@@ -1098,14 +1098,14 @@ static int *depth_stack;
 	}								\
       }									\
       else {								\
-	/*	printf("about to handle adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit);*/ \
+	printf("about to handle adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); \
 	HANDLE_ANSWER_LIST_METRIC;					\
       }									\
-  }									\
-  else {								\
-    /*    printf("nocheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); */ \
-    ADD_LIST_TO_ANSWER_TRIE;						\
-   }									\
+    }									\
+    else {								\
+      /*    printf("nocheck adc %lu wadl %lu\n",answer_depth_ctr,working_answer_depth_limit); */ \
+      ADD_LIST_TO_ANSWER_TRIE;						\
+    }									\
   }
 
 #define recvariant_trie_ans_subsf(flag,TrieType) {			\

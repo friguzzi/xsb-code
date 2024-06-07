@@ -56,6 +56,7 @@
 #include "tst_utils.h"
 #include "hashtable.h"
 #include "hashtable_itr.h"
+#include "tables.h"
 
 // defined in call_graph_xsb.c
 int immediate_depends_callnode_ptrlist(CTXTdeclc callnodeptr);
@@ -416,6 +417,59 @@ case PSC_GET_INCR: {
       return TRUE;
     }
     return FALSE;
+  }
+    
+  case ADD_INCR_DEPENDENCY: {
+    TIFptr tip;
+    VariantSF  sf;
+    TabledCallInfo callInfo;
+    CallLookupResults lookupResults;
+    callnodeptr cn;
+
+    //    printf("Adding dependency\n");
+    Psc dp_psc = term_psc((Cell)(ptoc_tag(CTXTc 2)));
+    if (!dp_psc) {
+      xsb_abort("add_incr_dependency: improper input\n");
+    }
+    CallInfo_CallArity(callInfo) = get_arity(dp_psc);
+    tip = get_tip(dp_psc);
+    //    printf("tip %p\n",tip);
+    if (!tip) {
+      xsb_abort("add_incr_dependency: %s/%d is non-incremental\n",
+		get_name(dp_psc),get_arity(dp_psc));
+    }
+    CallInfo_TableInfo(callInfo) = tip;
+    //    printterm(stddbg,ptoc_tag(CTXTc 2),25); 
+    //    CPtr cptr = (CPtr) ptoc_tag(CTXTc 2);
+    CallInfo_Arguments(callInfo) = reg + 2;
+    check_tcpstack_overflow;
+    CallInfo_AnsTempl(callInfo) = top_of_cpstack;
+    check_glstack_overflow(CallInfo_CallArity(callInfo),pcreg,OVERFLOW_MARGIN);
+
+    if (table_call_search_incr(CTXTc &callInfo,&lookupResults)) {
+	return TRUE;
+    }
+    if(IsNonNULL(ptcpreg)) {
+      sf=(VariantSF)ptcpreg;
+      if(IsIncrSF(sf)){
+	cn=(callnodeptr)BTN_Child(CallLUR_Leaf(lookupResults));
+	//printf("cn %p\n",cn);
+	if(IsNonNULL(cn)) {
+	  addcalledge(CTXTc cn,sf->callnode);  
+	}
+      }
+      else {
+	if (!get_opaque(TIF_PSC(subg_tif_ptr(sf)))) {
+	  xsb_abort("add_incr_dependency(%s/%d): the calling predicate %s:%s/%d was not declared incrementally_tabled\n",
+		    get_name(TIF_PSC(tip)),
+		    get_arity(TIF_PSC(tip)),
+		    get_mod_name(TIF_PSC(subg_tif_ptr(sf))),
+		    get_name(TIF_PSC(subg_tif_ptr(sf))),
+		    get_arity(TIF_PSC(subg_tif_ptr(sf)))    );
+	}
+      }
+    }
+    break;
   }
 
   default:
