@@ -1,0 +1,10 @@
+%---------
+%---------
+%---------
+%---------
+%---------
+caight_t2( add_incr_dependency(q/2), the calling predicate usermod:t4/2 was not declared incrementally_tabled)
+caight_t2( add_incr_dependency: improper input)
+caight_t2( add_incr_dependency: r/1 is non-incremental)
+incr_directly_depends(t1(A,B),p(C))
+incr_directly_depends(t1(A,B),q(q(1,f(7,[a],C)),D))

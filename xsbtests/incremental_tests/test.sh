@@ -61,6 +61,8 @@ options=$2
 ../gentest.sh "$XEMU -l $options" test_table_errors "test."
 #------------------------------------------------- testing executable incremental dirs.
 ../gentest.sh "$XEMU -l $options" test_wfs_mult_upd "test."
+#------------------------------------------------- testing executable incremental dirs.
+../gentest.sh "$XEMU -l $options" test_add_incr_dep "test."
 #--------------------------------------------------
 #../gentest.sh "$XEMU -l $options" test_set_pp "test."
 #--------------------------------------------------
