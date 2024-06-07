@@ -907,6 +907,32 @@ goals according to the transitive closure of the ``directly depends''
 relation.  Error conditions are the same as {\tt
   incr\_directly\_depends/2}.
 
+\ourmoditem{add\_incr\_dependency(Goal)}{add\_incr\_dependency/1}{increval}
+%
+Incremental tabling creates dependency graphs dynamically, so that
+specific goal bindings can always be used.  This works well the great
+majority of the time, but consider the following case:
+\begin{verbatim}
+:- dynamic p/1, q/2 as incremental.
+:- table t1/2 as incremental.
+t1(X,1):- p(X,Y),!.
+t1(X,Y):- q(X,Y).
+
+p(1,2).
+\end{verbatim}
+In the case of the goal {\tt ?- t1(1,Y)} the first clause will
+succeed, cutting away the second clause so that the dependency of {\tt
+  t1(1,Y)} on {\tt q(1,Y)} is never added, which may cause unexpected
+behavior later in execution if new clauses are added or retracted for
+{\tt q/1}.  Such a situation can be addressed using {\tt
+  add\_inc\_dependency/2} by rewriting {\tt t1/2} as:
+\begin{verbatim}
+t1(X,Y):- p(X,Y),!,add_incr_dependency(q(X,Y)).
+t1(X,Y):- q(X,Y).
+\end{verbatim}
+It must be stressed, however, that it should not be common to need {\tt
+  add\_incr\_dependency/1} and it should be avoided in most (though not all) situations.
+
 \ourrepeatmoditem{get\_incr\_sccs(?SCCList)}{get\_incr\_sccs/1}{increval}
 \ourrepeatmoditem{get\_incr\_sccs\_with\_deps(?SCCList,?DepList)}{get\_incr\_sccs\_with\_deps/2}{increval}
 \ourrepeatmoditem{get\_incr\_sccs(+SubgoalList,?SCCList)}{get\_incr\_sccs/2}{increval}
