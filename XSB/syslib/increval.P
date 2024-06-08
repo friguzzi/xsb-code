@@ -553,6 +553,10 @@ incremental_subgoals(Subgoal,Falsecount):-
     writeln(two(S)),
     incr_eval_builtin(IS_AFFECTED,S,Falsecount,_HasAnswers).
 
+:- export add_incr_dependency/1.
+add_incr_dependency(Call):- 
+    incr_eval_builtin(ADD_INCR_DEPENDENCY,Call,_,_).
+
 end_of_file.
 ==========================================================================================
 
