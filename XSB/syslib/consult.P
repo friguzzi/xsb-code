@@ -1698,6 +1698,8 @@ cvt_term_to_mod(Term,MTerm) :-
 %%		 ;	term_new_mod(Mod1,NTerm,MTerm0),
 %%		    	cvt_term_to_mod(MTerm0,MTerm)
 %%		)
+	 ; functor(Term,_,0)  %% DSW added to handle f() type terms
+	 ->     cvt_to_mod(Term,usermod,MTerm,assumed)
 	 ;	Term =.. [Pred|Args],
 		cvt_term_to_mod_list(Args,1,0,unknown,MArgs),
 		Term1 =.. [Pred|MArgs],

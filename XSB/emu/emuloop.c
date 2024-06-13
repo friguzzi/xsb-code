@@ -1579,10 +1579,10 @@ contcase:     /* the main loop */
           lpcreg = *(pb *)(lpcreg+sizeof(Cell));
           break;
       }
-      if (get_arity(get_str_psc(op1)) == 0) {
-	lpcreg = *(pb *)(lpcreg+sizeof(Cell));
-	break;
-      }
+      //      if (get_arity(get_str_psc(op1)) == 0) {
+      //	lpcreg = *(pb *)(lpcreg+sizeof(Cell));
+      //	break;
+      //      }
     case XSB_LIST:	/* include structure case here */
       lpcreg = *(pb *)(lpcreg+sizeof(Cell)*2); 
       break;
