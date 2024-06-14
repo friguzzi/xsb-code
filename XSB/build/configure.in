@@ -1967,8 +1967,10 @@ AC_OUTPUT([ '"${arch_config_prefix}/topMakefile"':topMakefile.in
         '"${scriptdir}/xsb64arm.bat"':xsb64arm.bat.in
         '"${arch_config_prefix}/banner.msg"':banner.in
         windows/banner.msg:windows/banner.in
+        windows64/banner.msg:windows64/banner.in
         windows64arm/banner.msg:windows64arm/banner.in
         windows/MSVC_mkfile.mak:windows/MSVC_mkfile.in
+        windows64/MSVC_mkfile.mak:windows64/MSVC_mkfile.in
         windows64arm/MSVC_mkfile.mak:windows64arm/MSVC_mkfile.in
         '"${topdir}/packages/xmc/xmc-gui"':xmc-gui.in
         ])
