@@ -206,3 +206,14 @@ John =  Author('TPLP',3,2021)
 
 def return_complex():
         return(complex(3,2))
+
+class Dog:
+        tricks = []
+
+        def __init__(self, name):
+            self.name = name
+
+        def add_trick(self, trick):
+            self.tricks.append(trick)
+            return(self)
+

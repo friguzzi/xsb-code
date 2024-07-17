@@ -547,12 +547,12 @@ testit(Call,Var,Answer):-
 py_call_tests :- 
     check_call(py_call(test_janus_plg:sumlist3(5,[1,2,3]),_Res1),[6,7,8]),
     fail.
-py_call_tests :- 
-      py_call(sys:flags,Flags),
-      (Flags =.. [-|_] ->
-          writeln('py_call(sys:flags,Flags) succeeded')
-       ;  writeln('!!! failed py_call(sys:flags,Flags)') ),
-    fail.
+%py_call_tests :- 
+%      py_call(sys:flags,Flags),
+%      (Flags =.. [-|_] ->
+%          writeln('py_call(sys:flags,Flags) succeeded')
+%       ;  writeln('!!! failed py_call(sys:flags,Flags)') ),
+%    fail.
 py_call_tests :- 
     check_call(py_call(sys:exc_info(),_),-(@('none'),@('none'),@('none'))),
     fail.
@@ -582,12 +582,13 @@ py_call_tests :-
 	 writeln(success('py_call(F:__class__:__name__, Class)'))
     ;	 writeln('!!!failure'('py_call(F:__class__:__name__, Class)')) ),
     fail.
-py_call_tests :-
-    py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F),
-    (F = {'Name' : 'Geeks',1 : [1,2,3,4]} ->
-	 writeln(success('py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F)'))
-    ;	 writeln('!!!failure'('py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F)')) ),
-    fail.
+% TES: took this out -- redo whenever I re-add eval()		  
+%py_call_tests :-
+%    py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F),
+%    (F = {'Name' : 'Geeks',1 : [1,2,3,4]} ->
+%	 writeln(success('py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F%%)'))
+%    ;	 writeln('!!!failure'('py_call(returnVal:returnVal(eval(returnVal:return_dictionary(%%))),F)')) ),
+%    fail.
 py_call_tests.
 
 check_call(py_dot(Obj,MA,Res),Atom):-

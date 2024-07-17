@@ -30,3 +30,5 @@ class StressClass:
         print("python_done: " + str(end-start) + " seconds")
         return self.list
 
+def exp(Base,Exp):
+    return Base**Exp

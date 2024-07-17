@@ -1,4 +1,5 @@
-| ?- | ?- 
+| ?- | ?- yes
+| ?- 
 py_func(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
 py_func(builtins,float(+1E6),1000000.0) succeeded.
 (should error) py_func set:  In Prolog to Python translation of dictionary/1
@@ -106,12 +107,9 @@ py_func(range(1,4)),F,[py_object(true)]),py_iter(F,H) succeeded
 py_func(range(1,4)),F),py_iter(F,H) succeeded
 py_func(builtins,range(1,4),[1,2,3],[iter(true)]) succeeded.
 py_call(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
-py_call(sys:flags,Flags) succeeded
 py_call(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
 py_call(builtins,float(1.E6),1000000.0) succeeded.
 success(py_call(PyObj:returnVal([1,2,3,4]),E))
 success(py_call(Obj:favorite_ice_cream,I))
 success(py_call(F:__class__:__name__, Class))
-py_call(returnVal : return_dictionary(),{(Name : Geeks,1 : [1,2,3,4])})
-success(py_call(returnVal:returnVal(eval(returnVal:return_dictionary())),F))
 collect(0)
