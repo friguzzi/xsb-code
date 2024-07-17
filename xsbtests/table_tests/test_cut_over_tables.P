@@ -1,0 +1,12 @@
+
+:- table p/3, q/3.
+
+test:-
+    catch(p(_X,[foo(bar),1,3.14],struct([2.73])),
+	  error(_Type,context(context(_Msg,Subgoal),_Bt)),
+	  writeln(the_goal_is(Subgoal))).
+
+p(X,Y,Z):- q(X,Y,Z),!.
+q(X,Y,Z):- p(X,Y,Z).
+q(1,_Y,_Z).
+q(2,_Y,_Z).

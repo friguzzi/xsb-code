@@ -216,6 +216,8 @@ rm -f aggregs_test_2.xwam
 #-------------------------------------------------
 ../gentest.sh "$XEMU -l $options" test_tab_interact "test."
 #--------------------------------
+../gentest.sh "$XEMU -l $options" test_cut_over_tables "test."
+#--------------------------------
 # h series is hilog/tabling tests
 #------------------------------------
 ../gentest.sh "$XEMU $options" hirc "tc(manage)(X,Y),write(X),write(' '),write(Y),nl,fail."
