@@ -63,7 +63,7 @@ AC_MSG_RESULT([])
 # ac_preferred_python may be set by configure so the below will select 
 # that version of Python
 
-for python in $ac_preferred_python python3.11m python3.11 python3.10m python3.10 python3.9m python3.9 python3.8m python3.8 python3.7m python3.7 python3.6m python3.6 python3.5m python3.5 python3.4m python3.4 python3.3m python3.3 python3.2m python3.2 python3.1m python3.1 python3.0m python3.0 ; do
+for python in $ac_preferred_python python3.13m python3.13 python3.12m python3.12  python3.11m python3.11 python3.10m python3.10 python3.9m python3.9 python3.8m python3.8 python3.7m python3.7 python3.6m python3.6 python3.5m python3.5 python3.4m python3.4 python3.3m python3.3 python3.2m python3.2 python3.1m python3.1 python3.0m python3.0 ; do
 AC_CHECK_PROGS(PYTHON_BIN, [$python])
 ax_python_bin=$PYTHON_BIN
 if test "x$ax_python_bin" != "x"; then
