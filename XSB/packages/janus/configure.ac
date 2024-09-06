@@ -6,7 +6,7 @@ dnl	autoconf
 dnl  here.
 
 
-AC_PREREQ(2.12)
+AC_PREREQ([2.71])
 AC_INIT([janus_xsb],[1.0])
 
 AC_CONFIG_MACRO_DIR([./m4])
@@ -105,7 +105,8 @@ AC_SUBST(XSB_ROOTDIR)
 #support2=no
 #AC_SEARCH_LIBS([Py_Initialize], [], [support2=yes], [message2="       JANUS_XSB: Py_Initialize not found"], [])
 
-AC_OUTPUT([ janus_connect_defs.h:janus_connect_defs.in ])
+AC_CONFIG_FILES([ janus_connect_defs.h:janus_connect_defs.in ])
+AC_OUTPUT
 
 if test "$support0" = "yes" -a "$support1" = "yes" ; then
    support=yes
@@ -140,10 +141,12 @@ if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "
     echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_janus_pkg.sh
     echo 'echo ""' >> make_janus_pkg.sh
 else
-    AC_OUTPUT([make_janus_pkg.sh:make_janus``_pkg.sh.in])
+    AC_CONFIG_FILES([make_janus_pkg.sh:make_janus``_pkg.sh.in])
+AC_OUTPUT
 fi
 
 AC_SUBST(support)
-AC_OUTPUT([janus_info.P:janus_info.in])
+AC_CONFIG_FILES([janus_info.P:janus_info.in])
+AC_OUTPUT
 
 chmod 700 make_janus_pkg.sh
