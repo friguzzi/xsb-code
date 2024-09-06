@@ -97,7 +97,7 @@ echo ""
 AC_MSG_WARN([ ****Your system is missing pcre.h, which is required
     for PCRE (Perl pattern matching library) to function.
 ****PCRE support will be disabled. To use PCRE, please install the packages
-    libpcre and libpcre-dev.])
+    libpcre3 and libpcre3-dev.])
 echo ""
 
 support=no

@@ -24,7 +24,7 @@
 
 :- export xsbpy_info/2.
 
-xsbpy_info(support, 'yes').
+xsbpy_info(support, 'no').
 xsbpy_info(ccflags, '').
 xsbpy_info(ldflags, '').
-xsbpy_info(libdir,  '/usr/lib').
+xsbpy_info(libdir,  '.').

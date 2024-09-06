@@ -63,14 +63,22 @@ AC_MSG_RESULT([])
 # ac_preferred_python may be set by configure so the below will select 
 # that version of Python
 
-for python in $ac_preferred_python python3.13m python3.13 python3.12m python3.12  python3.11m python3.11 python3.10m python3.10 python3.9m python3.9 python3.8m python3.8 python3.7m python3.7 python3.6m python3.6 python3.5m python3.5 python3.4m python3.4 python3.3m python3.3 python3.2m python3.2 python3.1m python3.1 python3.0m python3.0 ; do
+for python in $ac_preferred_python python3.19m python3.19 python3.18m python3.18 python3.17m python3.17 python3.16m python3.16 python3.15m python3.15 python3.14m python3.14 python3.13m python3.13 python3.12m python3.12  python3.11m python3.11 python3.10m python3.10 python3.9m python3.9 python3.8m python3.8 python3.7m python3.7 python3.6m python3.6 ; do
 AC_CHECK_PROGS(PYTHON_BIN, [$python])
 ax_python_bin=$PYTHON_BIN
 if test "x$ax_python_bin" != "x"; then
    # if pip is not installed, arrange for exit
-   $PYTHON_BIN -m pip > /dev/null 2>&1 || pip_not_installed=1
+   $PYTHON_BIN -m pip help > /dev/null 2>&1 || pip_not_installed=1
+   $PYTHON_BIN -m pipx environment > /dev/null 2>&1 || pip_not_installed=1
 
-   ax_python_conflib=`$PYTHON_BIN -m find_libpython 2> /dev/null || ($PYTHON_BIN -m pip install find_libpython > /dev/null 2>&1; $PYTHON_BIN -m find_libpython)`
+   save_path=$PATH
+   # is it possible that the bin dir will be other than $HOME/.local/bin ??
+   ## It seems PIPX_BIN_DIR env var can override this.
+   ## Deal with it later
+   PATH="$HOME/.local/bin":$save_path
+   ax_python_conflib=`$PYTHON_BIN -m find_libpython 2> /dev/null || ($PYTHON_BIN -m pipx install find_libpython > /dev/null 2>&1; find_libpython)`
+   PATH=$save_path
+
    ax_python_lib=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('LIBDEST'))"`
    ax_python_extra_lib=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('BLDLIBRARY'))"`
    ax_python_header=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('CONFINCLUDEPY'))"`
@@ -81,7 +89,7 @@ fi
 done
 if test -n "$pip_not_installed" ; then
    echo
-   echo "***** pip is not installed for $PYTHON_BIN -- please install it!"
+   echo "***** pip or pipx is not installed for $PYTHON_BIN -- please install both!"
    echo
 fi
 if test "x$ax_python_bin" = "x"; then

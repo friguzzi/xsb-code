@@ -69,7 +69,7 @@ else
 fi
 
 # check if libcurl.so can be found
-# If the ODBC library is missing, set curl_error
+# If the CURL library is missing, set curl_error
 # If libcurl.so is not in a standard place, we must use --with-curl-libdir
 if test -n "$with_curl_libdir" ; then
    LDFLAGS="-L${with_curl_libdir} ${LDFLAGS}"
