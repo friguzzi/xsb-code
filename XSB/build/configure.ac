@@ -1,8 +1,8 @@
-## File:      configure.in
+## File:      configure.ac
 ## Author(s): kifer
 ## Contact:   xsb-users@lists.soutceforge.net
 ##
-## Copyright (C) The Research Foundation of SUNY, 1998 - 2021
+## Copyright (C) The Research Foundation of SUNY, 1998 - 2024
 ##
 ## XSB is free software; you can redistribute it and/or modify it under the
 ## terms of the GNU Library General Public License as published by the Free
@@ -18,7 +18,6 @@
 ## along with XSB; if not, write to the Free Software Foundation,
 ## Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ##
-## $Id: configure.in,v 1.242 2012-09-29 02:08:25 kifer Exp $
 ##
 ##
 
@@ -30,10 +29,13 @@ dnl
 dnl
 
 
-AC_PREREQ(2.67)dnl
+AC_PREREQ([2.71])dnl
 
-AC_INIT(../emu/emuloop.c)
+AC_INIT
+AC_CONFIG_SRCDIR([../emu/emuloop.c])
 dnl
+
+AC_CONFIG_AUX_DIR(".")
 
 if test -f buildxsb.lock ; then
    echo "***Build lock exists: another configure/makexsb is probably running.
@@ -64,8 +66,6 @@ if test "$topdir" != "$topdir_sans_spaces" ;  then
     echo ""
     exit 1
 fi
-
-AC_CONFIG_AUX_DIR("$build_dir")
 
 # Needed by the xsb_config.h file
 AC_DEFINE(CONFIG_INCLUDED)
@@ -818,7 +818,7 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 dnl If on AIX, define _ALL_SOURCE, which allows the use of some BSD functions
 dnl This must be AFTER AC_PROG_CC
-AC_AIX
+AC_USE_SYSTEM_EXTENSIONS
 
 AC_CHECK_PROG(has_gcc, gcc, "yes", "no")
 
@@ -1000,9 +1000,10 @@ fi
 
 # xsbpy package
 #if test -d "$topdir/packages/xsbpy"; then
-#    AC_OUTPUT([
+#    AC_CONFIG_FILES([
 #    '"${topdir}/packages/xsbpy/configvars.sh"':'"${topdir}/packages/xsbpy/configvars.in"'
 #    ])
+#AC_OUTPUT
 #
 #    cd "$topdir/packages/xsbpy"
 #    echo "***Configuring XSBPY (XSB to Python connector)"
@@ -1017,9 +1018,10 @@ fi
 
 # janus  package
 if test -d "$topdir/packages/janus"; then
-    AC_OUTPUT([
+    AC_CONFIG_FILES([
     '"${topdir}/packages/janus/configvars.sh"':'"${topdir}/packages/janus/configvars.in"'
     ])
+AC_OUTPUT
 
     cd "$topdir/packages/janus"
     echo "***Configuring Janus-Pro (XSB to Python connector)"
@@ -1042,9 +1044,9 @@ AC_PROG_MAKE_SET
 dnl We use 4 in AC_CHECK_SIZEOF, below, as the size for cross-compiling,
 dnl even though we aren't cross-compiling.
 dnl This is done in order to get rid of a warning:
-dnl	   AC_TRY_RUN called without default to allow cross compiling
+dnl	   AC_RUN_IFELSE([AC_LANG_SOURCE([[]])],[],[],[]) called without default to allow cross compiling
 dnl This warning is really a buglet in the AC_CHECK_SIZEOF macro:
-dnl it invokes AC_TRY_RUN without specifying an action for cross-compilation,
+dnl it invokes AC_RUN_IFELSE([AC_LANG_SOURCE([[]])],[],[],[]) without specifying an action for cross-compilation,
 dnl if the second arg to AC_CHECK_SIZEOF is not given.
 AC_CHECK_SIZEOF([long int])
 if test "${ac_cv_sizeof_long_int}" = 0; then
@@ -1101,7 +1103,7 @@ fi
 
 # A series of checks for essential libraries.
 AC_CHECK_LIB(m, main,, have_errors=yes)
-test -n "$have_errors" && AC_MSG_ERROR(Your system is missing library: \`m')
+test -n "$have_errors" && AC_MSG_ERROR(Your system is missing library: `m')
 
 AC_CHECK_LIB(dl, main,, have_dl=no)
 AC_CHECK_LIB(nsl, main, , have_nsl=no)
@@ -1125,7 +1127,20 @@ dnl Note, under NT, we sould include time.h instead
 AC_CHECK_HEADERS(sys/time.h)
 
 dnl defines TIME_WITH_SYS_TIME if both allowed
-AC_HEADER_TIME
+m4_warn([obsolete],
+[Update your code to rely only on HAVE_SYS_TIME_H,
+then remove this warning and the obsolete code below it.
+All current systems provide time.h; it need not be checked for.
+Not all systems provide sys/time.h, but those that do, all allow
+you to include it and time.h simultaneously.])dnl
+AC_CHECK_HEADERS_ONCE([sys/time.h])
+# Obsolete code to be removed.
+if test $ac_cv_header_sys_time_h = yes; then
+  AC_DEFINE([TIME_WITH_SYS_TIME],[1],[Define to 1 if you can safely include both <sys/time.h>
+	     and <time.h>.  This macro is obsolete.])
+fi
+# End of obsolete code.
+
 
 AC_CHECK_FUNCS(malloc, have_malloc=yes,have_malloc=no)
 test "${have_malloc}" = "no" &&
@@ -1143,7 +1158,19 @@ AC_C_CONST
 dnl Check for functions that are in standard libraries.
 dnl Functions that aren't in standard libraries should be checked after
 dnl their corresponding libraries are AC_CHECK_LIB'ed.
-AC_TYPE_SIGNAL
+m4_warn([obsolete],
+[your code may safely assume C89 semantics that RETSIGTYPE is void.
+Remove this warning and the `AC_CACHE_CHECK' when you adjust the code.])dnl
+AC_CACHE_CHECK([return type of signal handlers],[ac_cv_type_signal],[AC_COMPILE_IFELSE(
+[AC_LANG_PROGRAM([#include <sys/types.h>
+#include <signal.h>
+],
+		 [return *(signal (0, 0)) (0) == 1;])],
+		   [ac_cv_type_signal=int],
+		   [ac_cv_type_signal=void])])
+AC_DEFINE_UNQUOTED([RETSIGTYPE],[$ac_cv_type_signal],[Define as the return type of signal handlers
+		    (`int' or `void').])
+
 AC_CHECK_FUNCS(strdup mkdir, , have_errors="yes")
 test "${have_errors}" = "yes" && \
     AC_MSG_ERROR([One of these functions is missing on your system:
@@ -1386,8 +1413,6 @@ fi
 TEMP_LDFLAGS=$LDFLAGS
 LDFLAGS="-Wl,-export-dynamic"
 AC_MSG_CHECKING([whether loader understands -Wl,-export-dynamic])
-# Ideally we should use AC_LINK_IFELSE instead of the obsolete AC_TRY_LINK
-#AC_TRY_LINK([],[], __export_dynamic=yes, __export_dynamic=no)
 AC_LINK_IFELSE([AC_LANG_SOURCE([[int main(){return 0;}]])], __export_dynamic=yes, __export_dynamic=no)
 AC_MSG_RESULT($__export_dynamic)
 LDFLAGS=$TEMP_LDFLAGS
@@ -1515,10 +1540,10 @@ case "$canonical" in
                 LDFLAGS="${LDFLAGS} -lnsl -ldl"
 
                 if test "${have_dl}" = "no" ; then
-                    AC_MSG_ERROR(Your system is missing library: \`dl')
+                    AC_MSG_ERROR(Your system is missing library: `dl')
                 fi
                 if test "${have_nsl}" = "no" ; then
-                    AC_MSG_ERROR(Your system is missing library: \`nsl')
+                    AC_MSG_ERROR(Your system is missing library: `nsl')
                 fi
 
                 if test "${have_pthread}" != "no" ; then
@@ -1540,7 +1565,7 @@ case "$canonical" in
                     LDFLAGS="${LDFLAGS} -Wl,-export-dynamic"
                 fi
                 if test "${have_socket}" = "no" ; then
-                    AC_MSG_ERROR(Your system is missing library: \`socket')
+                    AC_MSG_ERROR(Your system is missing library: `socket')
                 fi
         ;;
     *-aix*)     AC_DEFINE(IBM)
@@ -1933,11 +1958,11 @@ AC_SUBST(DLLTYPE)
 xsb_obj_extension=.xwam
 AC_SUBST(xsb_obj_extension)
 
-dnl When running autoheader, uncoment these 2 lines and comment the next 2.
-dnl Then move xsb_config.h.in to def_config.in.
-dnl There probably will be no need to run autoheader any more!
-dnl AC_CONFIG_HEADER(${arch_config_prefix}/xsb_config.h:def_config.in
-dnl ${arch_config_prefix}/xsb_debug.h:def_debug.in])
+# When running autoheader, uncoment these 2 lines and comment the next 2.
+# Then move xsb_config.h.in to def_config.in.
+# There probably will be no need to run autoheader any more!
+# AC_CONFIG_HEADERS([${arch_config_prefix}/xsb_config.h:def_config.in
+# ${arch_config_prefix}/xsb_debug.h:def_debug.in])]
 
 AC_CONFIG_HEADERS(['"${arch_config_prefix}/xsb_config.h"':${config_dot_h_templ}
 windows/xsb_config.h:windows/def_config.in
@@ -1949,7 +1974,7 @@ windows64arm/xsb_debug.h:def_debug.in
 '"${arch_config_prefix}/xsb_debug.h"':def_debug.in])
 
 
-AC_OUTPUT([ '"${arch_config_prefix}/topMakefile"':topMakefile.in
+AC_CONFIG_FILES([ '"${arch_config_prefix}/topMakefile"':topMakefile.in
         '"${arch_config_prefix}/emuMakefile"':emuMakefile.in
         '"${arch_config_prefix}/modMakefile"':modMakefile.in
         '"${arch_config_prefix}/gppMakefile"':gppMakefile.in
@@ -1974,6 +1999,7 @@ AC_OUTPUT([ '"${arch_config_prefix}/topMakefile"':topMakefile.in
         windows64arm/MSVC_mkfile.mak:windows64arm/MSVC_mkfile.in
         '"${topdir}/packages/xmc/xmc-gui"':xmc-gui.in
         ])
+AC_OUTPUT
 
 chmod 644 "${arch_config_file}"
 

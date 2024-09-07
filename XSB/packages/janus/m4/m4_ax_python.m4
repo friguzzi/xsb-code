@@ -53,7 +53,7 @@
 #serial 19
 
 # if this is changed, execute 
-#   autoreconf -i --install
+#   autoreconf -i
 # in ../
 
 AC_DEFUN([AX_PYTHON],
