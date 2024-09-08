@@ -41,8 +41,10 @@
    from file_io.
 
 windows_os.
+windows_os32 :- fail.
 windows_os64.
 windows_os64(amd).
+windows_os64(arm) :- fail.
 
 xsb_configuration(compiler, 'cl.exe').
 

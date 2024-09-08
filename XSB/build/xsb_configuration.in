@@ -36,7 +36,8 @@
 :- import fmt_write_string/3
    from file_io.
 
-windows_os :- fail.
+windows_os   :- fail.
+windows_os32 :- fail.
 windows_os64 :- fail.
 windows_os64(_) :- fail.
 
