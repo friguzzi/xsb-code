@@ -41,6 +41,7 @@
    from file_io.
 
 windows_os.
+windows_os32.
 windows_os64 :- fail.
 windows_os64(_) :- fail.
 
