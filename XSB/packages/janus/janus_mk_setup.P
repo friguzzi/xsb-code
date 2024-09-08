@@ -5,7 +5,7 @@
 :- import lazy_writeln/2 from standard.
 
 mk_setup(File,PythonIncludeDir) :-
-        writeln(2,'*** Creating the settings for the py-xsb package'),
+        writeln(2,'*** Creating the settings for the janus-xsb package'),
         tell(File),
         mk_setup(PythonIncludeDir),
         told,
