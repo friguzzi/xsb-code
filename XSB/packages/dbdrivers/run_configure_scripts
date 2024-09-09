@@ -16,3 +16,7 @@ cd $curdir
 cd mysqlembedded; ./configure $*; cat Installation_summary >> ../Installation_summary
 /bin/rm -f cc/mysqlembedded_driver.H
 cd $curdir
+
+cd mariadb; ./configure $*; cat Installation_summary >> ../Installation_summary
+/bin/rm -f cc/mariadb_driver.H
+cd $curdir

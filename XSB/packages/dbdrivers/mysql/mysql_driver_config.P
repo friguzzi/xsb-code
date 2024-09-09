@@ -34,6 +34,9 @@ make_mysql_driverH(CC, CC_opts) :-
         slash(Slash),
         xsb_configuration(configuration, XSBconfiguration),
         xsb_configuration(config_libdir, ConfigLibDir),
+        (mysql_info(support,no) ->
+            abort('XSB has not been compiled with support for MySQL')
+        ),
         mysql_info(libdir,MysqlLibDir),
         (MysqlLibDir == '' -> MysqlLibDir_flag = ''
         ;  str_cat('-L', MysqlLibDir, MysqlLibDir_flag)
@@ -94,6 +97,9 @@ make_mysql_driverH(CC, CC_opts) :-
         fmt_write_string(LibObjFileX,
                          '%s%s%s%s',
                          args(ConfigLibDir,Slash,Basename,XSB_OBJ_EXTENSION_ATOM)),
+        (mysql_info(support,no) ->
+            abort('XSB has not been compiled with support for MySQL')
+        ),
         mysql_info(ccflags, CCflags),
         mysql_info(ldflags, LDflags),
 

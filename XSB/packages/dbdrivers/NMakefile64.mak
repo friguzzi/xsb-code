@@ -30,4 +30,6 @@ CLEAN::
 	nmake /nologo /f NMakefile64.mak clean
 	cd ..\..\odbc\cc
 	nmake /nologo /f NMakefile64.mak clean
+	cd ..\..\mariadb\cc
+	nmake /nologo /f NMakefile64.mak clean
 	cd ..\..

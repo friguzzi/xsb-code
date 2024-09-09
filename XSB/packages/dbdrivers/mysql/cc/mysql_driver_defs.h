@@ -27,7 +27,9 @@
 #include <string.h>
 
 #include "mysql.h"
+/*
 #include "mysql_com.h"
+*/
 
 #include "cinterf.h"
 #include "driver_manager_defs.h"

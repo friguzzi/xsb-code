@@ -372,7 +372,7 @@ struct xsb_data** driverMySQL_execPrepareStmt(struct xsb_data** bindValues, stru
       if (bindValues[i]->type == INT_TYPE)
 	{			
 	  bind[i].buffer_type = MYSQL_TYPE_LONG;
-	  intTemp = malloc (sizeof(int));
+	  intTemp = malloc (sizeof(Integer));
 	  *intTemp = bindValues[i]->val->i_val;
 	  bind[i].buffer = intTemp;
 	  bind[i].is_null = calloc(1,sizeof(_Bool));

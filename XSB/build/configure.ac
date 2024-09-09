@@ -147,6 +147,10 @@ AC_ARG_WITH(mysql-libdir,
 [  --with-mysql-libdir=DIR       provide info on where the MySQL libraries are])
 AC_ARG_WITH(mysql-incdir,
 [  --with-mysql-incdir=DIR       provide info on where the MySQL include files are])
+AC_ARG_WITH(mariadb-libdir,
+[  --with-mariadb-libdir=DIR       provide info on where the MariaDB libraries are])
+AC_ARG_WITH(mariadb-incdir,
+[  --with-mariadb-incdir=DIR       provide info on where the MariaDB include files are])
 AC_ARG_WITH(mysqlembedded-libdir,
 [  --with-mysqlembedded-libdir=DIR       provide info on where the MySQL Embedded Server libraries are])
 AC_ARG_WITH(mysqlembedded-incdir,
@@ -276,7 +280,7 @@ do
 		--with-static-libraries* | --with-dynamic-libraries* | \
                 --with-preferred-python* | \
                 --with-xpath* | \
-		--with-curl* | --with-pcre* | --with-mysql* | \
+		--with-curl* | --with-pcre* | --with-mysql* | --with-mariadb* \
 		--with-dbdrivers | --with-no-dbdrivers | --with-oracle | --with-odbc* | \
                 --with-iodbc* | \
                 --with-stdcall | \
@@ -961,6 +965,8 @@ if test -n "${with_dbdrivers}" && test -d "$topdir/packages/dbdrivers"; then
                             --with-odbc-incdir="$with_odbc_incdir" \
                             --with-mysql-libdir="$with_mysql_libdir" \
                             --with-mysql-incdir="$with_mysql_incdir" \
+                            --with-mariadb-libdir="$with_mariadb" \
+                            --with-mariadb-incdir="$with_mariadb" \
                             --with-mysqlembedded-libdir="$with_mysqlembedded_libdir" \
                             --with-mysqlembedded-incdir="$with_mysqlembedded_incdir" \
                             > /dev/null

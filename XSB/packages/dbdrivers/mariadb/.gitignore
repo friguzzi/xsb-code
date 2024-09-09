@@ -1,0 +1,6 @@
+*.cache/
+*.log
+/config.status
+/Installation_summary
+/mariadb_driver_config.xwam
+*.xwam
