@@ -25,9 +25,10 @@ dnl  in the directory containing this script.
 dnl
 dnl
 
-AC_PREREQ(2.53)dnl
+AC_PREREQ([2.71])dnl
 
-AC_INIT(mysql_driver_config.P)
+AC_INIT
+AC_CONFIG_SRCDIR([mysql_driver_config.P])
 
 SHELL=/bin/sh
 
@@ -53,7 +54,7 @@ topdir=`echo "${build_dir}" | sed 's,/[[^/]][[^/]]*/*/[[^/]][[^/]]*/*/[[^/]][[^/
 
 
 # Tell where the autoconf scripts are
-AC_CONFIG_AUX_DIR($topdir/build)
+AC_CONFIG_AUX_DIR(../../../build)
 
 dnl Check configuration for a Unix variant
 if test -z "$with_config"; then
@@ -156,4 +157,5 @@ echo "  MySQL Loader Flags:                             $LDFLAGS"
 echo ""
 ) | tee Installation_summary
 
-AC_OUTPUT([mysql_init.P:mysql_init.in])
+AC_CONFIG_FILES([mysql_init.P:mysql_init.in])
+AC_OUTPUT
