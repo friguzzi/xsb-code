@@ -711,6 +711,8 @@ with_odbc_libdir
 with_odbc_incdir
 with_mysql_libdir
 with_mysql_incdir
+with_mariadb_libdir
+with_mariadb_incdir
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1345,6 +1347,8 @@ Optional Packages:
   --with-odbc-incdir=DIR	   ignored
   --with-mysql-libdir=DIR	   ignored
   --with-mysql-incdir=DIR	   ignored
+  --with-mariadb-libdir=DIR	   ignored
+  --with-mariadb-incdir=DIR	   ignored
 
 Some influential environment variables:
   CC          C compiler command
@@ -2378,6 +2382,21 @@ fi
 if test ${with_mysql_incdir+y}
 then :
   withval=$with_mysql_incdir;
+fi
+
+
+
+# Check whether --with-mariadb-libdir was given.
+if test ${with_mariadb_libdir+y}
+then :
+  withval=$with_mariadb_libdir;
+fi
+
+
+# Check whether --with-mariadb-incdir was given.
+if test ${with_mariadb_incdir+y}
+then :
+  withval=$with_mariadb_incdir;
 fi
 
 

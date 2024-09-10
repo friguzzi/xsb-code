@@ -45,6 +45,10 @@ AC_ARG_WITH(mysqlembedded-libdir,
 [  --with-mysqlembedded-libdir=DIR	   ignored])
 AC_ARG_WITH(mysqlembedded-incdir,
 [  --with-mysqlembedded-incdir=DIR	   ignored])
+AC_ARG_WITH(mariadb-libdir,
+[  --with-mariadb-libdir=DIR	   ignored])
+AC_ARG_WITH(mariadb-incdir,
+[  --with-mariadb-incdir=DIR	   ignored])
 
 
 

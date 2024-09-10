@@ -2,7 +2,7 @@
 ## Author(s): kifer
 ## Contact:   xsb-contact@cs.sunysb.edu
 ## 
-## Copyright (C) The Research Foundation of SUNY, 2003
+## Copyright (C) The Research Foundation of SUNY, 2024 - 2025
 ## 
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -37,6 +37,19 @@ AC_ARG_WITH(mariadb-libdir,
 AC_ARG_WITH(mariadb-incdir,
 [  --with-mariadb-incdir=DIR	   the directory of MariaDB include files])
 
+
+AC_ARG_WITH(mysql-libdir,
+[  --with-mysql-libdir=DIR	   ignored])
+AC_ARG_WITH(mysql-incdir,
+[  --with-mysql-incdir=DIR	   ignored])
+AC_ARG_WITH(odbc-libdir,
+[  --with-odbc-libdir=DIR	   ignored])
+AC_ARG_WITH(odbc-incdir,
+[  --with-odbc-incdir=DIR	   ignored])
+AC_ARG_WITH(mysqlembedded-libdir,
+[  --with-mysqlembedded-libdir=DIR	   ignored])
+AC_ARG_WITH(mysqlembedded-incdir,
+[  --with-mysqlembedded-incdir=DIR	   ignored])
 
 build_dir="`pwd`"
 # strip the last three directories and possibly trailing slashes

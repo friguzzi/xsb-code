@@ -709,6 +709,8 @@ with_odbc_libdir
 with_odbc_incdir
 with_mysql_libdir
 with_mysql_incdir
+with_mariadb_libdir
+with_mariadb_incdir
 with_mysqlembedded_libdir
 with_mysqlembedded_incdir
 '
@@ -1343,6 +1345,8 @@ Optional Packages:
   --with-odbc-incdir=DIR	   the directory of ODBC include files
   --with-mysql-libdir=DIR	   ignored
   --with-mysql-incdir=DIR	   ignored
+  --with-mariadb-libdir=DIR	   ignored
+  --with-mariadb-incdir=DIR	   ignored
   --with-mysqlembedded-libdir=DIR	   ignored
   --with-mysqlembedded-incdir=DIR	   ignored
 
@@ -2364,6 +2368,20 @@ fi
 if test ${with_mysql_incdir+y}
 then :
   withval=$with_mysql_incdir;
+fi
+
+
+# Check whether --with-mariadb-libdir was given.
+if test ${with_mariadb_libdir+y}
+then :
+  withval=$with_mariadb_libdir;
+fi
+
+
+# Check whether --with-mariadb-incdir was given.
+if test ${with_mariadb_incdir+y}
+then :
+  withval=$with_mariadb_incdir;
 fi
 
 

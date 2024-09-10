@@ -707,6 +707,12 @@ ac_user_opts='
 enable_option_checking
 with_mariadb_libdir
 with_mariadb_incdir
+with_mysql_libdir
+with_mysql_incdir
+with_odbc_libdir
+with_odbc_incdir
+with_mysqlembedded_libdir
+with_mysqlembedded_incdir
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1337,6 +1343,12 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-mariadb-libdir=DIR	   the directory where the MariaDB library lives
   --with-mariadb-incdir=DIR	   the directory of MariaDB include files
+  --with-mysql-libdir=DIR	   ignored
+  --with-mysql-incdir=DIR	   ignored
+  --with-odbc-libdir=DIR	   ignored
+  --with-odbc-incdir=DIR	   ignored
+  --with-mysqlembedded-libdir=DIR	   ignored
+  --with-mysqlembedded-incdir=DIR	   ignored
 
 Some influential environment variables:
   CC          C compiler command
@@ -2343,6 +2355,49 @@ then :
   withval=$with_mariadb_incdir;
 fi
 
+
+
+
+# Check whether --with-mysql-libdir was given.
+if test ${with_mysql_libdir+y}
+then :
+  withval=$with_mysql_libdir;
+fi
+
+
+# Check whether --with-mysql-incdir was given.
+if test ${with_mysql_incdir+y}
+then :
+  withval=$with_mysql_incdir;
+fi
+
+
+# Check whether --with-odbc-libdir was given.
+if test ${with_odbc_libdir+y}
+then :
+  withval=$with_odbc_libdir;
+fi
+
+
+# Check whether --with-odbc-incdir was given.
+if test ${with_odbc_incdir+y}
+then :
+  withval=$with_odbc_incdir;
+fi
+
+
+# Check whether --with-mysqlembedded-libdir was given.
+if test ${with_mysqlembedded_libdir+y}
+then :
+  withval=$with_mysqlembedded_libdir;
+fi
+
+
+# Check whether --with-mysqlembedded-incdir was given.
+if test ${with_mysqlembedded_incdir+y}
+then :
+  withval=$with_mysqlembedded_incdir;
+fi
 
 
 build_dir="`pwd`"
