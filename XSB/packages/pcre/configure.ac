@@ -29,9 +29,10 @@ dnl  in the directory containing this script.
 dnl
 dnl
 
-AC_PREREQ(2.12)dnl
+AC_PREREQ([2.71])dnl
 
-AC_INIT(pcreconfig.P)
+AC_INIT
+AC_CONFIG_SRCDIR([pcreconfig.P])
 
 SHELL=/bin/sh
 
@@ -41,7 +42,7 @@ topdir=`echo "${build_dir}" | sed 's,/[[^/]][[^/]]*/*/[[^/]][[^/]]*/*$,,'`
 
 
 # Tell where the autoconf scripts are
-AC_CONFIG_AUX_DIR("$topdir/build")
+AC_CONFIG_AUX_DIR("../../build")
 
 AC_ARG_WITH(pcre-libdir,
 [  --with-pcre-libdir=DIR       the location of the libpcre.so is at DIR])
@@ -113,7 +114,8 @@ AC_SUBST(support)
 AC_SUBST(ccflags)
 AC_SUBST(ldflags)
 
-AC_OUTPUT([pcre_info.P:pcre_info.in])
+AC_CONFIG_FILES([pcre_info.P:pcre_info.in])
+AC_OUTPUT
 
 (
 echo "  PCRE support (Perl pattern matching):           $support"

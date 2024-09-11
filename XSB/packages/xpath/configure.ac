@@ -25,9 +25,10 @@ dnl  in the directory containing this script.
 dnl
 dnl
 
-AC_PREREQ(2.12)dnl
+AC_PREREQ([2.71])dnl
 
-AC_INIT(xpathconfig.P)
+AC_INIT
+AC_CONFIG_SRCDIR([xpathconfig.P])
 
 SHELL=/bin/sh
 
@@ -37,7 +38,7 @@ topdir=`echo "${build_dir}" | sed 's,/[[^/]][[^/]]*/*/[[^/]][[^/]]*/*$,,'`
 
 
 # Tell where the autoconf scripts are
-AC_CONFIG_AUX_DIR("$topdir/build")
+AC_CONFIG_AUX_DIR("../../build")
 
 dnl Check configuration for a Unix variant
 AC_CANONICAL_HOST
@@ -96,4 +97,5 @@ EOT
 fi
 ) | tee Installation_summary
 
-AC_OUTPUT([xpath_init.P:xpath_init.in])
+AC_CONFIG_FILES([xpath_init.P:xpath_init.in])
+AC_OUTPUT

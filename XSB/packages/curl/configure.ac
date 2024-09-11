@@ -25,9 +25,10 @@ dnl  in the directory containing this script.
 dnl
 dnl
 
-AC_PREREQ(2.12)dnl
+AC_PREREQ([2.71])dnl
 
-AC_INIT(curlconfig.P)
+AC_INIT
+AC_CONFIG_SRCDIR([curlconfig.P])
 
 SHELL=/bin/sh
 
@@ -37,7 +38,7 @@ topdir=`echo "${build_dir}" | sed 's,/[[^/]][[^/]]*/*/[[^/]][[^/]]*/*$,,'`
 
 
 # Tell where the autoconf scripts are
-AC_CONFIG_AUX_DIR("$topdir/build")
+AC_CONFIG_AUX_DIR("../../build")
 
 AC_ARG_WITH(curl-libdir,
 [  --with-curl-libdir=DIR       the location of the libcurl.so is at DIR])
@@ -109,7 +110,8 @@ AC_SUBST(support)
 AC_SUBST(ccflags)
 AC_SUBST(ldflags)
 
-AC_OUTPUT([curl_info.P:curl_info.in])
+AC_CONFIG_FILES([curl_info.P:curl_info.in])
+AC_OUTPUT
 
 (
 echo "  Curl support (HTTP protocol library):           $support"
