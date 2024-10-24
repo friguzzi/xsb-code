@@ -1,5 +1,5 @@
 /*
- Parson ( http://kgabis.github.com/parson/ )
+ Parson ( https://github.com/kgabis/parson )
  Copyright (c) 2012 - 2016 Krzysztof Gabis
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -19,6 +19,9 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
+
+ With additions by Michael Kifer (kifer@cs.stonybrook.edu), mostly
+ improving error reporting.
 */
 
 #ifndef parson_parson_h
