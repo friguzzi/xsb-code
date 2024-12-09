@@ -1222,6 +1222,7 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
 	xsb_error("Module %s is not parameterized, but %d actual parameters provided",
 		  name,get_arity(get_str_psc(modpars)));
       }
+      modformals = modpars;
     }
     ptr = insert_module(T_MODU, name);
     cur_mod = ptr->psc_ptr;
