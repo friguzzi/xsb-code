@@ -224,7 +224,7 @@ sym_propin1(Type, prop(OType,_,_,_,_,_), N, A) :-
 sym_propin1(Env, prop(_,OEnv,_,_,_,_), N, A) :-
 	env_prop(Env),
 	!,
-	( Env = OEnv, !
+	(   (	Env = OEnv ; Env=im(_), OEnv==ex), ! 
 	; error((N/A, ' is declared ', OEnv, ', cannot declare it ', Env, ' !'))
 	).
 sym_propin1(Def, prop(_,_,ODef,_,_,_), N, A) :-

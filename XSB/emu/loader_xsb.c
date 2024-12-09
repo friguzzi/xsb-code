@@ -676,6 +676,8 @@ int env; byte type;
     if (t_type && type && t_type != type) {
       if (t_type==T_UDEF && (type==T_PRED || type==T_DYNA || type==T_FORN)) ;
       else if (t_type==T_FORN && type==T_UDEF) psc_set_type(psc, T_FORN);
+      else /* allow imported and undefined to be exported */
+	if (t_type==T_IMPORTED && type==T_UDEF) psc_set_type(psc,t_type);
       else xsb_error("incompatible types in the use of %s/%d (%x with %x)",
 		     get_name(psc), get_arity(psc), type, t_type);
     } else psc_set_type(psc, type | t_type);  
@@ -730,7 +732,7 @@ void replace_form_by_act(char *name, prolog_term modformals, prolog_term modactu
   int i, arity;
   size_t namelen, formallen, actuallen;
 
-  if (isinteger(modactuals) || isinteger(modformals)) return;
+  if (isinteger(modactuals) || isinteger(modformals) || modformals == 0) return;
   if (isstring(modactuals) || isstring(modformals)) {
     size_t name_len = strlen(name);
     if (name[0] == '\'' && name[name_len-1] == '\'') {
@@ -943,8 +945,9 @@ static xsbBool load_one_sym(CTXTdeclc FILE *fd, char *filename, Psc cur_mod, int
 	}
 	mod = cur_mod;  /* mod of this symbol is cur_mod */
       }
-    } else if ((t_env&0x7) == T_GLOBAL)
+    } else if ((t_env&0x7) == T_GLOBAL) {
       mod = global_mod;
+    }
     else mod = cur_mod;
 
     temp_pair = insert(str.string, t_arity, mod, &is_new);
@@ -1184,6 +1187,10 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
     if (immutable && pflags[VERBOSENESS_LEVEL]) {
       printf("Warning: non-module loading as immutable: %s\n",name);
     }
+    if (!isinteger(modpars) && !isstring(modpars)) {
+      xsb_error("Non-module is called as parameterized: %s/%d",
+		get_name(get_str_psc(modpars)),get_arity(get_str_psc(modpars)));
+    }
   }
   else { // loading a module
     if (name[0] == '\'' || strstr(name,")") != NULL) {
@@ -1199,19 +1206,22 @@ static byte *loader1(CTXTdeclc FILE *fd, char *filename, int exp, int immutable,
       if (isstring(modformals) && !isstring(modpars)) {
 	xsb_error("Module %s is not parameterized, but %d actual parameters provided",
 		  name,get_arity(get_str_psc(modpars)));
-		  }
+      }
+      if (!isstring(modformals) && isstring(modpars)) {
+	xsb_error("Module %s is parameterized, but no actual parameters provided",
+		  name);
+      }
       if (!((isstring(modformals) && isstring(modpars)) ||
 	    (isstr(modformals) && isstr(modpars) &&
 	     get_arity(get_str_psc(modformals)) == get_arity(get_str_psc(modpars))))) {
 	xsb_error("Module %s, inconsistent number of formal and actual parameters",name);
-	}
+      }
       replace_form_by_act(name,modformals,modpars);  // formal pars by actual pars in name to name
     } else {
       if (!isinteger(modpars) && !isstring(modpars)) {
 	xsb_error("Module %s is not parameterized, but %d actual parameters provided",
 		  name,get_arity(get_str_psc(modpars)));
-		  }
-      modformals = modpars;
+      }
     }
     ptr = insert_module(T_MODU, name);
     cur_mod = ptr->psc_ptr;
