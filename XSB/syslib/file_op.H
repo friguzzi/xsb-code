@@ -39,6 +39,7 @@
 
 :- import integer/1, functor/3, atom/1, '_$multifile'/1, '_$multifile_comp'/2 from standard.
 :- import warning/1 from standard.
+:- import term_to_atom/3 from string.
 
 :- import instantiation_error/2 from error_handler.
 :- import dynamic_pred_has_clauses/2 from assert.

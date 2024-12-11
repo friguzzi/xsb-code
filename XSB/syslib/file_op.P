@@ -61,7 +61,7 @@ add_ops(_P,_T, []).
 add_ops( P, T, [OP|OPs]) :- add_op(P, T, OP), add_ops(P, T, OPs).
 
 add_op(0, T, S) :- 
-	dyn_op(0, T, S),	% An already deleted op doesn't 
+	dyn_op(0, T, S),	% An already deleted op doesnt 
 	!.			% need to be deleted again.
 add_op(0, T, S) :-
 	'_$op'(_, T, S),	% op S is a current op
@@ -414,8 +414,9 @@ conv_one_indx(A,Arity,Aout) :-
 
 % TLS: added some checking here, as I think silently failing can be dangerous.
 :- mode mpa_to_skel(?,?).
-mpa_to_skel(Mod:P/A,Skel) :-
-	atom(Mod),atom(P),integer(A),!,
+mpa_to_skel(Mod0:P/A,Skel) :-
+	(atom(Mod0);compound(Mod0)),atom(P),integer(A),!,
+	term_to_atom(Mod0,Mod,[quoted(true)]),
 	psc_insert(P,A,PSC,Mod),
 	term_new(PSC,Skel).
 mpa_to_skel(P/A,Skel) :- 
