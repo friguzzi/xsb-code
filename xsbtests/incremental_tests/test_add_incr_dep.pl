@@ -11,15 +11,15 @@ test:- incr_directly_depends(t1(X,Y),D),
        writeln('%---------'),
        fail.
 test:- catch(t2(_X,_Y),E,(xsb_error_get_message(E,Msg),
-			  writeln(caight_t2(Msg)))),
+			  writeln(caught_t2(Msg)))),
        writeln('%---------'),
        fail.
 test:- catch(t3(_X,_Y),E,(xsb_error_get_message(E,Msg),
-			  writeln(caight_t2(Msg)))),
+			  writeln(caught_t2(Msg)))),
        writeln('%---------'),
        fail.
 test:- catch(t4(_X,_Y),E,(xsb_error_get_message(E,Msg),
-			  writeln(caight_t2(Msg)))),
+			  writeln(caught_t2(Msg)))),
        writeln('%---------'),
        fail.
 test.
