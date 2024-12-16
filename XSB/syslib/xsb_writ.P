@@ -53,7 +53,7 @@ file_nl(File) :-
 file_write(File, Term) :- 
 	xsb_stream_lock(File),
 %	xsb_sys_mutex_lock(MUTEX_IO),
-	l_write(File, Term, 999), 
+	l_write(File, Term, 1000),  %dsw changed 999 to 1000?
 %	xsb_sys_mutex_unlock(MUTEX_IO), 
 	xsb_stream_unlock(File),
 	fail.
@@ -63,7 +63,7 @@ file_write(_, _).
 file_write0(File, Term) :- 
 	xsb_stream_lock(File),
 %	xsb_sys_mutex_lock(MUTEX_IO),
-	l_write(File, Term, 999), 
+	l_write(File, Term, 1000),  %dsw changed 999 to 1000?
 %	xsb_sys_mutex_unlock(MUTEX_IO),
 	xsb_stream_unlock(File),
 	fail.
@@ -264,7 +264,7 @@ l_writevar(File, N, Quoted, D,Flag) :-
 	             file_puttoken(File, XSB_STRING, '$VAR'), 
 	             file_put(File, CH_QUOTE) ),
 	        file_put(File, CH_LPAREN),
-	        l_write(File, N, 999, D,Flag),
+	        l_write(File, N, 1000, D,Flag), %dsw changed 999 to 1000?
 	        file_put(File, CH_RPAREN) ).
 
 l_writeattrvar(File,Var,Flag) :-
@@ -293,7 +293,7 @@ l_writestr(File, Name, N, Term, D,Flag) :-
 l_write_curly(File, Term, D,Flag) :- 
 	file_put(File, CH_LBRACE),	% {
 	term_arg(Term, 1, Arg),
-	l_write(File, Arg, 999, D,Flag),
+	l_write(File, Arg, 1000, D,Flag),
 	file_put(File, CH_RBRACE).	% }
 
 l_hilog_writestr(File, N, Term, D,Flag) :-
@@ -405,7 +405,7 @@ l_writetail(File, X, D,Flag) :-
 file_write_prolog(File, Term) :- 
 	xsb_stream_lock(File),
 %	xsb_sys_mutex_lock(MUTEX_IO),
-	l_write_prolog(File, Term, 999), 
+	l_write_prolog(File, Term, 1000), %dsw changed 999 to 1000?
 %	xsb_sys_mutex_unlock(MUTEX_IO),
 	xsb_stream_unlock(File),
 	fail.
@@ -481,7 +481,7 @@ l_writevar_prolog(File, N, Quoted) :-
 	    file_put(File, CH_QUOTE)
 	  ),
 	  file_put(File, CH_LPAREN),
-	  l_write_prolog(File, N, 999),
+	  l_write_prolog(File, N, 1000), %dsw changed 999 to 1000?
 	  file_put(File, CH_RPAREN)
 	).
 l_writestr_prolog(File, Name, N, Term) :-
@@ -495,7 +495,7 @@ l_writestr_prolog(File, Name, N, Term) :-
 l_write_curly_prolog(File, Term) :- 
 	file_put(File, CH_LBRACE),	% {
 	term_arg(Term, 1, Arg),
-	l_write_prolog(File, Arg, 999),
+	l_write_prolog(File, Arg, 1000), %dsw changed 999 to 1000?
 	file_put(File, CH_RBRACE).	% }
 
 l_writebinop_prolog(File, Op, Term, Oldp, Curp, Newlp, Newrp) :- 
@@ -576,7 +576,7 @@ file_write_quoted(File, Term) :-
 	xsb_stream_lock(File),
 %	xsb_sys_mutex_lock(MUTEX_IO),
         stat_flag(WRITE_DEPTH,Level),
-	l_write_quoted(File, Term, 999,Level), 
+	l_write_quoted(File, Term, 1000,Level), %dsw changed 999 to 1000?
 %	xsb_sys_mutex_unlock(MUTEX_IO),
 	xsb_stream_unlock(File),
 	fail.
@@ -673,7 +673,7 @@ l_writestr_quoted(File, Name, N, Term,Level) :-
 l_write_curly_quoted(File, Term,Level) :- 
 	file_put(File, CH_LBRACE),	% {
 	term_arg(Term, 1, Arg),
-	l_write_quoted(File, Arg, 999,Level),
+	l_write_quoted(File, Arg, 1000,Level), %dsw changed 999 to 1000?
 	file_put(File, CH_RBRACE).	% }
 
 l_hilog_writestr_quoted(File, N, Term,Level) :-
