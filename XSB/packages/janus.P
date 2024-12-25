@@ -19,7 +19,7 @@
 :- bootstrap_package(janus, janus).
 
 %:- import term_to_atom/2 from string.
-:- import member/2,memberchk/2 from basics.
+:- import comma_member/2,comma_memberchk/2,member/2 from basics.
 :- import check_callable/3,check_nonvar/2,domain_error/4,type_error/4
    from error_handler.
 
@@ -185,11 +185,18 @@ values(Dict,List,Val):-
     values(Dict,Key,Dict1),
     values(Dict1,Rest,Val).
 values(Dict,Key,Val):-
-    Dict = PYDICT_PROLOG(List),
+    Dict = {CommaList},
 %    pp_py(List),
     (nonvar(Key) -> 
-	    memberchk(PYTUP_PROLOG(Key,Val),List)
-	 ; member(PYTUP_PROLOG(Key,Val),List)).
+	 comma_memberchk(Key:Val,CommaList)
+    ;    comma_member(Key:Val,CommaList)).
+	 
+%values(Dict,Key,Val):-
+%    Dict = PYDICT_PROLOG(List),
+%    pp_py(List),
+%    (nonvar(Key) -> 
+%	    memberchk(PYTUP_PROLOG(Key,Val),List)
+%	 ; member(PYTUP_PROLOG(Key,Val),List)).
 	 
 obj_dict(Obj,Dict):-
     py_dot(Obj,'__dict__',Dict).
@@ -199,7 +206,7 @@ obj_dir(Obj,Dir):-
 
 :- import pyObj/1 from usermod.
 py_call(pyObj(O):Call,Ret):- !,
-   writeln(py_call(pyObj(O):Call,Ret)),
+%   writeln(py_call(pyObj(O):Call,Ret)),
     (Call = _C1:_C2 ->
 	 pcpo(pyObj(O),Call,Ret)
       ;  py_dot(pyObj(O),Call,Ret) ).
@@ -223,6 +230,7 @@ pcpo(Mod,Call,Ret):- !,
       py_dot(Mod,Call,Ret)
     ; py_func(Mod,Call,Ret) ).
 
+/* Maybe need this 
 pc_eval(Call,NewCall):-
     Call =.. [Func|L],
     (L = [] ->
@@ -238,6 +246,7 @@ pc_eval_1([eval(Goal)|T],[Res|NT]):- !,
     pc_eval_1(T,NT).
 pc_eval_1([Arg|T],[Arg|NT]):-
     pc_eval_1(T,NT).
+*/
 
 py_call(pyObj(O):Call,Ret,Opt):- !,
     py_dot(pyObj(O),Call,Ret,Opt).
