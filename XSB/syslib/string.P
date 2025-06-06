@@ -58,6 +58,8 @@ atomlist_to_codelist([A|As],[C|Cs]) :-
      ->	atom_codes(A,C)
      ; number(A)
      ->	number_codes(A,C)
+     ; A @= @(_)
+     ->	A = @(At), atom_codes(At,C)
      ;	A = C
     ),
     atomlist_to_codelist(As,Cs).
@@ -96,8 +98,10 @@ c_atom(A,L0,L) :-
 		c_atom(A1,L1,L)
 	 ;	(atom(A)
 		 ->	atom_codes(A,AC)
-		 ;	number(A)
+		 ;  number(A)
 		 ->	number_codes(A,AC)
+		 ;  A @= @(_)
+		 ->     A = @(At), atom_codes(At,AC)
 		 ;	warning(('concat_atom failed due to element: ',A)),
 			fail
 		),
