@@ -150,7 +150,7 @@ extern FILE * fview_ptr;
 
 extern int is_ancestor_sf(VariantSF consumer_sf, VariantSF producer_sf);
 
-#define MAX_INTERNED_TRIES 2003
+#define MAX_INTERNED_TRIES 4003
 
 typedef struct Table_Status_Frame {
   int pred_type;
