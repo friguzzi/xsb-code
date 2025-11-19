@@ -1986,7 +1986,7 @@ void load_solution_trie(CTXTdeclc int arity, int attv_num, CPtr cptr, BTNptr Tri
     }
     heap_needed = follow_par_chain(CTXTc TriePtr); /* side-effect: fills termstack */
     if (glstack_overflow(heap_needed*sizeof(Cell))) {
-      xsb_warn(CTXTc "stack overflow could cause problems for delay lists\n");
+      xsb_warn(CTXTc "stack overflow (%lld cells needed) could cause problems for delay lists\n",heap_needed*sizeof(Cell));
       handle_heap_overflow_trie(CTXTc &cptr,arity,heap_needed);
     }
     load_solution_trie_1(CTXTc arity,cptr);
