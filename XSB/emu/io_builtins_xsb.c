@@ -1677,6 +1677,7 @@ int xsb_intern_file(CTXTdeclc char *context,char *addr, int *ioport,char *strmod
     }
     if (!(retcode= stat_function(addr, &stat_buff)) && !S_ISDIR(stat_buff.st_mode)) {
 	/* file exists and isn't a dir */
+      clearerr(fptr);  // somehow needed?
       open_files[first_null].file_ptr = fptr;
       open_files[first_null].file_name = string_find(addr,1);
       open_files[first_null].line_number = 0;
