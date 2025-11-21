@@ -989,7 +989,18 @@ clause(Head0, Body) :-
     ),
     check_clause(Head),
     clause0(Head, Body0),
-    goal_cut_untrans(Body0, Body).
+    term_psc(Body0,BPSC),
+    psc_arity(BPSC,BArity),
+    (BArity =:= 0
+     ->	psc_mod(BPSC,BModPSC),
+        psc_name(BModPSC,BModName),
+        (BModName == usermod
+	 -> psc_name(BPSC,Body1)
+	 ;  Body1 = Body0
+	)
+     ;  Body1 = Body0
+    ),
+    goal_cut_untrans(Body1, Body).
 
 :- mode clause0(?,?).
 clause0(Head, Body) :-
