@@ -32,10 +32,10 @@
 	  comma_length/2, comma_member/2, comma_append/3.
 
 /* TES: basics imports from string and vice-versa, but it seems to work */
-:- import substring/4,str_len/2,str_sub/3 from string.
+:- import substring/4,str_sub/3 from string.
 :- import last/2 from lists as list_last/2.
 :- import integer/1, is_list/1 from standard.
 :- import arg/3, functor/3 from standard.
 :- import check_nonvar/3, check_integer/3, check_nonneg_integer/3 from error_handler.
-:- import parsort/4 from machine.
+:- import parsort/4, str_len/2 from machine.
 :- import sort/3 from setof.
