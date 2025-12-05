@@ -668,7 +668,7 @@ table_index_trans_pred(Sym,Pscs,Oth,Indexes,ClList,SymTab) :-
 			      im(pred_table_pred/2,tables),
 			      im(assert/1,assert),
 			      im(retractall/1,assert),
-			      im(numbervars/1,usermod)
+			      im(numbervars/1,num_vars)
 			      ], SymTab).
 
 gen_ind_clauses([],_BaseOrd,_Pred,_Arity,_NonAbsPoss,_OrdPred,_ClList,_SymTab).
