@@ -289,7 +289,7 @@ check_metapredicates(Sym,Args):-
 	Meta = structure(NewSym,NSArgs),
 %	message(meta(Meta)),
 	(A =:= 1,
-	 (F == assert ; F == asserta ; F == assertz),
+	 (F == assert ; F == asserta ; F == assertz ; F == retract),
 	 sym_name(NewSym,(:-),2)
 	 -> NSArgs = [Head,_],
 	    ((Head = structure(HeadSym,_) ; Head = constant(HeadSym))
