@@ -84,6 +84,7 @@ rm -f varcond.xwam
 # Test format library
 #------------------------------------
 ../gentest.sh "$XEMU $options" format_test "test."
+../gentest.sh "$XEMU $options" pip_0110_format_test "test."
 #------------------------------------
 # Test listing/0
 #------------------------------------
