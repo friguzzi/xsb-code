@@ -1407,27 +1407,27 @@ load_forest_log(File):-
 
 forest_log_overview:- 
 	total_subgoals(TotSubg),total_sccs(TotSCCs),
-	format("There were ~1D subgoals in ~1D (completed) SCCs.~n",[TotSubg,TotSCCs]),
+	format("There were ~D subgoals in ~D (completed) SCCs.~n",[TotSubg,TotSCCs]),
 	count_ecs(Len),
-	format("   ~1D subgoals were early-completed.~n",[Len]),
+	format("   ~D subgoals were early-completed.~n",[Len]),
 	total_noncompleted_subgoals(NonComp),
-	format("   ~1D subgoals were not completed in the log.~n",[NonComp]),
+	format("   ˜D subgoals were not completed in the log.~n",[NonComp]),
 	count_pos_calls(Calls,New,Incomplete,Completed),
-	format("   There were a total of ~1D positive tabled subgoal calls:~n",[Calls]),
-	format("      ~1D were calls to new subgoals~n",[New]),
-	format("      ~1D were calls to incomplete subgoals~n",[Incomplete]),
-	format("      ~1D were calls to complete subgoals~n",[Completed]),
+	format("   There were a total of ~D positive tabled subgoal calls:~n",[Calls]),
+	format("      ~D were calls to new subgoals~n",[New]),
+	format("      ~D were calls to incomplete subgoals~n",[Incomplete]),
+	format("      ~D were calls to complete subgoals~n",[Completed]),
 	count_neg_calls(NCalls,NNew,NIncomplete,NCompleted),
-	format("   There were a total of ~1D negative tabled subgoal calls:~n",[NCalls]),
-	format("      ~1D were calls to new subgoals~n",[NNew]),
-	format("      ~1D were calls to incomplete subgoals~n",[NIncomplete]),
-	format("      ~1D were calls to complete subgoals~n",[NCompleted]),
+	format("   There were a total of ~D negative tabled subgoal calls:~n",[NCalls]),
+	format("      ~D were calls to new subgoals~n",[NNew]),
+	format("      ~D were calls to incomplete subgoals~n",[NIncomplete]),
+	format("      ~D were calls to complete subgoals~n",[NCompleted]),
 	count_delays_and_simpls(NDelays,NSimpl),
-	format("There were a total of ~1D negative delays~n",[NDelays]),
-	format("There were a total of ~1D simplifications~n",[NSimpl]),
+	format("There were a total of ~D negative delays~n",[NDelays]),
+	format("There were a total of ~D simplifications~n",[NSimpl]),
 	count_answers(NU,NC),
-	format("There were a total of ~1D unconditional answers derived:~n",[NU]),
-	format("There were a total of ~1D conditional answers derived:~n",[NC]),
+	format("There were a total of ~D unconditional answers derived:~n",[NU]),
+	format("There were a total of ~D conditional answers derived:~n",[NC]),
 	nl,
 	report_sccs.
 
@@ -1529,10 +1529,10 @@ analyze_an_scc(Scc,File):-
 	count_backlinks_in_scc(Scc,Links,Ninks),
 	TotLinks is Subgoals+Links+Ninks-1,
 	Density is (Subgoals+Links)/Subgoals,
-	format("There are ~1D subgoals and ~1D links (average of ~f edges per subgoal) within the SCC~n",
+	format("There are ~D subgoals and ~D links (average of ~f edges per subgoal) within the SCC~n",
 		[Subgoals,TotLinks,Density]),
 	count_delays(Scc,Delays),
-	format("There are ~1D negative edges resulting in ~1D delays and 0 simplifications~n",
+	format("There are ~D negative edges resulting in ~D delays and 0 simplifications~n",
 		[Ninks,Delays]),
 	nl,count_preds(Scc),
 	nl,report_links(Scc,File).
@@ -1547,17 +1547,19 @@ scc_has_delay(Scc):-
 
 :- mode analyze_an_scc(+,+,?).
 analyze_an_scc(Scc,File,Abstraction_in):-
-	functor(Abstraction_in,F,A),
-	(F = ':',A = 2 -> 
-	    arg(1,Abstraction_in,Module),arg(2,Abstraction_in,Abstraction) 
-	  ; Module = usermod,Abstraction = Abstraction_in),
-	count_subgoals_in_scc(Scc,Subgoals),
-	count_backlinks_in_scc(Scc,Links,Ninks),
-	Density is (Subgoals+Links)/Subgoals,
-	format("There are ~1D subgoals and ~1D links (average of ~f edges per subgoal) within the SCC~n",
-		[Subgoals,Links,Density]),
-	format("There are ~1D negative edges resulting in 0 delays and 0 simplifications~n",
+  functor(Abstraction_in,F,A),
+  (F = ':',A = 2 -> 
+    arg(1,Abstraction_in,Module),arg(2,Abstraction_in,Abstraction) 
+ ; Module = usermod,Abstraction = Abstraction_in),
+ count_subgoals_in_scc(Scc,Subgoals),
+ count_backlinks_in_scc(Scc,Links,Ninks),
+ Density is (Subgoals+Links)/Subgoals,
+ format("There are ~D subgoals and ~D links (average of ~f edges per subgoal) within the SCC~n",	[Subgoals,Links,Density]),
+%	format("There are ~D subgoals and ~D links (average of ~f edges per subgoal) within the SCC~n"
+ format("There are ~D negative edges resulting in 0 delays and 0 simplifications~n",
 		[Ninks]),
+%	format("There are ~D negative edges resulting in 0 delays and 0 simplifications~n",
+%		[Ninks]),
 	nl,count_preds(Scc,Module,Abstraction),
 	nl,report_links(Scc,File,Module,Abstraction).
 
@@ -1581,7 +1583,7 @@ negbacklink_in_scc(T1,Scc):-
 count_preds(S):- 
 	setof(pred(C,P),count_preds_1(S,P,C),Preds),
 	member(pred(C,P),Preds),
-	format("There are ~1D subgoals in the SCC for the predicate ",[C]),
+	format("There are ~D subgoals in the SCC for the predicate ",[C]),
 	P = F/A,
 	write(F),write('/'),writeln(A),
 %	writeln(Thre are pred(P,C)),
@@ -1591,7 +1593,7 @@ count_preds(_).
 count_preds(S,Module,Abstraction):- 
 	setof(pred(C,P),count_preds_1(S,P,C,Module,Abstraction),Preds),
 	member(pred(C,P),Preds),
-	format("There are ~1D subgoals in the SCC for the predicate ~q~n",[C,P]),
+	format("There are ~D subgoals in the SCC for the predicate ~q~n",[C,P]),
 	fail.
 count_preds(_,_,_).
 
@@ -1641,7 +1643,7 @@ report_links_1(Occs,File):-
 	tell(File),
 	(  member((From,To)-Count,Occs),
 	   write('Calls from '),write(From),write(' to '),write(To),
-	   format(" : ~1D~n",[Count]),
+	   format(" : ~D~n",[Count]),
 	   fail
 	 ; 
 	   true),
@@ -1933,8 +1935,8 @@ sdg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegS
         format("Subgoal: ~q~n",Subgoal),
 	(integer(Level) -> 
 	   Index is Level - Base,
-	   format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Index,CallsTo,Answers])
-         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
+format("        SCC: ~D; Number of calls to this subgoal ~D; Number of answers ~D~n",[Index,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~D; Number of answers ~D~n",[CallsTo,Answers]) ),
 	(PosSFList == [] -> true 
           ; get_subgoal_list(PosSFList,AVL,PosSubgList),
 	    format("        Affects positively ",[]),
@@ -1961,8 +1963,8 @@ idg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegS
         numbervars(Subgoal),
         format("Tabled Subgoal: ~q~n",Subgoal),
 	(integer(Level) -> 
-	   format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Level,CallsTo,Answers])
-         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
+	   format("        SCC: ~D; Number of calls to this subgoal ~D; Number of answers ~D~n",[Level,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~D; Number of answers ~D~n",[CallsTo,Answers]) ),
 	(PosSFList == [] -> true 
           ; get_subgoal_list(PosSFList,AVL,PosSubgList),
 	    format("        Affects positively ",[]),
@@ -2031,8 +2033,8 @@ print_each_subgoal_no_deps([subgoal(Subgoal_orig,Level,_Key,CallsTo,Answers,_Pos
         format("Subgoal: ~q~n",Subgoal),
         (integer(Level) ->
            Index is Level - Base,
-           format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Index,CallsTo,Answers])
-         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
+           format("        SCC: ~D; Number of calls to this subgoal ~D; Number of answers ~d~n",[Index,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~D; Number of answers ~D~n",[CallsTo,Answers]) ),
         print_each_subgoal_no_deps(R,Base).
 
 get_subgoals_base_level(SDG,Base):- 
@@ -2276,9 +2278,9 @@ max_incomplete_subgoals_default_handler:-
 
 max_incomplete_subgoals_header:- 
   inc_subg_analysis_info(SubgNum,SCCNumber),
-  format("There are currently ~d incomplete tabled subgoals, which exceeds the limit set by the flag~n",
+  format("There are currently ~D incomplete tabled subgoals, which exceeds the limit set by the flag~n",
          [SubgNum]),
-  format("'max_incomplete_subgoals'.  These subgoals are in ~d separate recursive components.~n",[SCCNumber]),
+  format("'max_incomplete_subgoals'.  These subgoals are in ~D separate recursive components.~n",[SCCNumber]),
   format("~n"),
   format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
@@ -2313,12 +2315,12 @@ max_scc_subgoals_header:-
   current_prolog_flag(max_scc_subgoals,Max),
   scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers),
 %  writeln(scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers)),
-  format("A recursive component containing ~d incomplete tabled subgoals is currently under evaluation.~n",
+  format("A recursive component containing ~D incomplete tabled subgoals is currently under evaluation.~n",
 	 [NumSubgoals]), 
-  format("The size of this recursive component exceeds the limit of ~d set by the flag 'max_scc_subgoals'.~n",[Max]),
-  format("Together, the total number of dependency edges among all subgoals in this recursive component is ~d~n",[TotEdges]),
-  format("and the total number of answers for all subgoals in this component is ~d~n",[NumAnswers]),
-  format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
+  format("The size of this recursive component exceeds the limit of ~D set by the flag 'max_scc_subgoals'.~n",[Max]),
+  format("Together, the total number of dependency edges among all subgoals in this recursive component is ~D~n",[TotEdges]),
+  format("and the total number of answers for all subgoals in this component is ~D~n",[NumAnswers]),
+  format("~n  * To continue, reset the flag and then type Ctrl-D~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
    format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]),!.
    max_scc_subgoals_header.
@@ -2411,7 +2413,7 @@ max_answers_for_subgoal_default_handler:-
 
 max_answers_for_subgoal_header:- 
   current_prolog_flag(max_answers_for_subgoal,Max),
-  format("~d answers derived for a tabled subgoal~n",[Max]),
+  format("~D answers derived for a tabled subgoal~n",[Max]),
   format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
   format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
@@ -2437,7 +2439,7 @@ max_memory_default_handler:-
 
 max_memory_header:- 
   current_prolog_flag(max_memory,Max_mem),
-  format("~nThe maximum user-set memory of ~d has been exceeded~n",[Max_mem]),
+  format("~nThe maximum user-set memory of ~D has been exceeded~n",[Max_mem]),
   format("Details can be seen by typing statistics/0~n",[]),
   format("To support debugging and diagnosis, the limit has been increased by 20\\%.~n",[]),
   format("~n  * To continue set the flag to allow more memory, and then type Ctrl-d~n",[]),
