@@ -1,0 +1,11 @@
+
+:- [format].
+:- import format/2, format/3 from format.
+
+stream_location(Stream, Pos) :-
+	stream_property(Stream, position(Pos)).
+
+:- ['format_tests/test_harness_iso'].
+
+test :-
+	test('format_tests/format.tst').
