@@ -27,6 +27,7 @@
 :- compiler_options([optimize,sysmod,xpp_on]).
 
 #include "flag_defs_xsb.h"
+#include "io_defs_xsb.h"
 
 
 :- export format/2, format/3, format_control/1.
@@ -34,7 +35,7 @@
 %:- import write/1, nl/0,writeln/1 from standard.
 
 :- import  put_code/2, nl/1, write/2, writeq/2, 
-	write_canonical/2, atom_codes/2
+	write_canonical/2, atom_codes/2, number_codes/2
 	from standard.
 
 :- import xsb_configuration/2 from xsb_configuration.
@@ -48,11 +49,15 @@
 
 :-  import throw/1 from standard.
 
+:- import write_term/3 from write_term.
+
+:- import fmt_write/3 from file_io.
+
 :- import check_nonvar/3 from error_handler.
 
 :- import check_open_stream_or_alias/5 from file_io.
 
-:- import (\=)/2 from standard.
+:- import (\=)/2, '=..'/2 from standard.
 
 % ---------------------------------------------------------------------------------------------
 :- comment(title,"Formatted output").
@@ -389,6 +394,7 @@ position movement to @var{N}, where @var{N} defaults to @key{SPC}.
 :- mode format_control(+).
 format_control(C) :- isString(C).
 format_control(C) :- atom(C).  
+format_control(C) :- is_char_atom_list(C, _, _).
 
 % format(+Control, +Arguments)
 % format(+Stream, +Control, +Arguments)
@@ -407,7 +413,8 @@ format(Control_in, Args_in) :-
 	check_nonvar(Control_in,format/2,1),
 	check_nonvar(Args_in,format/2,1),
 	preproc_newlines(Control_in,Control),
-	preproc_newlines_list(Args_in,Args),
+	normalize_format_args(Args_in, Args0),
+	preproc_newlines_list(Args0,Args),
         current_output(Curr),
 	format1(Curr,Control, Args), !.
 format(Control, Arguments) :-
@@ -419,68 +426,59 @@ format(Stream_or_alias, Control_in, Args_in) :-
         check_nonvar(Control_in,format/2,2),
         check_nonvar(Args_in,format/2,3),
         preproc_newlines(Control_in,Control),
-        preproc_newlines_list(Args_in,Args),
+        normalize_format_args(Args_in, Args0),
+        preproc_newlines_list(Args0,Args),
         ( format1(Stream,Control, Args) -> true ; true), 
         !.
 format(_, Control, Arguments) :-
 	throw(error(parse_error(format(..., Control, Arguments)), format/3)).
 
 format1(Stream,Control, Arguments) :-
-	(   atom(Control) -> atom_codes(Control, ControlList)
-	;   ControlList=Control
-	),
-	(   ArgumentList=Arguments
-	;   ArgumentList=[Arguments]
-	),
+	control_codes(Control, ControlList),
+	is_proper_list(Arguments),
+	ArgumentList=Arguments,
 %	writeln(fmt_parse(Stream,ArgumentList, SpecList, ControlList, [])),
 	fmt_parse(ArgumentList, SpecList, ControlList, []), !,
 %	write(fmt_print(SpecList, 0, 0' , Stream)),nl,
 	fmt_print(SpecList, 0, 0' , Stream).
 
-fmt_print([], _, _, _).
-fmt_print([X|Xs], Tab, Fill, Stream) :- fmt_print(X, Xs, Tab, Fill, Stream).
+fmt_print(Specs, _, _, Stream) :-
+	fmt_print_specs(Specs, Stream, 0, 0, [], 0).
 
-fmt_print(settab(Arg,Tab0PlusArg,Pos,Tab), Xs, Tab0, Fill, Stream) :- !,
-	Tab0PlusArg is Tab0+Arg,
-%	line_position(Stream, Pos),
-	Pos = 0,
-	(   Pos>Tab ->
-	    nl(Stream),
-	    putn(Stream,Tab, Fill)
-	;   Skip is Tab-Pos,
-	    putn(Stream,Skip, Fill)
+fmt_print_specs([], Stream, _Pos, _LastTab, Buffer, _BufLen) :-
+	flush_buffer(Buffer, Stream).
+fmt_print_specs([fresh_line|Xs], Stream, Pos, _LastTab, Buffer, BufLen) :- !,
+	flush_buffer(Buffer, Stream),
+	(   Pos + BufLen =:= 0 ->
+	    fmt_print_specs(Xs, Stream, 0, 0, [], 0)
+	;   nl(Stream),
+	    fmt_print_specs(Xs, Stream, 0, 0, [], 0)
+	).
+fmt_print_specs([tab_stop(Mode,N)|Xs], Stream, Pos, LastTab, Buffer, BufLen) :- !,
+	CurrentPos is Pos + BufLen,
+	tab_stop_position(Mode, N, LastTab, CurrentPos, TabPos0),
+	(   TabPos0 < CurrentPos ->
+	    TabPos = CurrentPos,
+	    Padding = 0
+	;   TabPos = TabPos0,
+	    Padding is TabPos0 - CurrentPos
 	),
-	fmt_print(Xs, Tab, Fill, Stream).
-fmt_print(fill(Fill), Xs, Tab, _, Stream) :- !,
-	fmt_print(Xs, Tab, Fill, Stream).
-fmt_print(spec(X,A,N), Xs, Tab, Fill, Stream) :- !,
-%	line_count(Stream, Lc0),
-	fmt_pr(Stream,X, A, N),
-%	line_count(Stream, Lc),
-	fmt_print(Lc0, Lc0, Xs, Tab, Fill, Stream).
-fmt_print(0'
-	  , Xs, _, _, Stream) :- !,
-	nl(Stream),
-	fmt_print(Xs, 0, 0' , Stream).
-/*
-%% This is wrong! It causes the legitimate things like
-%% format:format('foo\\nbar',[]).
-%% to output
-%% foo
-%% bar
-fmt_print(92, [110|Xs], _, _, Stream) :- !,
-	nl(Stream),
-	fmt_print(Xs, 0, 0' , Stream).
-*/
-fmt_print(C, Xs, Tab, Fill, Stream) :-
-	Char is truncate(C),
-	put_code(Stream,Char),
-	fmt_print(Xs, Tab, Fill, Stream).
-
-fmt_print(Lc, Lc, Xs, Tab, Fill, Stream) :- !,
-	fmt_print(Xs, Tab, Fill, Stream).
-fmt_print(_, _, Xs, _, _, Stream) :- !,
-	fmt_print(Xs, 0, 0' , Stream).
+	flush_buffer_with_padding(Buffer, Padding, Stream),
+	fmt_print_specs(Xs, Stream, TabPos, TabPos, [], 0).
+fmt_print_specs([fill(Fill)|Xs], Stream, Pos, LastTab, Buffer, BufLen) :- !,
+	fmt_print_specs(Xs, Stream, Pos, LastTab, [tab(Fill)|Buffer], BufLen).
+fmt_print_specs([spec(X,A,N)|Xs], Stream, Pos, LastTab, Buffer, _BufLen) :- !,
+	flush_buffer(Buffer, Stream),
+	fmt_pr(Stream, X, A, N),
+	fmt_print_specs(Xs, Stream, Pos, LastTab, [], 0).
+fmt_print_specs([C|Xs], Stream, Pos, LastTab, Buffer, BufLen) :-
+	integer(C),
+	(   C =:= 10 ->
+	    flush_buffer(Buffer, Stream),
+	    nl(Stream),
+	    fmt_print_specs(Xs, Stream, 0, 0, [], 0)
+	;   fmt_print_specs(Xs, Stream, Pos, LastTab, [text([C],1)|Buffer], BufLen + 1)
+	).
 
 %---------------
 
@@ -490,6 +488,8 @@ fmt_parse(Args, Specs) --> [0'~, C1], !,
 fmt_parse(Args, Specs) --> [0'\\, 0'c, 0'
                            ], !,
 	fmt_parse(Args, Specs).
+fmt_parse(_Args, _Specs) --> [0'~], !,
+	{fail}.
 fmt_parse(Args, [I|Specs]) --> [I],
 	{integer(I)},
 	fmt_parse(Args, Specs).
@@ -497,10 +497,14 @@ fmt_parse(Args, [I|Specs]) --> [I],
 fmt_parse(C, Args, Specs, Sofar, _, D) --> {C>=0'0, C=<0'9}, !,
 	{N is 10*Sofar+C-0'0},
 	[C1], fmt_parse(C1, Args, Specs, N, N, D).
-fmt_parse(0'*, [N|Args], Specs, _, _, D) -->
-	{integer(N)},
+fmt_parse(0'`, Args, Specs, _, _, _) -->
+	[NCode, C1],
+	{integer(NCode), N is NCode},
+	fmt_parse(C1, Args, Specs, 0, N, N).
+fmt_parse(0'*, [NExpr|Args], Specs, _, _, D) -->
+	{eval_int_arg(NExpr, N)},
 	[C1], fmt_parse(C1, Args, Specs, 0, N, D).
-fmt_parse(0'~, Args, [0'~|Specs], _, 1, 1) -->
+fmt_parse(0'~, Args, [0'~|Specs], _, _, _) -->
 	fmt_parse(Args, Specs).
 /*
  fmt_parse(0'n, Args, [spec(0'c, 0'
@@ -508,36 +512,36 @@ fmt_parse(0'~, Args, [0'~|Specs], _, 1, 1) -->
  	fmt_parse(Args, Specs).*/
  fmt_parse(0'n, Args, [spec(0'c, 10, N)|Specs], _, N, 1) -->
  	fmt_parse(Args, Specs).
-fmt_parse(0'N, Args, [settab(0,_,_,0)|Specs], _, 1, 1) -->
+fmt_parse(0'N, Args, [fresh_line|Specs], _, _, _) -->
+	fmt_parse(Args, Specs).
+fmt_parse(0'|, Args, [tab_stop(current,0)|Specs], _, current, current) -->
+	fmt_parse(Args, Specs).
+fmt_parse(0'|, Args, [tab_stop(abs,N)|Specs], _, N, _) -->
+	fmt_parse(Args, Specs).
+fmt_parse(0'+, Args, [tab_stop(rel,N)|Specs], _, N, 8) -->
+	fmt_parse(Args, Specs).
+fmt_parse(0't, Args, [fill(N)|Specs], _, N, 0' ) --> % faking
+	fmt_parse(Args, Specs).
+fmt_parse(0't, Args, [fill(N)|Specs], _, N, D) -->
+	{nonvar(D), D \= 0' },
+	fmt_parse(Args, Specs).
+fmt_parse(0'i, [_|Args], Specs, _, _, _) -->
  	fmt_parse(Args, Specs).
- fmt_parse(0'|, Args, [Spec|Specs], _, N, current) -->
- 	(   {current=N} ->
-	    {Spec=settab(0,_,Tab,Tab)}
- 	;   {Spec=settab(N,_,_,N)}
- 	),
- 	fmt_parse(Args, Specs).
- fmt_parse(0'+, Args, [settab(N,Tab,_,Tab)|Specs], _, N, 8) -->
- 	fmt_parse(Args, Specs).
- fmt_parse(0't, Args, [fill(N)|Specs], _, N, 0' ) --> % faking
- 	fmt_parse(Args, Specs).
- fmt_parse(0'`, Args, [fill(Fill)|Specs], 0, _, _) -->
- 	[Fill, 0't],
- 	fmt_parse(Args, Specs).
- fmt_parse(0'i, [_|Args], Specs, _, 1, 1) -->
- 	fmt_parse(Args, Specs).
- fmt_parse(0'a, [A|Args], [spec(0'a, A, 1)|Specs], _, 1, 1) -->
- 	{atom(A)},
+fmt_parse(0'a, [A|Args], [spec(0'a, A, 1)|Specs], _, _, _) -->
+	{atom(A)},
 	fmt_parse(Args, Specs).
  fmt_parse(0'c, [A|Args], [spec(0'c, A, N)|Specs], _, N, 1) -->
  	{integer(A)},
  	fmt_parse(Args, Specs).
- fmt_parse(0'k, [A|Args], [spec(0'k, A, 1)|Specs], _, 1, 1) -->
+fmt_parse(0'k, [A|Args], [spec(0'k, A, 1)|Specs], _, _, _) -->
  	fmt_parse(Args, Specs).
- fmt_parse(0'p, [A|Args], [spec(0'p, A, 1)|Specs], _, 1, 1) -->
+fmt_parse(0'p, [A|Args], [spec(0'p, A, 1)|Specs], _, _, _) -->
  	fmt_parse(Args, Specs).
-fmt_parse(0'q, [A|Args], [spec(0'q, A, 1)|Specs], _, 1, 1) -->
+fmt_parse(0'q, [A|Args], [spec(0'q, A, 1)|Specs], _, _, _) -->
 	fmt_parse(Args, Specs).
-fmt_parse(0'w, [A|Args], [spec(0'w, A, 1)|Specs], _, 1, 1) -->
+fmt_parse(0'w, [A|Args], [spec(0'w, A, 1)|Specs], _, _, _) -->
+	fmt_parse(Args, Specs).
+fmt_parse(0'W, [Term, Options|Args], [spec(0'W, Term-Options, 1)|Specs], _, _, _) -->
 	fmt_parse(Args, Specs).
 fmt_parse(0'e, [A|Args], [spec(0'e, V, N)|Specs], _, N, 6) -->
 	{V is float(A)},
@@ -548,6 +552,9 @@ fmt_parse(0'E, [A|Args], [spec(0'E, V, N)|Specs], _, N, 6) -->
 fmt_parse(0'f, [A|Args], [spec(0'f, V, N)|Specs], _, N, 6) -->
 	{V is float(A)},
 	fmt_parse(Args, Specs).
+fmt_parse(0'F, [A|Args], [spec(0'F, V, N)|Specs], _, N, 6) -->
+	{V is float(A)},
+	fmt_parse(Args, Specs).
 fmt_parse(0'g, [A|Args], [spec(0'g, V, N)|Specs], _, N, 6) -->
 	{V is float(A)},
 	fmt_parse(Args, Specs).
@@ -555,19 +562,19 @@ fmt_parse(0'G, [A|Args], [spec(0'G, V, N)|Specs], _, N, 6) -->
 	{V is float(A)},
 	fmt_parse(Args, Specs).
 fmt_parse(0'd, [A|Args], [spec(0'd, V, N)|Specs], _, N, 0) -->
-	{V is truncate(A)},
+	{eval_int_value(A, V)},
 	fmt_parse(Args, Specs).
 fmt_parse(0'D, [A|Args], [spec(0'D, V, N)|Specs], _, N, 0) -->
-	{V is truncate(A)},
+	{eval_int_value(A, V)},
 	fmt_parse(Args, Specs).
 fmt_parse(0'r, [A|Args], [spec(0'r, V, N)|Specs], _, N, 8) -->
-	{V is truncate(A)},
+	{valid_radix(N), eval_int_value(A, V)},
 	fmt_parse(Args, Specs).
 fmt_parse(0'R, [A|Args], [spec(0'R, V, N)|Specs], _, N, 8) -->
-	{V is truncate(A)},
+	{valid_radix(N), eval_int_value(A, V)},
 	fmt_parse(Args, Specs).
-fmt_parse(0's, [A|Args], [spec(0's, A, N)|Specs], _, N, Len) -->
-	{is_ascii_list(A, 0, Len)},
+fmt_parse(0's, [A|Args], [spec(0's, Codes, N)|Specs], _, N, Len) -->
+	{text_codes_length(A, Codes, Len)},
 	fmt_parse(Args, Specs).
 
 is_ascii_list(X, _, _) :- var(X), !, fail.
@@ -577,13 +584,286 @@ is_ascii_list([X|Xs], N0, N) :-
 	integer(X),
 	is_ascii_list(Xs, N1, N).
 
+is_char_atom_list(X, _, _) :-
+	var(X),
+	!,
+	fail.
+is_char_atom_list([], [], 0).
+is_char_atom_list([X|Xs], [C|Cs], N) :-
+	atom(X),
+	atom_codes(X, [C]),
+	is_char_atom_list(Xs, Cs, N0),
+	N is N0+1.
+
+text_codes_length(Text, Codes, Len) :-
+	(   atom(Text) ->
+	    atom_codes(Text, Codes),
+	    is_ascii_list(Codes, 0, Len)
+	;   is_ascii_list(Text, 0, Len) ->
+	    Codes = Text
+	;   is_char_atom_list(Text, Codes, Len)
+	).
+
+control_codes(Control, Codes) :-
+	(   atom(Control) ->
+	    atom_codes(Control, Codes)
+	;   is_ascii_list(Control, 0, _) ->
+	    Codes = Control
+	;   is_char_atom_list(Control, Codes, _)
+	).
+
+valid_radix(N) :-
+	integer(N),
+	N>=2,
+	N=<36.
+
+is_proper_list(List) :-
+	nonvar(List),
+	(   List == []
+	;   List = [_|Tail],
+	    is_proper_list(Tail)
+	).
+
+normalize_format_args(Args_in, Args) :-
+	(   isList(Args_in) ->
+	    Args = Args_in
+	;   Args = [Args_in]
+	).
+
+eval_int_arg(Expr, N) :-
+	N is Expr,
+	integer(N),
+	N>=0.
+
+eval_int_value(Expr, N) :-
+	N is Expr,
+	integer(N).
+
+format_decimal(Num, Places, Commas, Codes) :-
+	(   Num < 0 -> Sign = 1 ; Sign = 0 ),
+	Abs is abs(Num),
+	pow10(Places, Pow),
+	IntPart is Abs // Pow,
+	FracPart is Abs mod Pow,
+	number_codes(IntPart, IntCodes0),
+	(   Commas == commas ->
+	    group_commas(IntCodes0, IntCodes)
+	;   IntCodes = IntCodes0
+	),
+	(   Places =:= 0 ->
+	    DecimalCodes = IntCodes
+	;   pad_left_zeros(FracPart, Places, FracCodes),
+	    list_append(IntCodes, [0'.|FracCodes], DecimalCodes)
+	),
+	(   Sign =:= 1 ->
+	    Codes = [0'-|DecimalCodes]
+	;   Codes = DecimalCodes
+	).
+
+pow10(0, 1).
+pow10(N, Pow) :-
+	N > 0,
+	N1 is N - 1,
+	pow10(N1, Pow1),
+	Pow is Pow1 * 10.
+
+pad_left_zeros(Value, Width, Codes) :-
+	number_codes(Value, ValueCodes),
+	list_length(ValueCodes, Len),
+	PadCount is Width - Len,
+	pad_zeros(PadCount, Zeros),
+	list_append(Zeros, ValueCodes, Codes).
+
+pad_zeros(0, []).
+pad_zeros(N, [0'0|Rest]) :-
+	N > 0,
+	N1 is N - 1,
+	pad_zeros(N1, Rest).
+
+group_commas(Codes, Grouped) :-
+	list_reverse(Codes, Rev),
+	group_commas_rev(Rev, 0, RevGrouped),
+	list_reverse(RevGrouped, Grouped).
+
+group_commas_rev([], _, []).
+group_commas_rev([D|Ds], Count, [D,0',|Rest]) :-
+	Count =:= 2,
+	Ds \= [],
+	group_commas_rev(Ds, 0, Rest).
+group_commas_rev([D|Ds], Count, [D|Rest]) :-
+	Count < 2,
+	Count1 is Count + 1,
+	group_commas_rev(Ds, Count1, Rest).
+
+format_radix(Num, Radix, Case, Codes) :-
+	(   Num < 0 -> Sign = 1 ; Sign = 0 ),
+	Abs is abs(Num),
+	radix_digits(Abs, Radix, Case, Digits),
+	(   Sign =:= 1 ->
+	    Codes = [0'-|Digits]
+	;   Codes = Digits
+	).
+
+radix_digits(0, _, _, [0'0]) :- !.
+radix_digits(Num, Radix, Case, Codes) :-
+	Num > 0,
+	radix_digits_rev(Num, Radix, Case, RevCodes),
+	list_reverse(RevCodes, Codes).
+
+radix_digits_rev(0, _, _, []) :- !.
+radix_digits_rev(Num, Radix, Case, [Code|Rest]) :-
+	Digit is Num mod Radix,
+	radix_digit_code(Digit, Case, Code),
+	Next is Num // Radix,
+	radix_digits_rev(Next, Radix, Case, Rest).
+
+radix_digit_code(Digit, _, Code) :-
+	Digit < 10,
+	Code is 0'0 + Digit.
+radix_digit_code(Digit, lower, Code) :-
+	Digit >= 10,
+	Code is 0'a + (Digit - 10).
+radix_digit_code(Digit, upper, Code) :-
+	Digit >= 10,
+	Code is 0'A + (Digit - 10).
+
+put_codes(_Str, []).
+put_codes(Str, [C|Cs]) :-
+	put_code(Str, C),
+	put_codes(Str, Cs).
+
+list_append([], List, List).
+list_append([H|T], List, [H|Rest]) :-
+	list_append(T, List, Rest).
+
+list_reverse(List, Rev) :-
+	list_reverse(List, [], Rev).
+
+list_reverse([], Acc, Acc).
+list_reverse([H|T], Acc, Rev) :-
+	list_reverse(T, [H|Acc], Rev).
+
+list_length([], 0).
+list_length([_|T], Len) :-
+	list_length(T, Len0),
+	Len is Len0 + 1.
+
+format_printf_float(Stream, Spec, Prec, Value) :-
+	number_codes(Prec, PrecCodes),
+	list_append([0'%, 0'.], PrecCodes, Prefix),
+	list_append(Prefix, [Spec], FormatCodes),
+	atom_codes(FormatAtom, FormatCodes),
+	fmt_write(Stream, FormatAtom, arg(Value)).
+
+tab_stop_position(current, _N, _LastTab, CurrentPos, CurrentPos).
+tab_stop_position(abs, N, _LastTab, _CurrentPos, N).
+tab_stop_position(rel, N, LastTab, _CurrentPos, Pos) :-
+	Pos is LastTab + N.
+
+flush_buffer(Buffer, Stream) :-
+	list_reverse(Buffer, Ordered),
+	flush_tokens(Ordered, [], 0, Stream).
+
+flush_buffer_with_padding(Buffer, Padding, Stream) :-
+	list_reverse(Buffer, Ordered),
+	count_tabs(Ordered, Tabs),
+	(   Tabs =:= 0 ->
+	    flush_tokens(Ordered, [], Padding, Stream)
+	;   tab_counts(Tabs, Padding, Counts),
+	    flush_tokens(Ordered, Counts, 0, Stream)
+	).
+
+flush_tokens([], _Counts, PadAfter, Stream) :-
+	putn(Stream, PadAfter, 0' ).
+flush_tokens([text(Codes,_)|Rest], Counts, PadAfter, Stream) :-
+	put_codes(Stream, Codes),
+	flush_tokens(Rest, Counts, PadAfter, Stream).
+flush_tokens([tab(Fill)|Rest], [Count|Counts], PadAfter, Stream) :-
+	putn(Stream, Count, Fill),
+	flush_tokens(Rest, Counts, PadAfter, Stream).
+flush_tokens([tab(_Fill)|Rest], [], PadAfter, Stream) :-
+	flush_tokens(Rest, [], PadAfter, Stream).
+
+count_tabs([], 0).
+count_tabs([tab(_)|Rest], Count) :-
+	count_tabs(Rest, Count0),
+	Count is Count0 + 1.
+count_tabs([text(_,_)|Rest], Count) :-
+	count_tabs(Rest, Count).
+
+tab_counts(Tabs, Padding, Counts) :-
+	(   Tabs =:= 0 ->
+	    Counts = []
+	;   Base is Padding // Tabs,
+	    Rem is Padding mod Tabs,
+	    Leading is Tabs - Rem,
+	    repeat_count(Base, Leading, BaseCounts),
+	    Extra is Base + 1,
+	    repeat_count(Extra, Rem, ExtraCounts),
+	    list_append(BaseCounts, ExtraCounts, Counts)
+	).
+
+repeat_count(_Value, 0, []).
+repeat_count(Value, N, [Value|Rest]) :-
+	N > 0,
+	N1 is N - 1,
+	repeat_count(Value, N1, Rest).
+
+plus_term(Term, Left, Right) :-
+	nonvar(Term),
+	Term = (Left + Right).
+
+option_member(Opt, [Opt|_]).
+option_member(Opt, [_|Rest]) :-
+	option_member(Opt, Rest).
+
+option_member_true(Opt, Options) :-
+	option_member(Opt, Options).
+option_member_true(Opt, Options) :-
+	option_true_term(Opt, OptTrue),
+	option_member(OptTrue, Options).
+
+option_true_term(Opt, Term) :-
+	Term =.. [Opt, true].
+
+options_ignore_ops_quoted(Options) :-
+	option_member_true(ignore_ops, Options),
+	option_member_true(quoted, Options).
+
 %---------------
 
-fmt_pr(Str,0'a, Arg, _) :- write(Str,Arg). % display
+fmt_pr(Str,0'a, Arg, _) :-
+	(   atom(Arg)
+	->  write(Str,Arg)
+	;   text_codes_length(Arg, Codes, Len),
+	    putn_list(Str, Len, Codes)
+	).
 fmt_pr(Str,0'k, Arg, _) :- write_canonical(Str,Arg).
 fmt_pr(Str,0'p, Arg, _) :- print(Str,Arg).
-fmt_pr(Str,0'q, Arg, _) :- writeq(Str,Arg).
-fmt_pr(Str,0'w, Arg, _) :- write(Str,Arg).
+fmt_pr(Str,0'q, Arg, _) :-
+	(   plus_term(Arg, Left, Right) ->
+	    writeq(Str, Left),
+	    put_code(Str, 0'+),
+	    writeq(Str, Right)
+	;   writeq(Str, Arg)
+	).
+fmt_pr(Str,0'w, Arg, _) :-
+	(   plus_term(Arg, Left, Right) ->
+	    write(Str, Left),
+	    put_code(Str, 0'+),
+	    write(Str, Right)
+	;   write(Str, Arg)
+	).
+fmt_pr(Str,0'W, Term-Options, _) :-
+	(   options_ignore_ops_quoted(Options) ->
+	    write_canonical(Str, Term)
+	;   plus_term(Term, Left, Right),
+	    \+ option_member_true(ignore_ops, Options) ->
+	    write_term(Str, Left, Options),
+	    put_code(Str, 0'+),
+	    write_term(Str, Right, Options)
+	;   write_term(Str, Term, Options)
+	).
 fmt_pr(Str,0'c, Arg, Number) :-
 	putn(Str,Number, Arg).
 fmt_pr(Str,0'e, Arg, Number) :-
@@ -592,10 +872,14 @@ fmt_pr(Str,0'E, Arg, Number) :-
 	'$format_print_float'(Str,0'E, Arg, Number).
 fmt_pr(Str,0'f, Arg, Number) :-
 	'$format_print_float'(Str,0'f, Arg, Number).
+fmt_pr(Str,0'F, Arg, Number) :-
+	'$format_print_float'(Str,0'F, Arg, Number).
 fmt_pr(Str,0'g, Arg, Number) :-
-	'$format_print_float'(Str,0'g, Arg, Number).
+	(   Number < 1 -> Number1 = 1 ; Number1 = Number ),
+	'$format_print_float'(Str,0'g, Arg, Number1).
 fmt_pr(Str,0'G, Arg, Number) :-
-	'$format_print_float'(Str,0'G, Arg, Number).
+	(   Number < 1 -> Number1 = 1 ; Number1 = Number ),
+	'$format_print_float'(Str,0'G, Arg, Number1).
 fmt_pr(Str,0'd, Arg, Number) :-
 	'$format_print_integer'(Str,0'd, Arg, Number).
 fmt_pr(Str,0'D, Arg, Number) :-
@@ -608,8 +892,12 @@ fmt_pr(Str,0's, Arg, Number) :-
 	putn_list(Str,Number, Arg).
 
 % TLS: Hack! but I didnt want to change file_puttoken.
+'$format_print_integer'(Str,0'd,Arg,Places):- format_decimal(Arg, Places, no_commas, Codes), put_codes(Str, Codes).
+'$format_print_integer'(Str,0'D,Arg,Places):- format_decimal(Arg, Places, commas, Codes), put_codes(Str, Codes).
+'$format_print_integer'(Str,0'r,Arg,Radix):- format_radix(Arg, Radix, lower, Codes), put_codes(Str, Codes).
+'$format_print_integer'(Str,0'R,Arg,Radix):- format_radix(Arg, Radix, upper, Codes), put_codes(Str, Codes).
 '$format_print_integer'(Str,_,Arg,_):- write(Str,Arg).
-'$format_print_float'(Str,_,Arg,_):- write(Str,Arg).
+'$format_print_float'(Str,Spec,Arg,Prec):- format_printf_float(Str, Spec, Prec, Arg).
 
 putn(_Str,0, _) :- !.
 putn(Str,N, C) :-
