@@ -1,6 +1,3 @@
-
-
-
 % get_call_from_sf(SF,Call):- 
 % Lost pos/neg depends; need to get terminal preds,scc levels
 
@@ -9,7 +6,7 @@
 test:-
      init,
      get_idg_info(G1,G2),
-%     writeln(G),
+%     writeln(G2),
      print_idg_info(G1,G2).
 
 /*

@@ -1,6 +1,5 @@
 
 
-There are 18 subgoals and 4 links (average of 1.22222222222222 edges per subgoal) within the SCC
 There are 1 subgoals in the SCC for the predicate ar1(v)
 There are 1 subgoals in the SCC for the predicate ar2(v)
 There are 1 subgoals in the SCC for the predicate dar1(v)
@@ -15,6 +14,7 @@ There are 1 subgoals in the SCC for the predicate puc_simpl_1(g)
 There are 1 subgoals in the SCC for the predicate puc_simpl_2(g)
 There are 1 subgoals in the SCC for the predicate puc_simpl_3(g)
 There are 1 subgoals in the SCC for the predicate r1
+There are 18 subgoals and 4 links (average of 1.222222 edges per subgoal) within the SCC
 There are 2 subgoals in the SCC for the predicate del1(g)
 There are 2 subgoals in the SCC for the predicate del2(g)
 There are 4 negative edges resulting in 0 delays and 0 simplifications

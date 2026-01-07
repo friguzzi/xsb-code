@@ -490,17 +490,24 @@ put_code(C) :-
 put(C):- stat_flag(CURRENT_OUTPUT, Str), file_put_code(Str, C).
 
 
+% TES: 4/25.
+% used to be tab(X):- tab(X).
+% which I changed to add functionality.
 :- mode tab(+).
-tab(N) :- tab(N).
+tab(N) :- tab(userout,N).
 
 :- mode tab(+,+).
-tab(userout,N):- !, tab(N).
-tab(_Str,0):- !.                                                                         
-tab(Str,N):-
+tab(Str,Expr):-
+    Num is Expr,
+    tab_1(Str,Num).
+
+%tab_1(userout,N):- !, tab(N).
+tab_1(_Str,0):- !.                                                                         
+tab_1(Str,N):-
    N > 0,
-   file_put_char(Str,' '),
+   write(Str,' '),
    N1 is N - 1,
-   tab(Str,N1).
+   tab_1(Str,N1).
 
 % TLS: peek_code, peek_char in file_io.
 
