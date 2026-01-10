@@ -624,15 +624,15 @@ variables in the term.
 \section{Formatted Output}
 
 \begin{description}
-\ourrepeatmoditem{format(+String,+Control)}{format/2}{format}
-\ourmoditem{format(+Stream,+String,+Control)}{format/3}{format}
+\ourrepeatmoditem{format(+Control,+Arguments)}{format/2}{format}
+\ourmoditem{format(+Stream,+Control,+Arguments)}{format/3}{format}
 
 {\tt format/2} and {\tt format/3} act as a Prolog analog to the C {\tt
 stdio} function {\tt printf()}, allowing formatted
 output~\footnote{The {\tt format} family of predicates is due to
 Quintus Prolog, by way of Ciao.}.
 
-Output is formatted according to {\tt String} which can contain either
+Output is formatted according to {\tt Control} which can contain either
 a format control sequence, or any other character which will appear
 verbatim in the output. Control sequences act as place-holders for the
 actual terms that will be output.  Thus
@@ -643,11 +643,13 @@ actual terms that will be output.  Thus
 \noindent
 will print {\tt Hello world!}.
 
-If there is only one control sequence, the corresponding element may
-be supplied alone in {\tt Control}.  If there are more, {\tt Control}
-must be a list of these elements. If there are none then {\tt Control}
+The control text may be given as an atom, an XSB string, a list of
+character codes, or a list of single-character atoms.  If there is
+only one control sequence, the corresponding element may be supplied
+alone in {\tt Arguments}.  If there are more, {\tt Arguments} must be a
+proper list of these elements. If there are none then {\tt Arguments}
 must be an empty list. There have to be as many elements in {\tt
-Control} as control sequences in {\tt String}.
+Arguments} as control sequences in {\tt Control}.
 
 The character \verb|~| introduces a control sequence. To print 
         a \verb|~| just repeat it:  
@@ -677,7 +679,9 @@ The general format of a control sequence is \verb|~NC|.  The character
 {\tt C} determines the type of the control sequence.  {\tt N} is an
 optional numeric argument.  An alternative form of {\tt N} is {\tt
 *}. {\tt *} implies that the next argument in {\tt Arguments} should
-be used as a numeric argument in the control sequence.  For example:
+be used as a numeric argument in the control sequence.  A third form
+is \verb|`c|, where {\tt c} is a character; in that case {\tt N} is the
+character code of {\tt c}.  For example:
 
 \begin{verbatim}
 ?- format("Hello~4cworld!", [0'x]).
@@ -699,54 +703,57 @@ Helloxxxxworld!
 
 The following control sequences are available in XSB.
 
-%TLS: printf-style integers and floats are not currently supported in XSB!
-
 \begin{itemize}
 
 \item \verb|~a|
-The argument is an atom.  The atom is printed without quoting.  
+The argument is an atom or text (atom, string, list of character codes,
+or list of single-character atoms).  It is printed without quoting.
 
 \item \verb|~Nc|
 (Print character.)  The argument is a number that will be interpreted as an
 UTF-8 code. {\tt N} defaults to one and is interpreted as the number of
 times to print the character.  
 
-\item \verb|~f|
-(Print float).  The argument is a float.  The float will be printed out by XSB.
+\item \verb|~Ns|
+(Print string.) The argument is text (atom, string, list of character
+codes, or list of single-character atoms).  Exactly {\tt N} characters
+will be printed. {\tt N} defaults to the length of the text.  If {\tt N}
+is larger than the text, it is padded on the right with spaces; if
+smaller, it is truncated.
 
-\item \verb|~d|
-(Print integer).  The argument is an integer, and will be printed out by XSB.
+\item \verb|~~|
+(Print tilde.)  Prints a single {\tt ~}.
 
-%-------------------------------------------------------------------------
-\comment{
-Various shadings don't work -- TLS
 \item \verb|~Ne|
+(Print float.) The argument is an arithmetic expression that evaluates
+to a float.  Prints in exponential notation with precision {\tt N}, as
+in \verb|printf("%.Ne", Arg)|.  {\tt N} defaults to 6.
+
 \item \verb|~NE|
+As \verb|~Ne|, but using upper-case {\tt E}.
+
 \item \verb|~Nf|
+(Print float.) The argument is an arithmetic expression that evaluates
+to a float.  Prints in fixed-point notation with precision {\tt N}, as
+in \verb|printf("%.Nf", Arg)|.  {\tt N} defaults to 6.
+
+\item \verb|~NF|
+As \verb|~Nf|, but using upper-case for {\tt INF}/{\tt NAN}.
+
 \item \verb|~Ng|
+(Print float.) The argument is an arithmetic expression that evaluates
+to a float.  Prints using the shortest of \verb|~Ne| or \verb|~Nf|,
+with at most {\tt N} significant digits.  {\tt N} defaults to 6 and a
+value less than 1 is treated as 1.
+
 \item \verb|~NG|
-\begin{verbatim}
-printf("%.@var{N}e", @var{Arg})
-printf("%.@var{N}E", @var{Arg})
-printf("%.@var{N}f", @var{Arg})
-printf("%.@var{N}g", @var{Arg})
-printf("%.@var{N}G", @var{Arg})
-\end{verbatim}
+As \verb|~Ng|, but using upper-case for the exponent.
 
-If @var{N} is not supplied the action defaults to
-
-\begin{verbatim}
-printf("%e", @var{Arg})
-printf("%E", @var{Arg})
-printf("%f", @var{Arg})
-printf("%g", @var{Arg})
-printf("%G", @var{Arg})
-\end{verbatim}
-
-\item ~@var{N}d
-(Print decimal.) The argument is an integer. @var{N} is interpreted as the
-number of digits after the decimal point.  If @var{N} is 0 or missing, no
-decimal point will be printed.  Example:  
+\item \verb|~Nd|
+(Print decimal.) The argument is an arithmetic expression that evaluates
+to an integer. {\tt N} is interpreted as the number of digits after the
+decimal point.  If {\tt N} is 0 or missing, no decimal point will be
+printed.  Example:  
 
 \begin{verbatim}
 ?- format("Hello ~1d world!", [42]).
@@ -764,8 +771,9 @@ Hello 42 world!
 \noindent
 respectively.
 
-\item ~@var{N}D
-(Print decimal.) The argument is an integer.  Identical to {\tt ~@var{N}d}
+\item \verb|~ND|
+(Print decimal.) The argument is an arithmetic expression that evaluates
+to an integer.  Identical to {\tt ~Nd}
 except that {\tt ,} will separate groups of three digits to the left of the
 decimal point.  Example:  
 
@@ -780,9 +788,10 @@ will print as
 Hello 1,234.5 world!
 \end{verbatim}
 
-\item ~@var{N}r
-(Print radix.) The argument is an integer. @var{N} is interpreted as a radix.
-@var{N} should be >= 2 and <= 36.  If @var{N} is missing the radix defaults to
+\item \verb|~Nr|
+(Print radix.) The argument is an arithmetic expression that evaluates
+to an integer. {\tt N} is interpreted as a radix.
+{\tt N} should be >= 2 and <= 36.  If {\tt N} is missing the radix defaults to
 8.  The letters {\tt a-z} will denote digits larger than 9.  Example:  
 
 \begin{verbatim}
@@ -795,14 +804,15 @@ will print as
 
 \begin{verbatim}
 Hello 1111 world!
-Hello f world!V
+Hello f world!
 \end{verbatim}
 
 \noindent
 respectively.
 
-\item ~@var{N}R
-(Print radix.) The argument is an integer.  Identical to {\tt ~@var{N}r} except
+\item \verb|~NR|
+(Print radix.) The argument is an arithmetic expression that evaluates
+to an integer.  Identical to {\tt ~Nr} except
 that the letters {\tt A-Z} will denote digits larger than 9.  Example:  
 
 \begin{verbatim}
@@ -815,30 +825,6 @@ will print as
 \begin{verbatim}
 Hello F world!
 \end{verbatim}
-
-}
-%-------------------------------------------------------------------------
-
-\item \verb|~Ns|
-(Print string.) The argument is a list of UTF-8 codes.  Exactly {\tt
-N} characters will be printed. {\tt N} defaults to the length of the
-string.  Example:
-
-\begin{verbatim}
-?- format("Hello ~4s ~4s!", ["new","world"]).
-?- format("Hello ~s world!", ["new"]).
-\end{verbatim}
-
-\noindent
-will print as
-
-\begin{verbatim}
-Hello new worl!
-Hello new world!
-\end{verbatim}
-
-\noindent
-respectively.
 
 \item \verb|~i|
 (Ignore argument.) The argument may be of any type.  The argument will be
@@ -857,7 +843,7 @@ Hello new world!
 
 \item \verb|~k|
 (Print canonical.) The argument may be of any type.  The argument will be
-passed to {\tt write\_canonical/2} ).  Example:  
+passed to {\tt write\_canonical/2}.  Example:  
 
 \begin{verbatim}
 ?- format("Hello ~k world!", a+b+c).
@@ -870,34 +856,9 @@ will print as
 Hello +(+(a,b),c) world!
 \end{verbatim}
 
-%------------------------------------------------------------------------------------------
-\comment{
-\item ~p
-(print.) The argument may be of any type.  The argument will be passed to
-{\tt print/2}.  Example:
-
-\noindent
-supposing the user has defined the predicate
-
-\begin{verbatim}
-portray([X|Y]) :- print(cons(X,Y)).
-\end{verbatim}
-
-\noindent
-then
-
-\begin{verbatim}
-?- format("Hello ~p world!", [[a,b,c]]).
-\end{verbatim}
-
-\noindent
-will print as
-
-\begin{verbatim}
-Hello cons(a,cons(b,cons(c,[]))) world!
-\end{verbatim}
-}
-%------------------------------------------------------------------------------------------
+\item \verb|~p|
+(Print.) The argument may be of any type.  The argument will be passed to
+{\tt print/2}.
 
 \item \verb|~q|
 (Print quoted.) The argument may be of any type.  The argument will be
@@ -929,6 +890,14 @@ will print as
 Hello [A,B] world!
 \end{verbatim}
 
+\item \verb|~W|
+(Write with options.) Takes two arguments: a term followed by an options
+list.  These are passed to {\tt write\_term/3}.  For example:
+
+\begin{verbatim}
+?- format("Before ~W after", [a+'B', [quoted,ignore_ops]]).
+\end{verbatim}
+
 \item \verb|~Nn|
 (Print newline.) Print {\tt N} newlines. {\tt N} defaults to 1.
 Example:
@@ -945,32 +914,27 @@ Hello
  world!
 \end{verbatim}
 
-\end{itemize}
+\item \verb|~N|
+(Fresh line.) Print a newline if not already at the beginning of a line.
 
-%-------------------------------------------------------------------------------------------------------
-\comment{
-\item ~N
-(Fresh line.) Print a newline, if not already at the beginning of a line.
+\item \verb+~|+
+(Set tab.) Set a tab stop at the current position.
 
-% TLS: dont keep track of line_position.
-The following control sequences are also available for compatibility,
-but do not perform any useful functions.
-
-\begin{itemize}
-\item ~@var{N}|
-(Set tab.) Set a tab stop at position @var{N}, where @var{N} defaults to
+\item \verb+~N|+
+(Set tab.) Set a tab stop at position {\tt N}, where {\tt N} defaults to
 the current position, and advance the current position there.
 
-\item ~@var{N}+
-(Advance tab.) Set a tab stop at @var{N} positions past the current
-position, where @var{N} defaults to 8, and advance the current position
+\item \verb|~N+|
+(Advance tab.) Set a tab stop at {\tt N} positions past the previous
+tab stop, where {\tt N} defaults to 8, and advance the current position
 there.
 
-\item ~@var{N}t
-(Set fill character.) Set the fill character to be used in the next
-position movement to @var{N}, where @var{N} defaults to @key{SPC}.
+\item \verb|~Nt|
+(Tab padding.) Marks a location where padding can be inserted before the
+next tab stop.  The fill character defaults to space; the numeric argument
+may be given as \verb|`c| to use character {\tt c}.
+
 \end{itemize}
-}
 \end{description}
 %-------------------------------------------------------------------------------------------------------
 

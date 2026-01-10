@@ -1460,8 +1460,8 @@ additional errors that may arise in stream checking.
 %
 Outputs {\tt +Term} to the current output stream according to the list
 of write options, {\tt Options}.  The current set of write options
-which form a superset of the ISO-standard write options, are as
-follows:
+form a superset of the ISO-standard write options, and are in accord
+with the draft PIP 0105.  The options are as follows:
 %
 \begin{itemize}
 %
@@ -1513,13 +1513,19 @@ terms. If {\tt Depth} is zero, there is no limit. Default value is
 it will be printed parenthesized.  Default value is 1200 (no term
 parenthesized).
 %
+\item {\tt portable(+Bool)}. If {\tt Bool} is {\tt true}, output uses
+functional notation while retaining list, brace and comma syntax (no
+operator notation).  This is like {\tt ignore\_ops(true)} except lists
+and braces are preserved.
+%
 \item {\tt float\_precision(+Prec)}.  {\tt Prec} must be an integer
-  between 1 and 17, and this number determines the precision with
-  which a floating point number is displayed, (excluding trailing
-  zeros).  The default value is 15.
+  between 0 and 30.  If {\tt Prec} is 0, floats are printed with enough
+  digits to be read back exactly.  Otherwise, it determines the
+  precision with which a floating point number is displayed (excluding
+  trailing zeros).
 %
 \item {\tt float\_width(+Width)}.  {\tt Width} must be an integer
-  between 1 and 17, and this number determines the minimum width
+  between 0 and 30, and this number determines the minimum width
   precision with which a floating point number is displayed.  For
   instance, a width of 2 ensures that a floating point number is
   always displayed with a decimal value.  The default value is 2.
@@ -1529,11 +1535,29 @@ parenthesized).
   or {\tt F} means that a floating point number is always printed with
   a certain precision, while a specifier of {\tt g} or {\tt G}
   truncates trailing zeros.  The allowed values are {\tt g},{\tt
-    G},{\tt f} and {\tt F}.  The default value if {\tt g}.
+    G},{\tt f},{\tt F},{\tt e}, and {\tt E}.  The default value if {\tt g}.
 %
-\item {\tt radix(+Radix)}. Ensures that integers are printed with
-  radix {\tt Radix}.  {\tt Radix} can be {\tt decimal}, {\tt hex} or
-  {\tt octal}.  The default is {\tt decimal}.
+\item {\tt float\_style(+Spec)}.  A shorthand for {\tt float\_specifier/1},
+  also accepting {\tt h} or {\tt H} to request full precision for reading
+  back.
+%
+\item {\tt integer\_base(+Base)}.  Ensures that integers are printed
+  with base {\tt Base}.  {\tt Base} can be an integer between 2 and 36,
+  or one of {\tt dec}, {\tt bin}, {\tt oct}, or {\tt hex}.  The default
+  is {\tt dec}.
+%
+\item {\tt integer\_prefix(+Bool)}.  If {\tt Bool} is {\tt true},
+  integers are prefixed with a base indicator (e.g., {\tt 0x}).
+%
+\item {\tt radix(+Radix)}.  Backward-compatible alias for
+  {\tt integer\_base/1} accepting {\tt decimal}, {\tt hex} or {\tt octal}.
+%
+\item {\tt fullstop(+Bool)}.  If {\tt Bool} is {\tt true}, terminate
+  the term with a fullstop and a trailing blank.
+%
+\item {\tt nl(+Bool)}.  If {\tt Bool} is {\tt true}, output a newline
+  after the term.  When used with {\tt fullstop(true)}, the newline is
+  the blank after the fullstop.
 %
 \end{itemize}
 
@@ -6010,4 +6034,3 @@ for {\tt Handler}.
 %%% mode: latex
 %%% TeX-master: "manual1"
 %%% End: 
-
