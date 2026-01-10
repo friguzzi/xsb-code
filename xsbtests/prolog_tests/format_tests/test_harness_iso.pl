@@ -108,6 +108,9 @@ quiet.
 % Print whole goal for unsuccessful tests 
 print_bad_goal.
 
+stream_location(Stream, Pos) :-
+	stream_property(Stream, position(Pos)).
+
         
 
 :- op(1200, fy, fixme).
