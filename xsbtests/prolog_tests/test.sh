@@ -94,6 +94,7 @@ rm -f varcond.xwam
 # Test write_term library
 #------------------------------------
 ../gentest.sh "$XEMU $options" wttest "test."
+../gentest.sh "$XEMU $options" pip_write_term "test."
 
 #------------------------------------
 # Test writeq, write_canonical, and read library
@@ -267,4 +268,3 @@ rm -f test_cond_comp.xwam
 #------------------------------------------------------------------------
 #../gentest.sh "$XEMU $options" test_importas "test."
 #fi
-
