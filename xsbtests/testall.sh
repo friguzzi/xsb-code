@@ -87,6 +87,19 @@ member ()
     return 1
 }
 
+filter_list ()
+{
+    # Keep only items present in the -only list.
+    keep_list=$1
+    target_list=$2
+    out=""
+    for elt in $target_list ; do
+	if member "$elt" "$keep_list" ; then
+	    out="$out $elt"
+	fi
+    done
+    echo "$out"
+}
 
 # float_tests: don't pass. --mk
 # regmatch_tests: don't pass on solaris
@@ -121,9 +134,13 @@ for tst in $testlist ; do
   fi
 done
 
-# this screws up the parameter -only...
 default_subsumptive_testlist="neg_tests wfs_tests delay_tests constraint_tests"
-subtestlist=$default_subsumptive_testlist
+# When -only is set, restrict subsumption tests to that list.
+if test -n "$only_tests"; then
+    subtestlist=$(filter_list "$only_tests" "$default_subsumptive_testlist")
+else
+    subtestlist=$default_subsumptive_testlist
+fi
 
 for tst in $subtestlist ; do
   if member "${tst}_subsumption" "$excluded_tests" ; then
@@ -139,6 +156,9 @@ for tst in $subtestlist ; do
 done
 
 subinctestlist="incremental_tests"
+if test -n "$only_tests"; then
+    subinctestlist=$(filter_list "$only_tests" "$subinctestlist")
+fi
 for tst in $subinctestlist ; do
       cd $tst
       if test -f core ; then
@@ -150,7 +170,11 @@ done
 
 # now test call abstraction
 default_abstraction_testlist="basic_tests table_tests attv_tests constraint_tests"
-abstestlist=$default_abstraction_testlist
+if test -n "$only_tests"; then
+    abstestlist=$(filter_list "$only_tests" "$default_abstraction_testlist")
+else
+    abstestlist=$default_abstraction_testlist
+fi
 
 for tst in $abstestlist ; do
     cd $tst
