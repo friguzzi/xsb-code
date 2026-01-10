@@ -1,6 +1,6 @@
 /* File:      write_term.P
-** Author(s): Adapted to XSB (by Swift) from Ciao where the authorship
-**	is as follows: 
+** Author(s): Adapted to XSB (by Swift) from Ciao.  Expanded by Swift using Codex (GPT-5_
+**      The authorship of the Ciao package is as follows
 **	Adapted from shared code written by Richard A. O'Keefe.
 **	Changes by Mats Carlsson, Daniel Cabeza, and Manuel Hermenegildo.
 **
@@ -71,8 +71,9 @@ write_term(Stream, Term, OptList) :-
         current_output(Curr),
         set_output(Stream),
 	parse_options(OptList,write_term/3,lambda([X,Y],write_option(X,Y)),
-		      [Qt,IO,NV,Pr,Li,Prec,Width,Spec,Radix,Prio]),
-	write_out(Term,options(Qt,IO,NV,Pr,Li,Prec,Width,Spec,Radix),Prio,0,0,'(',2'100,_),
+		      [Qt,IO,NV,Pr,Li,Prec,Width,Spec,IntBase,IntPrefix,Prio,Fullstop,Nl]),
+	write_out(Term,options(Qt,IO,NV,Pr,Li,Prec,Width,Spec,IntBase,IntPrefix),Prio,0,0,'(',2'100,Co),
+	write_term_finish(Fullstop, Nl, Co),
 	set_output(Curr),
 	xsb_stream_unlock( Stream ).
 
@@ -81,8 +82,9 @@ write_term(Term,OptList):-
         current_output(Curr),
 	xsb_sys_mutex_lock( Curr ),
 	parse_options(OptList,write_term/3,lambda([X,Y],write_option(X,Y)),
-		      [Qt,IO,NV,Pr,Li,Prec,Width,Spec,Radix,Prio]),
-        write_out(Term, options(Qt,IO,NV,Pr,Li,Prec,Width,Spec,Radix), Prio, 0, 0, '(', 2'100, _),
+		      [Qt,IO,NV,Pr,Li,Prec,Width,Spec,IntBase,IntPrefix,Prio,Fullstop,Nl]),
+        write_out(Term, options(Qt,IO,NV,Pr,Li,Prec,Width,Spec,IntBase,IntPrefix), Prio, 0, 0, '(', 2'100, Co),
+	write_term_finish(Fullstop, Nl, Co),
 	xsb_sys_mutex_unlock( Curr ).
 
 :- comment(write_option/1, "@var{Opt} is a valid write option which
@@ -130,32 +132,70 @@ write_term(Term,OptList):-
  1200. If the term to be printed has higher priority than @em{prio}, it will be
  printed parenthesized.  Default value is 1200 (no term parenthesized).
 
+ @item @bf{portable(}@em{bool}@bf{):} If @em{bool} is @tt{true}, ignore
+ operator notation but preserve list, brace and comma syntax.
+
+ @item @bf{integer_base(}@em{base}@bf{):} Set integer output base. @em{base}
+ may be an integer between 2 and 36, or one of @tt{dec}, @tt{bin}, @tt{oct},
+ or @tt{hex}. Default is @tt{dec}.
+
+ @item @bf{integer_prefix(}@em{bool}@bf{):} If @em{bool} is @tt{true}, emit
+ integer base prefixes (default @tt{true}).
+
+ @item @bf{float_style(}@em{style}@bf{):} Float format style, one of
+ @tt{f}, @tt{e}, @tt{g}, or @tt{h} (plus upper-case variants).
+
+ @item @bf{fullstop(}@em{bool}@bf{):} If @em{bool} is @tt{true}, terminate
+ the term with a fullstop and trailing blank.
+
+ @item @bf{nl(}@em{bool}@bf{):} If @em{bool} is @tt{true}, append a newline
+ after the term.
+
 @end{itemize}.").
 
-%% [Qt,IO,NV,Pr,Li,Prec,Width,Spec,Radix,Prio]
-write_option(quoted(Qt),[Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_Radix,_Prio]) :-
+%% [Qt,IO,NV,Pr,Li,Prec,Width,Spec,IntBase,IntPrefix,Prio,Fullstop,Nl]
+write_option(quoted,Pars) :- write_option(quoted(true),Pars).
+write_option(quoted(Qt),[Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     (Qt == true ; Qt == false).
-write_option(ignore_ops(IO),[_Qt,IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_Radix,_Prio]) :-
+write_option(ignore_ops,Pars) :- write_option(ignore_ops(true),Pars).
+write_option(ignore_ops(IO),[_Qt,IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     (IO == true ; IO == false ; IO == ops).
-write_option(NumberVars,[_Qt,_IO,NV,_Pr,_Li,_Prec,_Width,_Spec,_Radix,_Prio]) :-
+write_option(numbervars,Pars) :- write_option(numbervars(true),Pars).
+write_option(NumberVars,[_Qt,_IO,NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     NumberVars =.. [numbervars,NV], (NV == true ; NV == false).
-write_option(portrayed(Pr),[_Qt,_IO,_NV,Pr,_Li,_Prec,_Width,_Spec,_Radix,_Prio]) :-
+write_option(portrayed,Pars) :- write_option(portrayed(true),Pars).
+write_option(portrayed(Pr),[_Qt,_IO,_NV,Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     (Pr == true ; Pr == false).
-write_option(max_depth(MD),[_Qt,_IO,_NV,_Pr,Li,_Prec,_Width,_Spec,_Radix,_Prio]) :-
+write_option(max_depth(MD),[_Qt,_IO,_NV,_Pr,Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     (integer(MD), MD >= 0 -> (MD =:= 0 -> Li = 1000000 ; Li = MD)).
-write_option(float_precision(PrecIn),[_Qt,_IO,_NV,_Pr,_Li,Prec,_Width,_Spec,_Radix,_Prio]) :-
+write_option(float_precision(PrecIn),[_Qt,_IO,_NV,_Pr,_Li,Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     (integer(PrecIn), PrecIn >= 0, PrecIn =< 30 -> (PrecIn =:= 0 -> Prec = 17 ; Prec = PrecIn)).
-write_option(float_width(WidthIn),[_Qt,_IO,_NV,_Pr,_Li,_Prec,Width,_Spec,_Radix,_Prio]) :-
+write_option(float_width(WidthIn),[_Qt,_IO,_NV,_Pr,_Li,_Prec,Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
     (integer(WidthIn), WidthIn >= 0, WidthIn =< 30
      -> (WidthIn =:= 0 -> Width = 2 ; Width = WidthIn)
     ).
-write_option(float_specifier(Spec),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,Spec,_Radix,_Prio]) :-
-    (Spec == f ; Spec == g ; Spec == 'F' ; Spec == 'G').
-write_option(radix(Radix),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,Radix,_Prio]) :-
-    (Radix == decimal ; Radix == octal ; Radix == hex).
-write_option(priority(Prio),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_Radix,Prio]) :-
+write_option(float_specifier(Spec),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
+    (Spec == f ; Spec == g ; Spec == e ; Spec == 'F' ; Spec == 'G' ; Spec == 'E').
+write_option(float_style(Style),[_Qt,_IO,_NV,_Pr,_Li,Prec,_Width,Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
+    float_style_spec(Style, Spec, Prec).
+write_option(radix(Radix),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
+    radix_to_base(Radix, IntBase).
+write_option(integer_base(Base),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
+    integer_base_to_base(Base, IntBase).
+write_option(integer_prefix(IntPrefix),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,IntPrefix,_Prio,_Fullstop,_Nl]) :-
+    (IntPrefix == true ; IntPrefix == false).
+write_option(portable,Pars) :- write_option(portable(true),Pars).
+write_option(portable(Bool),[_Qt,IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,_Nl]) :-
+    (Bool == true -> IO = ops ; Bool == false -> IO = false).
+write_option(fullstop,Pars) :- write_option(fullstop(true),Pars).
+write_option(fullstop(Fullstop),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,Fullstop,_Nl]) :-
+    (Fullstop == true ; Fullstop == false).
+write_option(nl,Pars) :- write_option(nl(true),Pars).
+write_option(nl(Nl),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,_Prio,_Fullstop,Nl]) :-
+    (Nl == true ; Nl == false).
+write_option(priority(Prio),[_Qt,_IO,_NV,_Pr,_Li,_Prec,_Width,_Spec,_IntBase,_IntPrefix,Prio,_Fullstop,_Nl]) :-
     integer(Prio), Prio >= 1, Prio =< 1200.
-write_option('$defaults',[false,false,false,false,1000000,P1,W1,S,decimal,1200]) :-
+write_option('$defaults',[false,false,false,false,1000000,P1,W1,S,dec,true,1200,false,false]) :-
         current_xsb_param(float_display_format,L),
         L = [width(W),precision(P),specifier(S)],
 	atomic(W), atomic(P),
@@ -271,15 +311,15 @@ write_out(Term, _, _, _, _, _, Ci, 2'000) :-
 	maybe_space(Ci, 2'000),
 	displayq(Term).
 write_out(_, Options, _, _, Depth, _, Ci, 2'010) :-
-        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_Radix),
+        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	Depth >= Limit, !,
 	maybe_space(Ci, 2'010),
 	display(...).
 write_out('$VAR'(N), Options, _, _, _, _, Ci, Co) :-
-        Options = options(_,_,true,_,_,_Prec,_Width,_Spec,_Radix),
+        Options = options(_,_,true,_,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	write_VAR(N, Ci, Co), !.
 write_out(Term, Options, _, _, _, _, _, 2'000) :-
-        Options = options(_,_,_,true,_,_Prec,_Width,_Spec,_Radix),
+        Options = options(_,_,_,true,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	(   \+ portray(Term) ->
 	    fail		 % portray might bind variables
         ;   true
@@ -289,16 +329,16 @@ write_out(Atom, Options, _, PrePrio, _, Lpar, _, 2'100) :-
 	current_prefixop(Atom, P, _),
 	P =< PrePrio, !,
 	display(Lpar),
-        Options = options(Quote,_,_,_,_,_Prec,_Width,_Spec,_Radix),
+        Options = options(Quote,_,_,_,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	write_atom(Quote, Atom, 2'100, _),
 	put_code(0')).
 write_out(Atom, Options, _, _, _, _, Ci, Co) :-
 	atom(Atom), !,
-        Options = options(Quote,_,_,_,_,_Prec,_Width,_Spec,_Radix),
+        Options = options(Quote,_,_,_,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	write_atom(Quote, Atom, Ci, Co).
 write_out(N,Options, _, _, _, _, Ci, 2'000) :-
     float(N), !,
-    Options = options(_Quote,_,_,_,_,Prec,Width,Spec,_Radix),
+    Options = options(_Quote,_,_,_,_,Prec,Width,Spec,_IntBase,_IntPrefix),
     atomic(Spec),
     atom_codes(Spec,[Char]),
 	(   N < 0 -> maybe_space(Ci, 2'010)
@@ -308,19 +348,14 @@ write_out(N,Options, _, _, _, _, Ci, 2'000) :-
 %	writeln(file_function(WRITE_FLOAT_VAR_FORMAT,Str,N,Prec,Width,Char,_)),
 	file_function(WRITE_FLOAT_VAR_FORMAT,Str,N,Prec,Width,Char,_).
 write_out(N,Options, _, _, _, _, Ci, 2'000) :-
-        Options = options(_Quote,_,_,_,_,_Prec,_Width,_Spec,Radix), % Ignore lists and operators
+        Options = options(_Quote,_,_,_,_,_Prec,_Width,_Spec,IntBase,IntPrefix), % Ignore lists and operators
 	number(N), !,
 	(   N < 0 -> maybe_space(Ci, 2'010)
 	;   maybe_space(Ci, 2'000)
 	),
-	current_output(Str),
-        (Radix = decimal ->
- 	   displayq(N)
-	 ; Radix = hex ->
-	     file_function(WRITE_RADIX,Str,N,XSB_HEXIDECIMAL,_,_,_)	       
-           ; file_function(WRITE_RADIX,Str,N,XSB_OCTAL,_,_,_) ).
+	write_integer(N, IntBase, IntPrefix).
 write_out(Term, Options, _, _, Depth, _, Ci, 2'100) :-
-        Options = options(Quote,true,_,_,_,_Prec,_Width,_Spec,_Radix), % Ignore lists and operators
+        Options = options(Quote,true,_,_,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix), % Ignore lists and operators
 	functor(Term, Atom, Arity), !,
 	write_atom(Quote, Atom, Ci, _),
 	Depth1 is Depth+1,
@@ -345,7 +380,7 @@ write_out([Head|Tail], Options, _, _, Depth, _, _, 2'100) :- !,
 	write_out(Head, Options, 999, 0, Depth1, '(', 2'100, _),
 	write_tail(Tail, Options, Depth1).
 write_out(Term, Options, _, _, Depth, _, Ci, 2'100) :-
-        Options = options(Quote,ops,_,_,_,_Prec,_Width,_Spec,_Radix), % Ignore operators
+        Options = options(Quote,ops,_,_,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix), % Ignore operators
 	functor(Term, Atom, Arity), !,
 	write_atom(Quote, Atom, Ci, _),
 	Depth1 is Depth+1,
@@ -361,7 +396,7 @@ write_out((A,B), Options, Prio, _, Depth, Lpar, Ci, Co) :- !,
 write_out(Term, Options, Prio, PrePrio, Depth, Lpar, Ci, Co) :-
 	functor(Term, F, N),
 	Depth1 is Depth+1,
-        Options = options(Quote,_,_,_,_,_Prec,_Width,_Spec,_Radix),
+        Options = options(Quote,_,_,_,_,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	write_out_(N, F, Term, Quote, Options, Prio, PrePrio, Depth1, Lpar, Ci, Co).
 
 write_out_(1, F, Term, Quote, Options, Prio, _, Depth, Lpar, Ci, Co) :-
@@ -453,7 +488,7 @@ write_oper(true, Atom, Ci, Co) :-
 %   all told in SynStyle, LexStyle, given that DoneSoFar have already been written.
 
 write_args(0, _, _, Options, Depth) :-
-        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_Radix),
+        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
         Depth >= Limit, !,
         put_code(0'(), display(...),	put_code(0')).
 write_args(N, N, _, _, _) :- !,
@@ -481,7 +516,7 @@ write_tail(Var, _, _) :-			%  |var]
 write_tail([], _, _) :- !,			%  ]
 	put_code(0']).
 write_tail(_, Options, Depth) :-
-        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_Radix),
+        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	Depth >= Limit, !,
 	put_code(0'|),
 	display(...),
@@ -505,7 +540,7 @@ write_string_tail(Var, _, _, 2'000) :-
 write_string_tail([], _, _, 2'100) :- !,
 	put_code(0'").
 write_string_tail(_, Options, Depth, 2'010) :-
-        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_Radix),
+        Options = options(_,_,_,_,Limit,_Prec,_Width,_Spec,_IntBase,_IntPrefix),
 	Depth >= Limit, !,
         put_code(0'"),  % end string with '"'
 	put_code(0'|),
@@ -521,6 +556,92 @@ write_string_tail(Other, Options, Depth, Co) :-
 	put_code(0'|),
 	put_code(0'|),
 	write_out(Other, Options, 999, 0, Depth, '(', 2'100, Co).
+
+write_term_finish(false, false, _) :- !.
+write_term_finish(true, Nl, Co) :- !,
+	fullstop_leading_space(Co),
+	put_code(0'.),
+	(   Nl == true
+	->  put_code(10)
+	;   put_code(0' )
+	).
+write_term_finish(false, true, _) :-
+	put_code(10).
+
+fullstop_leading_space(2'000) :- !, put_code(0' ).
+fullstop_leading_space(2'001) :- !, put_code(0' ).
+fullstop_leading_space(2'010) :- !, put_code(0' ).
+fullstop_leading_space(_).
+
+float_style_spec(h, 'g', 17) :- !.
+float_style_spec('H', 'G', 17) :- !.
+float_style_spec(Style, Spec, _Prec) :-
+	(Style == f ; Style == g ; Style == e ; Style == 'F' ; Style == 'G' ; Style == 'E'),
+	Spec = Style.
+
+radix_to_base(decimal, dec) :- !.
+radix_to_base(octal, oct) :- !.
+radix_to_base(hex, hex).
+
+integer_base_to_base(dec, dec) :- !.
+integer_base_to_base(bin, bin) :- !.
+integer_base_to_base(oct, oct) :- !.
+integer_base_to_base(hex, hex) :- !.
+integer_base_to_base(decimal, dec) :- !.
+integer_base_to_base(octal, oct) :- !.
+integer_base_to_base(hexadecimal, hex) :- !.
+integer_base_to_base(Base, Base) :-
+	integer(Base),
+	Base >= 2,
+	Base =< 36.
+
+write_integer(N, IntBase, IntPrefix) :-
+	(   N < 0
+	->  put_code(0'-),
+	    N1 is -N
+	;   N1 = N
+	),
+	normalize_integer_base(IntBase, Base, PrefixKind),
+	(   IntPrefix == true
+	->  write_integer_prefix(PrefixKind, Base)
+	;   true
+	),
+	write_integer_digits(N1, Base).
+
+normalize_integer_base(bin, 2, bin) :- !.
+normalize_integer_base(oct, 8, oct) :- !.
+normalize_integer_base(hex, 16, hex) :- !.
+normalize_integer_base(dec, 10, none) :- !.
+normalize_integer_base(10, 10, none) :- !.
+normalize_integer_base(Base, Base, base) :-
+	integer(Base),
+	Base >= 2,
+	Base =< 36.
+
+write_integer_prefix(none, _) :- !.
+write_integer_prefix(bin, _) :- !, display('0b').
+write_integer_prefix(oct, _) :- !, display('0o').
+write_integer_prefix(hex, _) :- !, display('0x').
+write_integer_prefix(base, Base) :-
+	write_integer_digits(Base, 10),
+	put_code(39).
+
+write_integer_digits(N, Base) :-
+	(   N < Base
+	->  digit_code(N, Code),
+	    put_code(Code)
+	;   Q is N // Base,
+	    R is N mod Base,
+	    write_integer_digits(Q, Base),
+	    digit_code(R, Code),
+	    put_code(Code)
+	).
+
+digit_code(Digit, Code) :-
+	(   Digit < 10
+	->  Code is 0'0 + Digit
+	;   Code is 0'a + Digit - 10
+	).
 
 put_string_code(0'") :- !, display('""').  %"
 put_string_code(0'\\) :- !, display('\\\\').
