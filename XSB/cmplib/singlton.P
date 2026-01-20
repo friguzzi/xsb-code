@@ -64,7 +64,25 @@ singleton_warnings(Clause, VariableList) :-
 	calculate_occurences(Clause, Occurences),
 	Clause = (Head :- _),
 	hilog_functor(Head, P, A),
-	write_singleton_warnings(VariableList, Occurences, P, A).
+	repl_nums_with_names(P,VariableList,VP),
+	write_singleton_warnings(VariableList, Occurences, VP, A).
+
+/* Replace variables in Predicate name with their names.
+   Necessary for HiLog predicates, which may contain variables */
+repl_nums_with_names(NTerm,VariableList,VTerm) :-
+	(atomic(NTerm)
+	 -> VTerm = NTerm
+	 ; NTerm = '_$cmplib_var'(_VNum)
+	 -> memberchk(vv(VTerm,NTerm),VariableList)
+	 ;  NTerm =.. [F|Args],
+	    repl_nums_with_names_list(Args,VariableList,VArgs),
+	    VTerm =.. [F|VArgs]
+	).
+
+repl_nums_with_names_list([],_VariableList,[]).
+repl_nums_with_names_list([Arg|Args],VariableList,[VArg|VArgs]) :-
+	repl_nums_with_names(Arg,VariableList,VArg),
+	repl_nums_with_names_list(Args,VariableList,VArgs).
 
 /* TLS: This is used for read_term */
 :- mode calculate_singleton(?,?,?).
