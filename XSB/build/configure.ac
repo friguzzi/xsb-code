@@ -247,7 +247,7 @@ do
 		    --enable-dwarf-debug | --enable-oracle-debug | --enable-profile | \
 		    --enable-batched-scheduling | --enable-batched | --enable-gc-test | --enable-demand | \
 		    --enable-mt | --enable-fast-floats | --enable-ccmpl | --enable-profiling | \
-		    --enable-electric-fenct | --enable-optimization | --enable-jumptable )
+		    --enable-electric-fence | --enable-optimization | --enable-jumptable )
                     ;;
 		*)
                     echo "configure: error: uncecognized option: $1"
@@ -262,7 +262,7 @@ do
 		    --disable-dwarf-debug | --disable-oracle-debug | --disable-profile | \
 		    --disable-batched-scheduling | --disable-batched | --disable-gc-test | --disable-demand | \
 		    --disable-mt | --disable-fast-floats | --disable-ccmpl | --disable-profiling | \
-		    --disable-electric-fenct | --disable-optimization | --disable-jumptable )
+		    --disable-electric-fence | --disable-optimization | --disable-jumptable )
 		    ;;
 		*)
                     echo "configure: error: uncecognized option: $1"
@@ -280,7 +280,7 @@ do
 		--with-static-libraries* | --with-dynamic-libraries* | \
                 --with-preferred-python* | \
                 --with-xpath* | \
-		--with-curl* | --with-pcre* | --with-mysql* | --with-mariadb* \
+		--with-curl* | --with-pcre* | --with-mysql* | --with-mariadb* | \
 		--with-dbdrivers | --with-no-dbdrivers | --with-oracle | --with-odbc* | \
                 --with-iodbc* | \
                 --with-stdcall | \
@@ -312,6 +312,13 @@ fi
 if test "${with_dwarf_debug}" = "yes" ; then
    enable_debug=yes
    enable_dwarf_debug=yes
+fi
+
+# If no explicit Python preference is given, prefer the active venv's Python.
+# In an activated venv, `python` resolves to ${VIRTUAL_ENV}/bin/python via PATH.
+if test -z "${with_preferred_python}" -a -n "${VIRTUAL_ENV}" -a -x "${VIRTUAL_ENV}/bin/python" ; then
+   with_preferred_python=python
+   echo "*** Python preference: active virtualenv detected at ${VIRTUAL_ENV}; using interpreter '${VIRTUAL_ENV}/bin/python'"
 fi
 
 if test "${enable_mt}" = "yes" -o "${enable_ccmpl}" = "yes" ; then
@@ -1033,7 +1040,7 @@ AC_OUTPUT
     echo "***Configuring Janus-Pro (XSB to Python connector)"
     chmod 700 ./configure
     if test -n "${with_preferred_python}" ; then
-        ./configure --with-preferred-python=${with_preferred_python} || janus_config_failed=1
+        ./configure --with-preferred-python="${with_preferred_python}" || janus_config_failed=1
     else
         ./configure || janus_config_failed=1
     fi

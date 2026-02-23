@@ -133,8 +133,7 @@ get_compiler_opts(auto,CompilerOpts,auto(PYTHON_BIN_QUOTED)):-
 		 ' -I/Library/Developer/CommandLineTools/usr/include',
 %%	 	 ' -I',PYTHON_INCLUDE_DIR_QUOTED	
 		 ' -L',PYTHON_LIBDIR_QUOTED,' ',
-		 ' -L',PYTHON_LIB_QUOTED,' ',
-		 ' -l',PYTHON_BIN_QUOTED,
+		 ' ',PYTHON_CONFLIB_QUOTED,
 		    ' -g' ],CompilerOpts).
 
 get_compiler_opts(auto,CompilerOpts,auto(PYTHON_BIN_QUOTED)):-

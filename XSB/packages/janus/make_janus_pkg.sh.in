@@ -11,22 +11,56 @@ halt.
 EOF
 
 cd janus-py
+: > ../janus-install.log
 @PYTHON_BIN@ -m pip install --upgrade setuptools wheel > ../janus-py-install.log 2>&1
 
-@PYTHON_BIN@ .tmp_janussetup.py bdist_wheel >> ../janus-py-install.log 2>&1
-@PYTHON_BIN@  -m pip -v install --no-index --force-reinstall --find-links=dist janus_xsb >> ../janus-install.log 2>&1
+build_status=0
+install_status=0
+verify_status=0
+
+@PYTHON_BIN@ .tmp_janussetup.py bdist_wheel >> ../janus-py-install.log 2>&1 || build_status=$?
+wheel_path=`ls -1t dist/janus_xsb-*.whl 2>/dev/null | head -n 1`
+if test -z "$wheel_path" ; then
+    build_status=1
+    echo "ERROR: Janus wheel was not created under XSB/packages/janus/janus-py/dist" >> ../janus-install.log
+fi
+
+if test "$build_status" = 0 ; then
+    @PYTHON_BIN@  -m pip -v install --no-index --force-reinstall "$wheel_path" >> ../janus-install.log 2>&1 || install_status=$?
+fi
+
+if test "$install_status" = 0 ; then
+    @PYTHON_BIN@ -c "import janus_xsb, xsbext" >> ../janus-install.log 2>&1 || verify_status=$?
+fi
 #@PYTHON_BIN@  -m pip -v install --no-index --find-links=dist janus_xsb --user >> ../janus-py-install.log 2>&1 
 
-janus_errors=`grep -i -e error ../janus-py-install.log | grep -v Werror | grep -v "error checking the latest version of pip"`
+janus_errors=`grep -Ei "error:|^ERROR:|failed with exit code|No matching distribution found|Could not build wheels|ModuleNotFoundError|ImportError|PermissionError|Traceback" ../janus-py-install.log ../janus-install.log | grep -v Werror | grep -v "error checking the latest version of pip"`
 janus_warn=`grep -i -e warning ../janus-install.log | grep -v "error checking the latest version of pip"`
 #janus_warn=`grep -i -e warning ../janus-py-install.log | grep -v "error checking the latest version of pip" | grep -v SetuptoolsDeprecationWarning`
 
-if test -n "$janus_errors" ; then
+if test "$build_status" != 0 -o "$install_status" != 0 -o "$verify_status" != 0 ; then
+    echo ""
+    echo "+++++ Errors occurred while configuring the Python-to-XSB bridge:"
+    if test "$build_status" != 0 ; then
+        echo "ERROR: Building the Janus wheel failed."
+    fi
+    if test "$install_status" != 0 ; then
+        echo "ERROR: Installing the Janus wheel failed."
+    fi
+    if test "$verify_status" != 0 ; then
+        echo "ERROR: Import verification failed (could not import janus_xsb/xsbext)."
+    fi
+    if test -n "$janus_errors" ; then
+        echo "$janus_errors"
+    fi
+    echo "+++++   The bridge will likely not function properly in this XSB installation."
+    echo "+++++   Check logs at XSB/packages/janus/janus-py-install.log and XSB/packages/janus/janus-install.log"
+elif test -n "$janus_errors" ; then
     echo ""
     echo "+++++ Errors occurred while configuring the Python-to-XSB bridge:"
     echo "$janus_errors"
     echo "+++++   The bridge will likely not function properly in this XSB installation."
-    echo "+++++   Check  the log at XSB/packages/janus/janus-py-install.log"
+    echo "+++++   Check logs at XSB/packages/janus/janus-py-install.log and XSB/packages/janus/janus-install.log"
 fi
 if test -n "$janus_warn" ; then
     echo ""
@@ -36,5 +70,3 @@ if test -n "$janus_warn" ; then
     echo "+++++   Check  the log at XSB/packages/janus/janus-py_install.log"
 fi
 echo ""
-
-

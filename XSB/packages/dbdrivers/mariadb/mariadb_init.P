@@ -23,7 +23,7 @@
 
 :- export mariadb_info/2.
 
-mariadb_info(support, 'yes').
-mariadb_info(libdir,  '/usr/lib/x86_64-linux-gnu').
-mariadb_info(ccflags, '-I/usr/include/mariadb -I/usr/include/mariadb/mysql').
-mariadb_info(ldflags, '-L/usr/lib/x86_64-linux-gnu/ -lmariadb').
+mariadb_info(support, 'no').
+mariadb_info(libdir,  '').
+mariadb_info(ccflags, '').
+mariadb_info(ldflags, '').
