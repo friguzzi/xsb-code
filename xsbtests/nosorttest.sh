@@ -18,7 +18,7 @@ if test -f ${FILE}_new; then
 fi
 
 
-$EMU -e "[$FILE],$CMD,halt." > ${FILE}_new
+$EMU --noprompt -e "[$FILE],$CMD,halt." > ${FILE}_new
 
 #$EMU << EOF
 #[$FILE].

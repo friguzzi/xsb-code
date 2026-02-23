@@ -1,8 +1,7 @@
-| ?- | ?- yes
-| ?- 
+
 py_func(test_janus_plg,sumlist3(5,[1,2,3]),[6,7,8]) succeeded.
 py_func(builtins,float(+1E6),1000000.0) succeeded.
-(should error) py_func set:  In Prolog to Python translation of dictionary/1
+(should error) py_func set: type_error(dictionary pair,a)
 py_func(test_janus_plg,return_empty_dict(),{}()) succeeded.
 py_func(test_janus_plg,return_empty_set(),py_set([])) succeeded.
 py_func(test_janus_plg,my_generation(5),pyObj,[py_object(true)]) succeeded.
@@ -53,7 +52,7 @@ set conversion_sizecheck tests successful
 tuple conversion_sizecheck tests successful
 dict conversion_sizecheck tests successful
 json_loads_test successful
-json_2({glossary : {(title : example glossary,GlossDiv : {(title : S,GlossList : {GlossEntry : {(ID : SGML,SortAs : SGML,GlossTerm : Standard Generalized Markup Language,Acronym : SGML,Abbrev : ISO 8879:1986,GlossDef : {(para : A meta-markup language, used to create markup languages such as DocBook.,GlossSeeAlso : [GML,XML])},GlossSee : markup)}})})}})
+json_2({glossary : {title : example glossary,GlossDiv : {title : S,GlossList : {GlossEntry : {ID : SGML,SortAs : SGML,GlossTerm : Standard Generalized Markup Language,Acronym : SGML,Abbrev : ISO 8879:1986,GlossDef : {para : A meta-markup language, used to create markup languages such as DocBook.,GlossSeeAlso : [GML,XML]},GlossSee : markup}}}}})
 py_func(test_janus_plg,kwargs_append(foo,=(bar,1),=(baz,2)),[foo,-(baz,2),-(bar,1)]) succeeded.
 caught python error for py_func(no_module,foo(1),X)
 caught(existence_error(Python module function,foo(1)))
@@ -62,7 +61,7 @@ caught python error for py_dot(no_module,foo(1),X)
 caught py_dor(test_janus_plg,7,_F) (should error)
 caught python error for py_iter(no_module,foo(1),X)
 caught py_iter(test_janus_plg,7,_F) (should error)
-py_func(test_err,raise_err_1(),_X): Exception('spam', 7.2)
+error_test_succeeded((test_err,raise_err_1()))
 Should error: (unhashable set elt) type_error(hashable term,{}(:(a,b)))
 Should error: (unhashable dict key) type_error(hashable term,[1,2,3])
 Should error: (unhashable dict key) type_error(hashable term,:([1,2,3],q))
@@ -76,7 +75,7 @@ py_call(pyObj,func3(eager,janus,programmer),Hello my name is john and I'm a eage
 py_func(builtins,float(+1E6),1000000.0) succeeded.
 py_dot(sys,flags,Res) succeeded
 py_dot(sys,exc_info(),-(@(none),@(none),@(none))) succeeded.
-dict({(name : mary,age : 34,favorite_ice_cream : chocolate)})
+dict({name : mary,age : 34,favorite_ice_cream : chocolate})
 obj_dir succeeded
 personErr1 (should err)(type_error(Python module or object,1))
 personErr2 (should err)(type_error(callable_term,1))
