@@ -1,4 +1,4 @@
-from xsbext import *
+from .xsbext import *
 #import xsbext as jns
 import sys
 import time

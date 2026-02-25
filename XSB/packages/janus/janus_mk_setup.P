@@ -13,19 +13,26 @@ mk_setup(File,PythonIncludeDir) :-
 
 mk_setup(PythonIncludeDir) :-
         writeln('from setuptools import setup, Extension'),  %% for setuptools
+        writeln('import sys'),
         %%writeln('from distutils.core import setup, Extension'),
         xsb_configuration(packagesdir, PkgsDir),
         xsb_configuration(emudir, EmuDir),
         xsb_configuration(config_dir, ConfigDir),
         xsb_configuration(config_bindir, ConfigBinDir),
         concat_atom([PkgsDir, '/janus'], XSBPy_Dir),
-        writeln('module1 = Extension(\'xsbext\','),
+        writeln(''),
+        writeln('extra_link_args = []'),
+        write('if sys.platform.startswith(\'darwin\') or sys.platform.startswith(\'linux\'):'), nl,
+        write('    extra_link_args.append(\'-Wl,-rpath,'), write(ConfigBinDir), writeln('\')'),
+        writeln(''),
+        writeln('module1 = Extension(\'janus_xsb.xsbext\','),
         write('                    include_dirs = [\''), write(PythonIncludeDir), writeln('\','),
         write('                                    \''), write(EmuDir), writeln('\','),
         write('                                    \''), write(XSBPy_Dir), writeln('\','),
         write('                                    \''), write(ConfigDir), writeln('\'],'),
         writeln('                    libraries = [\'xsb\'],'),
         write('                    library_dirs = [\''), write(ConfigBinDir), writeln('\'],'),
+        writeln('                    extra_link_args = extra_link_args,'),
         writeln('                    sources = [\'xsbext.c\', \'janus_common.c\'])'),
         writeln('
 setup (name = \'janus_xsb\',

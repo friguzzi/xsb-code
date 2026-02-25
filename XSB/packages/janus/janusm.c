@@ -654,8 +654,13 @@ DllExport int init_python() {
 #endif
     }
     Py_Initialize();
+#if PY_VERSION_HEX >= 0x030B0000
+    /* PySys_SetArgvEx is deprecated in Python 3.11+. */
+    PyRun_SimpleString("import sys; sys.argv = ['']");
+#else
     char *path = "";
     PySys_SetArgvEx(0,(wchar_t **) &path,0);
+#endif
     /* Ensure modules in the caller's current working directory are importable. */
     PyRun_SimpleString(
       "import os, sys\n"

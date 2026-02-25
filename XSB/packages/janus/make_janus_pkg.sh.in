@@ -4,21 +4,39 @@
 echo "*** Installing janus as a Python package"
 cd ../packages/janus
 
-../../bin/xsb <<EOF
+../../bin/xsb <<EOF2
 %%consult('.janus_mk_setup_query').
 consult(janus_mk_setup), mk_setup('janus-py/.tmp_janussetup.py','@PYTHON_INCLUDE_DIR@').
 halt.
-EOF
+EOF2
 
 cd janus-py
 : > ../janus-install.log
-@PYTHON_BIN@ -m pip install --upgrade setuptools wheel > ../janus-py-install.log 2>&1
+: > ../janus-py-install.log
 
 build_status=0
 install_status=0
 verify_status=0
 
-@PYTHON_BIN@ .tmp_janussetup.py bdist_wheel >> ../janus-py-install.log 2>&1 || build_status=$?
+# Offline/reproducible default: install required build tooling without --upgrade.
+# Set JANUS_PIP_UPGRADE=1 to allow upgrades.
+if test "${JANUS_PIP_UPGRADE:-0}" = "1" ; then
+    @PYTHON_BIN@ -m pip install --upgrade setuptools wheel build >> ../janus-py-install.log 2>&1 || build_status=$?
+else
+    @PYTHON_BIN@ -m pip install setuptools wheel build >> ../janus-py-install.log 2>&1 || build_status=$?
+fi
+
+if test "$build_status" = 0 ; then
+    rm -rf build janus_xsb.egg-info
+    rm -f xsbext*.so janus_xsb/xsbext*.so dist/janus_xsb-*.whl
+    cp .tmp_janussetup.py setup.py
+    @PYTHON_BIN@ -m build --wheel --no-isolation --outdir dist >> ../janus-py-install.log 2>&1 || build_status=$?
+    built_ext=`ls -1 build/lib*/janus_xsb/xsbext*.so 2>/dev/null | head -n 1`
+    if test -n "$built_ext" ; then
+        cp "$built_ext" janus_xsb/
+    fi
+fi
+
 wheel_path=`ls -1t dist/janus_xsb-*.whl 2>/dev/null | head -n 1`
 if test -z "$wheel_path" ; then
     build_status=1
@@ -26,17 +44,20 @@ if test -z "$wheel_path" ; then
 fi
 
 if test "$build_status" = 0 ; then
-    @PYTHON_BIN@  -m pip -v install --no-index --force-reinstall "$wheel_path" >> ../janus-install.log 2>&1 || install_status=$?
+    @PYTHON_BIN@ -m pip -v install --no-index --force-reinstall "$wheel_path" >> ../janus-install.log 2>&1 || install_status=$?
 fi
 
 if test "$install_status" = 0 ; then
-    @PYTHON_BIN@ -c "import janus_xsb, xsbext" >> ../janus-install.log 2>&1 || verify_status=$?
+    JANUS_ACTIVATE=`cd .. && pwd`/janus_activate
+    (
+        cd /tmp || exit 1
+        . "$JANUS_ACTIVATE"
+        @PYTHON_BIN@ -c "import janus_xsb; import janus_xsb.xsbext; print(janus_xsb.xsbext.__file__)"
+    ) >> ../janus-install.log 2>&1 || verify_status=$?
 fi
-#@PYTHON_BIN@  -m pip -v install --no-index --find-links=dist janus_xsb --user >> ../janus-py-install.log 2>&1 
 
 janus_errors=`grep -Ei "error:|^ERROR:|failed with exit code|No matching distribution found|Could not build wheels|ModuleNotFoundError|ImportError|PermissionError|Traceback" ../janus-py-install.log ../janus-install.log | grep -v Werror | grep -v "error checking the latest version of pip"`
 janus_warn=`grep -i -e warning ../janus-install.log | grep -v "error checking the latest version of pip"`
-#janus_warn=`grep -i -e warning ../janus-py-install.log | grep -v "error checking the latest version of pip" | grep -v SetuptoolsDeprecationWarning`
 
 if test "$build_status" != 0 -o "$install_status" != 0 -o "$verify_status" != 0 ; then
     echo ""
@@ -48,7 +69,7 @@ if test "$build_status" != 0 -o "$install_status" != 0 -o "$verify_status" != 0 
         echo "ERROR: Installing the Janus wheel failed."
     fi
     if test "$verify_status" != 0 ; then
-        echo "ERROR: Import verification failed (could not import janus_xsb/xsbext)."
+        echo "ERROR: Import verification failed (could not import janus_xsb/janus_xsb.xsbext)."
     fi
     if test -n "$janus_errors" ; then
         echo "$janus_errors"
