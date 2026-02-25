@@ -508,8 +508,8 @@ meth_tests:-
 meth_tests:-
     py_func('Person','Person'(mary,34),Obj),
     obj_dict(Obj,Dict),writeln(dict(Dict)),
-    obj_dir(Obj,Dir),
-    DirHead = [name,age,favorite_ice_cream|_],
+    obj_dir(Obj,_Dir),
+    _DirHead = [name,age,favorite_ice_cream|_],
     writeln('obj_dir succeeded'),
     fail.
 meth_tests:- 
