@@ -1465,18 +1465,22 @@ variant of some other answer already in $T$, a technique termed {\em
 tabling to compute the well-founded semantics and to terminate for
 programs with bounded term-depth, other choices of when and how to add
 an answer can be made.  Using {\em partial order answer subsumption},
-$A$ would be added to $T$ only if $A$ is maximal with respect to other
-answers in $T$ according to a given partial order $>_O$. Furthermore
-if $A$ is added, any answers in $T$ that $A$ subsumes (i.e., is
-greater than in $>_O$) are deleted.  When using {\em lattice answer
-  subsumption}, $A$ itself may not be added to $T$, rather the join is
-taken of $A$ and another answer $A'$ in $T$, with $A'$ being deleted.
-Despite its conceptual simplicity, answer subsumption can be a
-powerful tool.  Partial order answer subsumption allows a table to
-retain only answers that are maximal according to a metric or to a
-preference relation; lattice answer subsumption can form the basis of
-multi-valued logics, quantitative logics, and of abstract
-interpretations for programs and process logics.
+$A$ would be added to $T$ only if $A$ is minimal with respect to other
+answers in $T$ according to a given (optionally strict) partial order
+$>_O$. Furthermore if $A$ is added, any answers in $T$ that $A$
+subsumes (i.e., is greater than in $>_O$) are deleted.  
+(Note tht when using a prtial order such as $<$, minimal elements are returned.)
+When using
+{\em lattice answer subsumption}, $A$ itself may not be added to $T$,
+rather the join is taken of $A$ and another answer $A'$ in $T$, with
+$A'$ being deleted.  Despite its conceptual simplicity, answer
+subsumption can be a powerful tool.  Partial order answer subsumption
+allows a table to retain only answers that are maximal according to a
+metric or to a preference relation; lattice answer subsumption can
+form the basis of multi-valued logics, quantitative logics, and of
+abstract interpretations for programs and process logics.  If instead
+of a lattice operator, we use the operator of an Abeliean semigroup,
+we can do more general aggregation, such a summation.
 
 Dynamic predicates can be declared to use answer subsumption.
 %
@@ -1603,6 +1607,35 @@ logics, \cite{Swif99a} describes how a similar formalism can implement
 a quantitative logic, and \cite{RigS11a,RigS13} describes how XSB's
 {\tt PITA} package is based on answer subsumption (see Volume 2 of
 this manual).
+
+\subsubsection{Abelian Semigroup Answer Subsumption (Aggregation).}
+\index{tabling!answer subsumption}
+
+Operations of Abelian semigroups can also be used to reduce a sequence
+of values returned to a table.  At first glance it may seem
+problemmatical since tables are sets of tuples with no duplicates.
+But in fact use of sbemigroup operators cn make sense.  The key is to
+understand the meaning of the \verb|^| indicator in table
+declaration.  Consider a specification as follows:
+\begin{verbatim}
+:- table p(^,semigroup(sum/3)).
+
+p(1,1).
+p(1,2).
+p(2,1)
+\end{verbatim}
+A call to $p(\_,S)$ will return three values to the table: $1, 2, 1$,
+and the sum operator will sum them up.  So when a \verb|^| appears in
+such a table specification, duplictes amy be returned to a table and
+aggregation with a non-idempotent operator, such as $sum/3$ works as
+expected.  For this reason, XSB supports an operator specification
+indictor or ``semigroup''.  Its operational behovior is the same as
+for 'lattice' but for predictable results it must be used in
+conjunction with a \verb|^| specification.
+
+We note in passing that if the semigroup operation is not commutative
+then the result will be determined by the order of answers returned to
+the table, and that is unpredictable, in general.
 
 \subsubsection{Partial Order Answer Subsumption with Abstraction.}
 \index{tabling!answer subsumption}
