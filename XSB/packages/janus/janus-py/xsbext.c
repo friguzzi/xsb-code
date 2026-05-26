@@ -86,16 +86,16 @@ static PyMethodDef XsbMethods[] = {
     {"init", px_init, METH_VARARGS, "Init XSB"},
     {"close", px_close, METH_VARARGS, "Close XSB"},
     {"cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
-    {"apply_once",px_qdet, METH_VARARGS | METH_KEYWORDS,
+    {"apply_once",(PyCFunction)(void*)px_qdet, METH_VARARGS | METH_KEYWORDS,
      "Determiate XSB query execution using data structures"},
-    {"comp", px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
+    {"comp", (PyCFunction)(void*)px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
     {"jns_query_once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
-    {"get_error_message", px_get_error_message, METH_VARARGS, "Find the XSB error message"},
+    {"get_error_message", (PyCFunction)(void*)px_get_error_message, METH_VARARGS, "Find the XSB error message"},
     {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
-    {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
+    {"jns_next", (PyCFunction)(void*)px_next, METH_VARARGS, "XSB query execution via structures and terator"},
     //    {"jns_string_first", px_string_first, METH_VARARGS | METH_KEYWORDS, "XSB execution via string and iterator"},
     {"jns_string_first", px_string_first, METH_VARARGS, "XSB execution via string and iterator"},
-    {"jns_string_next", px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
+    {"jns_string_next", (PyCFunction)(void*)px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
     {"close_query", px_close_query, METH_VARARGS, "Close Query"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
@@ -467,8 +467,8 @@ static PyObject *px_once(PyObject *self,PyObject *args) {
   int rcode = xsb_query(CTXT);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
-    Py_INCREF(Py_None);
-    return Py_None;
+    xsb_close_query();
+    return NULL;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
       PyObject *pydict = PyDict_New();
