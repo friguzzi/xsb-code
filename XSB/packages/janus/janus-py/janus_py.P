@@ -6,6 +6,7 @@
 
 :- export jns_comp/3.
 :- export test_pred/2.
+:- export jns_consult_string/2.
 
 :- import table_status/5 from tables.
 :- import memberchk/2 from basics.
@@ -132,7 +133,7 @@ eval_nontabled_atom(Atom,InputDict,RetVars,DelayList):-
     (jns_table(Goal1),fail ; true),
     variant_get_residual(jns_table(Goal),DelayList).
 
-process_vars(Atom,Goal,InDict,RetVars):- 
+process_vars(Atom,Goal,InDict,RetVars):-
     string:concat_atom([Atom,'.'],Term),
     open(atom(Term),read,S),
     read_term(S,Goal,[variable_names(Bindings)]),
@@ -140,6 +141,45 @@ process_vars(Atom,Goal,InDict,RetVars):-
 %    writeln((Goal,Bindings)),
     dict_to_list(InDict,DictList),
     partition_vars(Bindings,DictList,RetVars).
+
+%% ---- consult from string support ----
+
+:- import functor/3 from standard.
+:- import assert/1, retractall/1, retract/1 from assert.
+:- dynamic jns_string_pred/3.
+
+jns_consult_string(Name, String) :-
+    jns_retract_string_preds(Name),
+    file_open(String, sr, S),
+    jns_read_assert_loop(S, Name),
+    file_close(S, NOFORCE_FILE_CLOSE).
+
+jns_retract_string_preds(Name) :-
+    retract(jns_string_pred(Name, F, A)),
+    functor(H, F, A),
+    retractall(H),
+    fail.
+jns_retract_string_preds(_).
+
+jns_read_assert_loop(S, Name) :-
+    file_read(S, T, _),
+    (T == end_of_file ->
+        true
+    ;   jns_process_clause(T, Name),
+        jns_read_assert_loop(S, Name)
+    ).
+
+jns_process_clause((H :- B), Name) :- !,
+    functor(H, F, A),
+    jns_record_pred(Name, F, A),
+    assert((H :- B)).
+jns_process_clause(H, Name) :-
+    functor(H, F, A),
+    jns_record_pred(Name, F, A),
+    assert(H).
+
+jns_record_pred(Name, F, A) :-
+    (jns_string_pred(Name, F, A) -> true ; assert(jns_string_pred(Name, F, A))).
 
 end_of_file.
 
