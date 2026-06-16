@@ -44,6 +44,27 @@ load_psv(FileName,PSpec) :-
 load_tsv(FileName,PSpec) :-
     load_dsv(FileName,PSpec,[separator="\t",order=reverse]).
 
+:- comment(load_dsv/3, "@pred{read_dsv(+FileName,+Options,+PSpec)}
+nondeterministically reads each delimited/separated line from the file
+@var{FileName}, according to @pred{read_dsv/3} options @var{Options}
+and unifies the fields that are read with the arguments of the term
+@var{PSpec}.
+
+This predicate can be used to use table indexing on the dsv tuples as
+This following example shows:
+
+:- import read_dsv/3 from proc_files.
+
+:- table p/3 as subsumptive, index([1,3]).
+p(X,Y,Z) :- read_dsv('p_file.csv',[separator='\t'],p(X,Y,Z)).
+
+Assuming that the file @tt(p_file.csv} contains lines containing three
+tab-separated fields, the predicate p/3 will read the file and build
+the necessary tables to implement the indicated indexing.  This same
+idea can be used with @pred{read_can/2} or @pred{read_pro/2} to load
+files into table indexed predicates. ").
+
+
 :- mode read_dsv(+,+,?).
 read_dsv(FileName,Options,Term) :-
     conset('__errcnt',0),
@@ -103,11 +124,16 @@ types of the corresponding fields as follows:
 
 @item{atom} indicates the corresponding field is an atom.
 
-@item{integer} indicates the the corresponding field contains an
+@item{integer} indicates that the corresponding field contains an
 integer and will be converted to an integer in the internal record.
 
-@item{float} indicates the the corresponding field contains a flowting
-point number and will be converted to a float in the internal record.
+@item{float} indicates that the corresponding field contains a
+floating point number and will be converted to a float in the internal
+record.
+
+@item{atomic} indicates that the corresponding field contains an atom,
+an integer or a floating point number and will be converted to a a
+value of the appropriate3 type in the internal record.
 
 @item{term} indicates that the corresponding field contains a Prolog
 term, which will be read and converted to a prolog term in the
@@ -249,13 +275,15 @@ cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
      ;	T == atom
      ->	atom_codes(A,F)
      ;	T == integer
-     ->	remove_commas_and_spaces(F,FC),
+     -> remove_commas_and_spaces(F,FC),
 	(FC == []
 	 -> A = 0
 	 ;  catch(number_codes(AN,FC),_,fail)
 	 -> A is floor(AN)
 	 ;  cannot_convert_errwarn(T,FC,Options,A)
 	)
+     ; T == atomic
+     -> auto_convert(F,A)
      ; T == float
      ->	remove_commas_and_spaces(F,FC),
 	(FC == []
@@ -294,6 +322,35 @@ cvt_types([F|Fs],Types,[A|As],Fields,Options) :-
     ),
     cvt_types(Fs,Ts,As,Fields,Options).
 
+auto_convert(Codes,Value) :-
+    (member(X,Codes),\+numbercode(X)  % quick check to maybe avoid number conv
+     ->	atom_codes(Value,Codes)
+     ;	remove_commas_and_spaces(Codes,FC),
+        (FC == []
+	 -> Value = 0
+	 ; catch(number_codes(Value,FC),_,fail)
+	 -> true
+	 ;  atom_codes(Value,Codes)
+	)
+    ).
+
+numbercode(0'0). 
+numbercode(0'1). 
+numbercode(0'2). 
+numbercode(0'3). 
+numbercode(0'4). 
+numbercode(0'5). 
+numbercode(0'6). 
+numbercode(0'7). 
+numbercode(0'8). 
+numbercode(0'9). 
+numbercode(0'.). 
+numbercode(0',). 
+numbercode(0' ). 
+numbercode(0'e). 
+numbercode(0'E). 
+
+
 %% over-general since removes all commas and spaces; could/should
 %% remove only leading/trailing blanks, and commas between triples of
 %% digits (from end/decimal point)
@@ -307,7 +364,7 @@ remove_commas_and_spaces([C|R],NC) :-
 
 remove_spaces([],[]).
 remove_spaces([C|R],NC) :-
-    (C =:= 0' -> NC = NC1
+    (C =:= 0' ' -> NC = NC1
      ;	NC = [C|NC1]
     ),
     remove_spaces(R,NC1).
@@ -589,7 +646,7 @@ first line of the file, and the file name.  ").
 load_with_header(FileNameList,Options) :-
     (flat_member(FileName,FileNameList),
      atom_codes(FileName,FileNameCodes),
-     (ll_append(PredNameCodes,[0'.|_],FileNameCodes)
+     (ll_append(PredNameCodes,[0'.'|_],FileNameCodes)
       -> atom_codes(PredName,PredNameCodes)
       ;	 PredName = FileName
      ),
@@ -666,7 +723,7 @@ write_code_field(FieldCodes,Stream,Sep,Delim,DelimA) :-
      ->	write(Stream,DelimA),
 	put_list(Stream,FieldCodes),
 	write(Stream,DelimA)
-     ;	member(0'\n,FieldCodes)
+     ;	member(0'\n',FieldCodes)
      ->	write(Stream,DelimA),
 	put_list(Stream,FieldCodes),
 	write(Stream,DelimA)
@@ -775,7 +832,7 @@ get_opt_params(Options,Sep,Delim,Titles,Types,Returns) :-
 	 -> true
 	 ;  misc_error(('[proc_files] Error: Delimiter must be a single character string'))
 	)
-     ;  Delim = 0'"  %"
+     ;  Delim = 0'"'
     ),
     (member(titles,Options)
      ->	Titles = 1
