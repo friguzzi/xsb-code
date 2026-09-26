@@ -257,6 +257,7 @@ static prolog_term convert_json_value(JSON_Value *value)
 {
   prolog_term json_prolog = p2p_new();
   double number;
+  const double prolog_int_limit = (double)XSB_MAXINT + 1.0;
 
   switch (json_value_get_type(value)) {
   case JSONArray:
@@ -273,8 +274,11 @@ static prolog_term convert_json_value(JSON_Value *value)
     break;
   case JSONNumber:
     number = json_value_get_number(value);
-    // try to print integers as integers
-    if (floor(number) == number)
+    // Convert integral values only when the conversion to prolog_int is
+    // defined.  Out-of-range floating-point-to-integer casts have
+    // platform-dependent results.
+    if (number >= -prolog_int_limit && number < prolog_int_limit &&
+        floor(number) == number)
       extern_c2p_int((prolog_int)floor(number),json_prolog);
     else
       extern_c2p_float(number,json_prolog);

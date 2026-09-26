@@ -654,8 +654,32 @@ DllExport int init_python() {
 #endif
     }
     Py_Initialize();
+#if PY_VERSION_HEX >= 0x030B0000
+    /* PySys_SetArgvEx is deprecated in Python 3.11+. */
+    PyRun_SimpleString("import sys; sys.argv = ['']");
+#else
     char *path = "";
     PySys_SetArgvEx(0,(wchar_t **) &path,0);
+#endif
+    /* Ensure modules in the caller's current working directory are importable. */
+    PyRun_SimpleString(
+      "import os, sys\n"
+      "cwd = os.getcwd()\n"
+      "if cwd not in sys.path:\n"
+      "    sys.path.insert(0, cwd)\n");
+    /* If running under a virtualenv, make its site-packages visible. */
+    PyRun_SimpleString(
+      "import os, sys\n"
+      "venv = os.environ.get('VIRTUAL_ENV')\n"
+      "if venv:\n"
+      "    major, minor = sys.version_info[:2]\n"
+      "    candidates = [\n"
+      "        os.path.join(venv, 'lib', f'python{major}.{minor}', 'site-packages'),\n"
+      "        os.path.join(venv, 'lib64', f'python{major}.{minor}', 'site-packages'),\n"
+      "    ]\n"
+      "    for p in candidates:\n"
+      "        if os.path.isdir(p) and p not in sys.path:\n"
+      "            sys.path.insert(0, p)\n");
   PyInit_janusm();
   }
   return TRUE;
@@ -667,36 +691,42 @@ void janus_python_error() {
   PyObject* ptypeRepr = PyObject_Repr(ptype);
   PyObject* pyValueRepr = PyObject_Repr(pyValue);
   prolog_term error_value = p2p_new(CTXT);
+  char *trace_text = "No Python traceback found.\n";
+  PyObject *tb_module = NULL, *tb_list = NULL, *sep = NULL, *tb_joined = NULL;
   if (!convert_pyObj_prObj(pyValue, &error_value, 0) ) {
     prolog_term error_value1 = p2p_new(CTXT);
     const  char *result = PyUnicode_AsUTF8(pyValueRepr);		
     c2p_string(CTXTc (char *) result, error_value1);
     error_value = error_value1;
-    }
-#if PY_MINOR_VERSION < 11
-  PyTracebackObject *tb = (PyTracebackObject *)ptraceback;
-  //  prolog_term error_value = p2p_new(CTXT);
-  if (NULL != tb && NULL != tb->tb_frame ) {
-    int buff_ctr = 0;
-    buff_ctr = sprintf(forest_log_buffer_1->fl_buffer,
-			  "Python traceback (most recent call last):\n");
-    while (NULL != tb) {
-      PyFrameObject *frame = tb ->tb_frame;
-        int line = PyCode_Addr2Line(frame->f_code, frame->f_lasti);
-        const char *filename = PyUnicode_AsUTF8(frame->f_code->co_filename);
-        const char *funcname = PyUnicode_AsUTF8(frame->f_code->co_name);
-        buff_ctr += sprintf(forest_log_buffer_1->fl_buffer+buff_ctr,
-			    "  File \"%s\", line %d, in %s\n", filename, line, funcname);
-        tb = tb->tb_next;
+  }
+
+  /* Use Python's traceback module so this works across newer Python versions. */
+  tb_module = PyImport_ImportModule("traceback");
+  if (tb_module) {
+    tb_list = PyObject_CallMethod(tb_module, "format_exception", "OOO",
+				  ptype ? ptype : Py_None,
+				  pyValue ? pyValue : Py_None,
+				  ptraceback ? ptraceback : Py_None);
+    if (tb_list) {
+      sep = PyUnicode_FromString("");
+      if (sep) {
+	tb_joined = PyUnicode_Join(sep, tb_list);
+	if (tb_joined) {
+	  const char *tmp = PyUnicode_AsUTF8(tb_joined);
+	  if (tmp) trace_text = (char *)tmp;
+	}
+      }
     }
   }
-  else
-    xsb_library_error_vargs(CTXTc "python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-			    error_value,"No Python backtrace found.\n");
-#else
-    xsb_library_error_vargs(CTXTc "python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
-			      error_value,"Stack not printed for Python >= 3.11\n");
-#endif
+  if (PyErr_Occurred()) PyErr_Clear();
+
+  xsb_library_error_vargs(CTXTc "python_error",(char *) PyUnicode_AsUTF8(ptypeRepr),
+			  error_value,trace_text);
+
+  Py_XDECREF(tb_joined);
+  Py_XDECREF(sep);
+  Py_XDECREF(tb_list);
+  Py_XDECREF(tb_module);
 }
 
 PyObject *get_module(Cell mod) {

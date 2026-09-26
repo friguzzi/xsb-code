@@ -64,6 +64,10 @@ flatten1([H|T],Flatlist,Flatout):-
 			flatten1(T,Flatmid,Flatout).
 
 %---
+:- export nth/3.
+nth(Index,List,Element):- 
+   ith(Index,List,Element).
+       
 % ith/3 that works both ways
 % ith(Index,List,Element)
 ith(Index,List,Element) :-

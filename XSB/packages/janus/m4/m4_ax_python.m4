@@ -67,30 +67,55 @@ for python in $ac_preferred_python python3.19m python3.19 python3.18m python3.18
 AC_CHECK_PROGS(PYTHON_BIN, [$python])
 ax_python_bin=$PYTHON_BIN
 if test "x$ax_python_bin" != "x"; then
-   # if pip is not installed, arrange for exit
-   $PYTHON_BIN -m pip help > /dev/null 2>&1 || pip_not_installed=1
-   $PYTHON_BIN -m pipx environment > /dev/null 2>&1 || pip_not_installed=1
+	   # if pip is not installed, arrange for exit
+	   $PYTHON_BIN -m pip help > /dev/null 2>&1 || pip_not_installed=1
 
-   save_path=$PATH
-   # is it possible that the bin dir will be other than $HOME/.local/bin ??
-   ## It seems PIPX_BIN_DIR env var can override this.
-   ## Deal with it later
-   PATH="$HOME/.local/bin":$save_path
-   ax_python_conflib=`$PYTHON_BIN -m find_libpython 2> /dev/null || ($PYTHON_BIN -m pipx install find_libpython > /dev/null 2>&1; find_libpython)`
-   PATH=$save_path
+	   # First, use find_libpython if available.
+	   ax_python_conflib=`$PYTHON_BIN -m find_libpython 2> /dev/null`
 
-   ax_python_lib=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('LIBDEST'))"`
-   ax_python_extra_lib=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('BLDLIBRARY'))"`
-   ax_python_header=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('CONFINCLUDEPY'))"`
-   if test "x$ax_python_header" != "x" -a "x$ax_python_conflib" != "xno"; then
+	   # Fallback for environments where find_libpython/pipx are unavailable:
+	   # derive a loadable Python runtime library path from sysconfig values.
+	   if test -z "$ax_python_conflib" -o "x$ax_python_conflib" = "xno"; then
+	      ax_python_instsoname=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('INSTSONAME') or '')"`
+	      ax_python_ldlibrary=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('LDLIBRARY') or '')"`
+	      ax_python_libdir=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('LIBDIR') or '')"`
+	      ax_python_framework_prefix=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('PYTHONFRAMEWORKPREFIX') or '')"`
+	      ax_python_ver=`$ax_python_bin -c "import sys; print(f'{sys.version_info[0]}.{sys.version_info[1]}')"`
+	      ax_python_conflib=
+	      for candidate in \
+	          "$ax_python_instsoname" \
+	          "$ax_python_libdir/$ax_python_instsoname" \
+	          "$ax_python_framework_prefix/$ax_python_instsoname" \
+	          "$ax_python_ldlibrary" \
+	          "$ax_python_libdir/$ax_python_ldlibrary" \
+	          "$ax_python_framework_prefix/$ax_python_ldlibrary" \
+	          "$ax_python_libdir/libpython$ax_python_ver.dylib" \
+	          "$ax_python_libdir/libpython$ax_python_ver.so" \
+	          "$ax_python_libdir/libpython$ax_python_ver""m.dylib" \
+	          "$ax_python_libdir/libpython$ax_python_ver""m.so"
+	      do
+	          case "$candidate" in
+	              "" | "/" | "." | "no" ) continue ;;
+	          esac
+	          if test -f "$candidate"; then
+	              ax_python_conflib=$candidate
+	              break
+	          fi
+	      done
+	   fi
+
+	   ax_python_lib=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('LIBDEST'))"`
+	   ax_python_extra_lib=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('BLDLIBRARY'))"`
+	   ax_python_header=`$ax_python_bin -c "from sysconfig import *; print(get_config_var('CONFINCLUDEPY'))"`
+	   if test "x$ax_python_header" != "x" -a "x$ax_python_conflib" != "xno"; then
      break;
    fi
 fi
 done
 if test -n "$pip_not_installed" ; then
-   echo
-   echo "***** pip or pipx is not installed for $PYTHON_BIN -- please install both!"
-   echo
+	   echo
+	   echo "***** pip is not installed for $PYTHON_BIN -- please install pip."
+	   echo
 fi
 if test "x$ax_python_bin" = "x"; then
    ax_python_bin=no

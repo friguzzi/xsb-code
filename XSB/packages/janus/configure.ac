@@ -49,16 +49,28 @@ echo
 rm -f *.xwam *.so *.dylib
 
 support1=no
+message1_hint0=
+message1_hint1=
+message1_hint2=
+message1_hint3=
 if test -z "$PYTHON_BIN" ; then
    message1="  Janus_xsb:       Python not found"
+   message1_hint0="  Janus_xsb hint:  Use --with-preferred-python=python3.X or activate the intended virtualenv/conda env before running ./configure."
 elif test -z "$PYTHON_LIB" ; then
    message1="  Janus_xsb:       Python shared library (libpython3.so) not found"
+   message1_hint0="  Janus_xsb hint:  Verify this interpreter has shared-library support enabled."
 elif test -z "$PYTHON_INCLUDE_DIR" ; then
    message1="  Janus_xsb:       Python include directory not found"
+   message1_hint0="  Janus_xsb hint:  Install Python development headers for the selected interpreter."
 elif test -z "$PYTHON_CONFLIB" ; then
-   message1="  Janus_xsb:       Python development libraries are likely missing (eg. the package python3.XX-dev not installed)"
+   message1="  Janus_xsb:       Could not locate a loadable Python runtime library for this interpreter"
+   message1_hint0="  Janus_xsb hint:  Check these values:"
+   message1_hint1="      $PYTHON_BIN -c \"import sys,sysconfig; print(sys.executable); print('INSTSONAME=',sysconfig.get_config_var('INSTSONAME')); print('LDLIBRARY=',sysconfig.get_config_var('LDLIBRARY')); print('LIBDIR=',sysconfig.get_config_var('LIBDIR')); print('PYTHONFRAMEWORKPREFIX=',sysconfig.get_config_var('PYTHONFRAMEWORKPREFIX'))\""
+   message1_hint2="  Janus_xsb hint:  Homebrew users: ensure your env is created from a brewed Python (for example: brew install python@3.12)."
+   message1_hint3="  Janus_xsb hint:  MacPorts users: install a matching python3X package and recreate your env from that interpreter."
 elif test "$pip_not_installed" = "1" ; then
    message1="  Janus_xsb:       pip is not installed"
+   message1_hint0="  Janus_xsb hint:  Run '$PYTHON_BIN -m ensurepip --upgrade' or install pip for this interpreter."
 else
    support1=yes
 fi
@@ -126,6 +138,10 @@ EOT
 else
     test "$support0" = no && echo "$message0" 
     test "$support1" = no && echo "$message1"
+    test "$support1" = no -a -n "$message1_hint0" && echo "$message1_hint0"
+    test "$support1" = no -a -n "$message1_hint1" && echo "$message1_hint1"
+    test "$support1" = no -a -n "$message1_hint2" && echo "$message1_hint2"
+    test "$support1" = no -a -n "$message1_hint3" && echo "$message1_hint3"
 fi
 ) | tee Installation_summary
 
@@ -137,7 +153,7 @@ py_includedir="'$PYTHON_INCLUDE_DIR'"
 
 if test -z "$PYTHON_INCLUDE_DIR" -o -z "$PYTHON_BIN" -o "$pip_not_installed" = "1" -o -z "$PYTHON_LIB" -o -z "$PYTHON_CONFLIB" ; then
     echo 'echo "+++ Python does not seem to be configured properly."' > make_janus_pkg.sh
-    echo 'echo "+++ Are the Python developer<s libraries installed?"' >> make_janus_pkg.sh
+    echo 'echo "+++ Janus_XSB could not determine a usable Python runtime library or packaging setup."' >> make_janus_pkg.sh
     echo 'echo "+++ XSB-Python bridge will not be supported in this installation."' >> make_janus_pkg.sh
     echo 'echo ""' >> make_janus_pkg.sh
 else

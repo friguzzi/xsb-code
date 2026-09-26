@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 #include <math.h>
 #include <sys/stat.h>
 
@@ -897,7 +898,8 @@ static int json_serialize_to_buffer_r(const JSON_Value *value, char *buf, int le
       num = json_value_get_number(value);
       if (buf != NULL)
         num_buf = buf;
-      if (num == ((double)(int)num)) /*  check if num is integer */
+      if (num >= INT_MIN && num <= INT_MAX &&
+          num == ((double)(int)num)) /* check if num is integer */
         written = sprintf(num_buf, "%d", (int)num);
       else
         written = sprintf(num_buf, DOUBLE_SERIALIZATION_FORMAT, num);

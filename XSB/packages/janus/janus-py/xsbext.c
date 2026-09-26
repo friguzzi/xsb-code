@@ -28,19 +28,19 @@ void printPlgTerm(prolog_term term2);
 void pPO(PyObject *obj1);
 
 static int query_arity = 0;
-static PyObject *px_init();
-static PyObject *px_close();
+static PyObject *px_init(PyObject *self,PyObject *args);
+static PyObject *px_close(PyObject *self,PyObject *args);
 static PyObject *px_cmd(PyObject *self,PyObject *args);
 static PyObject *px_qdet(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_comp(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_first(PyObject *self,PyObject *args);
-static PyObject *px_next(PyObject *self);
+static PyObject *px_next(PyObject *self,PyObject *args);
 static PyObject *px_once(PyObject *self,PyObject *args);
 //static PyObject *px_string_first(PyObject *self,PyObject *args,PyObject *kwargs);
 static PyObject *px_string_first(PyObject *self,PyObject *args);
-static PyObject *px_string_next(PyObject *self);
-static PyObject *px_get_error_message();
-static PyObject *px_close_query();
+static PyObject *px_string_next(PyObject *self,PyObject *args);
+static PyObject *px_get_error_message(PyObject *self,PyObject *args);
+static PyObject *px_close_query(PyObject *self,PyObject *args);
 
 
 PyObject *printPyObj(PyObject *self,PyObject *obj1);
@@ -83,20 +83,20 @@ extern CPtr darwinDelayregHack;
 
 static PyMethodDef XsbMethods[] = {
   //    {"printPyObj", printPyObj, METH_VARARGS, "Print Python Obj from C"},
-    {"init", px_init, METH_VARARGS, "Init XSB"},
-    {"close", px_close, METH_VARARGS, "Close XSB"},
+    {"init", px_init, METH_NOARGS, "Init XSB"},
+    {"close", px_close, METH_NOARGS, "Close XSB"},
     {"cmd", px_cmd, METH_VARARGS, "XSB command execution using data structures"},
-    {"apply_once",(PyCFunction)(void*)px_qdet, METH_VARARGS | METH_KEYWORDS,
+    {"apply_once",(PyCFunction)px_qdet, METH_VARARGS | METH_KEYWORDS,
      "Determiate XSB query execution using data structures"},
-    {"comp", (PyCFunction)(void*)px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
+    {"comp", (PyCFunction)px_comp, METH_VARARGS | METH_KEYWORDS, "Set or list comprehehsion using XSB"},
     {"jns_query_once", px_once, METH_VARARGS, "Determinate XSB execution via query/cmd string."},
-    {"get_error_message", (PyCFunction)(void*)px_get_error_message, METH_VARARGS, "Find the XSB error message"},
+    {"get_error_message", px_get_error_message, METH_NOARGS, "Find the XSB error message"},
     {"jns_first", px_first, METH_VARARGS, "XSB query execution via structures and iterator"},
-    {"jns_next", (PyCFunction)(void*)px_next, METH_VARARGS, "XSB query execution via structures and terator"},
+    {"jns_next", px_next, METH_VARARGS, "XSB query execution via structures and terator"},
     //    {"jns_string_first", px_string_first, METH_VARARGS | METH_KEYWORDS, "XSB execution via string and iterator"},
     {"jns_string_first", px_string_first, METH_VARARGS, "XSB execution via string and iterator"},
-    {"jns_string_next", (PyCFunction)(void*)px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
-    {"close_query", px_close_query, METH_VARARGS, "Close Query"},
+    {"jns_string_next", px_string_next, METH_VARARGS, "XSB execution via string and iterator"},
+    {"close_query", px_close_query, METH_NOARGS, "Close Query"},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
@@ -120,7 +120,7 @@ static PyObject * mod_janus(void) {
 const PyObject *jns_undef = NULL;
 
   
-PyObject *px_get_error_message() {
+PyObject *px_get_error_message(PyObject *self,PyObject *args) {
   return PyUnicode_FromString(xsb_get_error_message(CTXT));
 }
 
@@ -152,14 +152,14 @@ PyInit_xsbext(void)
 
   //  const char xsb_root[10]  = "XSB_ROOT";
   //  printf("envvar %s\n",getenv(xsb_root));
-static PyObject *px_init() {
+static PyObject *px_init(PyObject *self,PyObject *args) {
   char *argarray[1];
   argarray[0] = XSB_ROOTDIR_2QUOTED;
   PyObject* ret = PyLong_FromLong((long) xsb_init(1,argarray)); 
   return ret;
 }
 
-static PyObject *px_close() {
+static PyObject *px_close(PyObject *self,PyObject *args) {
   xsb_close();
   return PyLong_FromLong(0);
 		
@@ -401,7 +401,7 @@ static PyObject *px_string_first(PyObject *self,PyObject *args) {
   }
 }
 
-  static PyObject *px_string_next(PyObject *self) {
+  static PyObject *px_string_next(PyObject *self,PyObject *args) {
   size_t heap_offset;
   int rcode;
   reset_ccall_error(CTXT);
@@ -467,8 +467,8 @@ static PyObject *px_once(PyObject *self,PyObject *args) {
   int rcode = xsb_query(CTXT);
   if (ccall_error_thrown(CTXT))  {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
-    xsb_close_query();
-    return NULL;
+    Py_INCREF(Py_None);
+    return Py_None;
   } else {
     if (is_var(reg_term(CTXTc 1))) {
       PyObject *pydict = PyDict_New();
@@ -557,7 +557,7 @@ if (gl_bot != (CPtr)glstack.low) {
   }
 }
 
-static PyObject *px_next(PyObject *self) {
+static PyObject *px_next(PyObject *self,PyObject *args) {
   size_t heap_offset;
   int rcode;
   reset_ccall_error(CTXT);
@@ -731,7 +731,7 @@ static PyObject *px_cmd(PyObject *self,PyObject *args) {
   }
 }
 
-PyObject *px_close_query() {
+PyObject *px_close_query(PyObject *self,PyObject *args) {
   int rcode = xsb_close_query();
   if (rcode == XSB_ERROR) {
     PyErr_SetString(PyExc_Exception,xsb_get_error_message(CTXT));
@@ -789,4 +789,3 @@ void printPlgTerm( prolog_term term) {
 //#define PYFALSE 0
 //#define PYTRUE  1
 //#define PYUNDEF 2
-

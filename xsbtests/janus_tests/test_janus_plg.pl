@@ -38,7 +38,7 @@ func_tests :-
     fail.
 func_tests :- 
     catch(py_func(builtins,set({a,b,c,d}),_),_E,
-	  (xsb_error_get_message(_E,M),lazy_writeln(['(should error) py_func set: ',M]))),
+	  (xsb_error_get_tag(_E,M),lazy_writeln(['(should error) py_func set: ',M]))),
     fail.
 func_tests :- 
     check_call(py_func(test_janus_plg,return_empty_dict(),_F),{}()),
@@ -451,11 +451,11 @@ error_tests:-
 %    fail.
 error_tests:-
     \+ janus_python_version('python3.11'),
-   error_tests_1(test_err,raise_err_1(),[]),
+   error_tests_1(test_err,raise_err_1(),python_error('<class ''Exception''>',_)),
     fail.
   error_tests:-
     janus_python_version('python3.11'),
-    %    error_tests_1(test_err,raise_err_1(),[' Value: Exception(''spam'', ''eggs'') ']),
+    % error_tests_1(test_err,raise_err_1(),[' Value: Exception(''spam'', ''eggs'') ']),
     catch(py_func(test_err,raise_err_1(),_X),E,xsb_error_get_tag(E,Tag)),Tag = python_error(_,V),
     write('py_func(test_err,raise_err_1(),_X): '),py_pp(V),
     fail.
@@ -474,11 +474,11 @@ error_tests:-
 error_tests.
 
 error_tests_1(Mod,Goal,Message):-
-    catch(py_func(Mod,Goal,_X),E,xsb_error_get_message(E,Mess)),
-    (concat_atom(Message,Mess) ->
+    catch(py_func(Mod,Goal,_X),E,xsb_error_get_tag(E,Tag)),
+    (Message =Tag ->
        writeln(error_test_succeeded((Mod,Goal)))
     ;  writeln('!!!failed'(error_tests_1(Mod,Goal))),
-       writeq(bad(Mess)),nl,writeq(good(Message)),nl).
+       writeq(bad(Tag)),nl,writeq(good(Message)),nl).
     
 meth_tests:- 
     check_call(py_func('Person','Person'(john,35),Obj),pyObj(_)),
@@ -508,8 +508,8 @@ meth_tests:-
 meth_tests:-
     py_func('Person','Person'(mary,34),Obj),
     obj_dict(Obj,Dict),writeln(dict(Dict)),
-    obj_dir(Obj,Dir),
-    DirHead = [name,age,favorite_ice_cream|_],
+    obj_dir(Obj,_Dir),
+    _DirHead = [name,age,favorite_ice_cream|_],
     writeln('obj_dir succeeded'),
     fail.
 meth_tests:- 
