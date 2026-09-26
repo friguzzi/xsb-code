@@ -1393,6 +1393,7 @@ void simplify_neg_fails(CTXTdeclc VariantSF subgoal)
   //printf("nf simplification_depth %d\n",simplification_depth_gl);
 
   if (in_simplify_neg_fails) {
+    simplification_depth_gl--;
     return;
   }
   in_simplify_neg_fails = 1;
@@ -1772,4 +1773,3 @@ void print_pdes(PNDE firstPNDE) {
 #endif
 
 /*---------------------- end of file slgdelay.c ------------------------*/
-
