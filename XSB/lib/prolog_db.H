@@ -7,7 +7,7 @@
    union_db/3, intersect_db/3, difference_db/3, sym_diff_db/3, disjoint_db/2,
    select_db/4, 
    db_to_list/2, dump_db/2, dump_db/3, pure_in_db/2, load_in_db/4,
-   write_db/1, write_db/2, writeln_db/1, writeln_db/2, write_label_db/2, write_label_db/3,
+   write_db/1, swrite_db/1, write_db/2, writeln_db/1, writeln_db/2, write_label_db/2, write_label_db/3,
    write_label_db/2, write_label_db/3, writeln_label_db/2, writeln_label_db/3.
 
 :- export union_in_db/5,
@@ -16,6 +16,8 @@
    copy_in_db/4, materialize_in_db/4, xprod_in_db/5, join_in_db/6,
    reorder_in_db/4, project_in_db/5, is_empty_in_db/2, is_empty_in_db/3,
    move_in_db/4.
+
+:- export is_set/2, in_set/2, in_model/2.
 
 :- export count_in_db/3.
 :- export compare_size_db/3.
@@ -45,7 +47,7 @@
 :- import subsumes_chk/2 from subsumes.
 :- import phrase/3 from dcg.
    
-:- import misc_error/1 from error_handler.
+:- import misc_error/1 /*, instantiation_error/3*/ from error_handler.
 
 :- import write_canonical_lettervar/2 from xsb_writ.
 

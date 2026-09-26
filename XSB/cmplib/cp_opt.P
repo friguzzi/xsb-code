@@ -295,11 +295,15 @@ generate_agg_clauses(po(OpSpec),Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClL
 	copy_term(OpSpec1,OpSpec2),
 	arg(1,OpSpec1,OVar), arg(2,OpSpec1,Var1),
 	arg(1,OpSpec2,Var1), arg(2,OpSpec2,OVar),
+	copy_term(Pred1Term,Pred1TermC),  % all new distinct vars)
+	PredTerm =.. [_|Args], Pred1TermC =.. [_|Args],  % ident variable args
 	Body = ('_$savecp'(Breg),
 		breg_retskel(Breg,Arity,Skel,Cs),
-		excess_vars(Skel,ExistVarList,[],Vars),
-		copy_term(t(Vars,Skel,Var),t(Vars,OSkel,OVar)),
-		Pred1Term,
+		CalledVar = Pred1TermC,
+		excess_vars(CalledVar,[Var|ExistVarList],[],GBVars),
+		copy_term(t(CalledVar,Var,GBVars),t(NPred1Term,Var1,GBVars)),
+		copy_term(t(Skel,Var,GBVars),t(OSkel,OVar,GBVars)),
+		NPred1Term,
 		\+ ('_$$get_returns'(Cs,OSkel,Leaf),
 		    (OVar == Var1 ; OpSpec1)
 		   ),
@@ -324,11 +328,14 @@ generate_agg_clauses(po(OpSpec),Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClL
 			      im('_$$get_returns'/3,tables),
 			      im('delete_return'/2,tables)
 			      ],SymTab).
-
+/* This clause rewritten, input of Pred1Term is used only for its predicate symbol.
+   The bindings of its group=by variables is ignored and reconsructed here. */
 generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClList2,SymTab) :-
 	(AggrSpec = fold(OpSpec,Id)
 	 ;
 	 AggrSpec = lattice(OpSpec), Id = no_identity
+	 ;
+	 AggrSpec = semigroup(OpSpec), Id = no_identity
 	),
 	!,
 	functor(PredTerm,Pred,Arity),
@@ -346,33 +353,35 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	sym_propin(tabled,Sym),
 	arg(1,OpSpec1,OVar), arg(2,OpSpec1,Var1), arg(3,OpSpec1,Var), 
 	get_actions_for_lattice_aggr_success(Sym,[Cs,Leaf,Var,OVar,Breg],Actions),
+	copy_term(Pred1Term,Pred1TermC),  % all new distinct vars)
+	PredTerm =.. [_|Args], Pred1TermC =.. [_|Args],  % ident variable args
 	Body = ('_$savecp'(Breg),
 		breg_retskel(Breg,Arity,Skel,Cs),
 		(nonvar(Var) -> instantiation_error(Pred/Arity,Arity,var) ; true),
-		excess_vars(PredTerm,[Var|ExistVarList],[],Vars),
-		copy_term(t(Vars,Skel,Var),t(Vars1,OSkel,OVar)),
-		excess_vars(Pred1Term,[],[],NEVars),  %non-existential vars
-		copy_term(Pred1Term-NEVars,NPred1Term-NEVars),
+		CalledVar = Pred1TermC,
+		excess_vars(CalledVar,[Var|ExistVarList],[],GBVars),
+		copy_term(t(CalledVar,Var,GBVars),t(NPred1Term,Var1,GBVars)),
+		copy_term(t(GBVars,Skel,Var),t(GBVars1,OSkel,OVar)),
 		DefTerm = ifUndef(XX,YY), % if seen undefined
 		XX = 0,			  % undef seen?
 		YY = 0,			  % varibles seen in groupby values?
 		NPred1Term,
 		xwam_state(2,DelayReg),
 		(XX =:= 0, DelayReg =:= 0 % opt for all defined (no undef ans and this true)
-		 ->	(YY =:= 0, ground(Vars) % opt for all groupby vals ground
-			 ->	(Vars = Vars1,
+		 ->	(YY =:= 0, ground(GBVars) % opt for all groupby vals ground
+			 ->	(GBVars = GBVars1,
 				 '_$$get_returns'(Cs,OSkel,Leaf)
-				 ->	OpSpec1,
+				 ->  	OpSpec1,
 					Var \== OVar,
 				    	Actions
-				 ;	Init
+				 ;  	Init
 				)
 			 ;	(YY =:= 0 -> term_set_arg(DefTerm,2,1,1) ; true),
 				findall(t(OVar,Var,Leaf1,Sub,RSub),
 					('_$$get_returns'(Cs,OSkel,Leaf1),
 					 OpSpec1,
-					 (subsumes_chk(Vars1,Vars) -> Sub=1 ; Sub=0),
-					 (subsumes_chk(Vars,Vars1) -> RSub=1 ; RSub=0)
+					 (subsumes_chk(GBVars1,GBVars) -> Sub=1 ; Sub=0),
+					 (subsumes_chk(GBVars,GBVars1) -> RSub=1 ; RSub=0)
 					),
 					AllRets),
 				('_$member'(t(OVar,Var,Leaf,1,_),AllRets),
@@ -389,7 +398,7 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 				)
 			)
 		 ;	term_set_arg(DefTerm,1,1,1), % undef before or now, set seen undef
-			Vars = Vars1,
+			GBVars = GBVars1,
 			findall(t(OSkel,Leaf1,DL1,Var),
 				('_$$get_returns_and_dls'(Cs,OSkel,Leaf1,DL1),
 				 OpSpec1),
@@ -446,8 +455,8 @@ generate_agg_clauses(termset,_Sym,PredTerm,Var1,[],Pred1Term,Var,ClList2,SymTab)
 	functor(Pred1Term,NPred,Arity),
 	sym_insert(NPred,Arity,[tabled,use_subsumptive_tabling],SymTab,_),
 	Body = Pred1Term,
-	excess_vars(Pred1Term,[Var1],[],Vars),
-	copy_term(t(Pred1Term,Var1,Vars),t(Pred1Temp,AbsVar,Vars)),
+	excess_vars(Pred1Term,[Var1],[],GBVars),
+	copy_term(t(Pred1Term,Var1,GBVars),t(Pred1Temp,AbsVar,GBVars)),
 	Var = {AbsVar:Pred1Temp},
 	parse_preddef_closed(PredTerm,Body,ClList2,SymTab).
 generate_agg_clauses(OpSpec-Iden,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClList2,SymTab) :- !,
@@ -507,7 +516,8 @@ equate_but_argno([X|PArgs],[Y|P1Args],CurArg,ArgList,VarList,A,B,ArgNo) :-
 	 ->	A = X, Y = B,
 		ArgList0 = ArgList, VarList0 = VarList
 	 ;	(ArgList = [CurArg|ArgList0]
-		 ->	VarList = [Y|VarList0]
+%%		 ->	VarList = [Y|VarList0]
+		 ->	VarList = [X|VarList0]
 		 ;	X = Y,
 			ArgList0 = ArgList, VarList0 = VarList
 		)
@@ -999,6 +1009,8 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	(AggrSpec = fold(OpSpec,Id)
 	 ;
 	 AggrSpec = lattice(OpSpec), Id = no_identity
+	 ;
+	 AggrSpec = semigroup(OpSpec), Id = no_identity
 	),
 	!,
 	functor(PredTerm,Pred,Arity),
@@ -1105,6 +1117,8 @@ generate_agg_clauses(AggrSpec,Sym,PredTerm,Var1,ExistVarList,Pred1Term,Var,ClLis
 	(AggrSpec = fold(OpSpec,Id)
 	 ;
 	 AggrSpec = lattice(OpSpec), Id = no_identity
+	 ;
+	 AggrSpec = semigroup(OpSpec), Id = no_identity
 	),
 	!,
 	functor(PredTerm,Pred,Arity),

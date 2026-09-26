@@ -519,6 +519,7 @@ indeed_spy(Call) :- \+ (\+ ('_b_SPY_condition'(Call))).
 /* main tracing interpreter-------------------------------------------*/
 
 deb_enterpred(N,PSC,Call,Spy,Tr) :-
+	%%ll_write(deb_enterpred(Call)),ll_nl,
 	conset('_$_verbose_skip_current_callno', N),
 	(N==0 ->
 	    %% New top-level goal
@@ -567,8 +568,10 @@ deb_enterpred(N,PSC,Call,Spy,Tr) :-
 		;   true
 		),
 		get_psc_info(Call,_,P,A),
-		show_this_hide_call(P,A),         % fail keeping state hidden
+		%%ll_write(deb_show_hide_call(P,A)),ll_nl,
+		\+ show_this_hide_call(P,A),     % if not still hide then
 		stat_set_flag(HIDE_STATE,0),      % un-hide_state
+		%%ll_write(deb_unhide(P,A)),ll_nl,
 		fail
 	    )
 	;   

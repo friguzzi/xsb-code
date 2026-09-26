@@ -29,6 +29,7 @@ cmd('curr_sym','set_prolog_flag','heap_garbage_collection','none')
 cmd('consult','consult','janus')    # was xsbpy
 cmd('consult','consult','janus_py') # was px
 cmd('consult','consult','jns_test')
+cmd('consult','consult','basics')
 
 ################################################################
 # Modified from SWI
@@ -127,13 +128,18 @@ def ensure_loaded(File):
     
     cmd('consult','ensure_loaded',File)
 
-def consult(File):
-    """Convenience function for compiling a Prolog 'file' as necessary, and loading it.
+def consult(File, String=None):
+    """Load Prolog clauses from a file or from a string.
 
-    Defined as cmd('consult','consult',File)
+    consult(File) — compile and load a Prolog file.
+    consult(Name, String) — assert clauses from String under Name.
+      Re-calling with the same Name retracts previous clauses first.
     """
-    
-    cmd('consult','consult',File)
+    if String is None:
+        cmd('consult','consult',File)
+    else:
+        query_once("janus_py:jns_consult_string(Name, String)",
+                   inputs={'Name': File, 'String': String})
 
 def prolog_paths():
     """Convenience function to return a list of all current XSB library paths (XSB's equivalent of Python's sys.path).

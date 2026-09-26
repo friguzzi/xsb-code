@@ -278,6 +278,11 @@ int convert_prObj_pyObj(CTXTdeclc prolog_term prTerm, PyObject **pyObj) {
   int type = find_prolog_term_type(CTXTc prTerm);
   //  printf("type %i\n",type);
   //  printPlgTerm(prTerm);
+  if(is_var(prTerm)) {
+    Py_INCREF(Py_None);
+    *pyObj = Py_None;
+    return TRUE;
+  }
   if(is_int(CTXTc prTerm)) {
     prolog_term argument = prTerm;
     prolog_int argument_int = p2c_int(argument);

@@ -1217,6 +1217,7 @@ is_aggregation_spec(Spec,SymTab) :-
 
 is_aggregation_arg_spec(Spec3-_,SymTab) :- !, is_spec3(Spec3,SymTab).
 is_aggregation_arg_spec(lattice(Spec3),SymTab) :- !, is_spec3(Spec3,SymTab).
+is_aggregation_arg_spec(semigroup(Spec3),SymTab) :- !, is_spec3(Spec3,SymTab).
 is_aggregation_arg_spec(fold(Spec3,Id),SymTab) :- !, is_spec3(Spec3,SymTab),is_spec1(Id,SymTab).
 is_aggregation_arg_spec(po(Spec2),SymTab) :- !, is_spec2(Spec2,SymTab).
 is_aggregation_arg_spec(po(Spec2,Spec3),SymTab) :- !, is_spec2(Spec2,SymTab),is_spec3(Spec3,SymTab).

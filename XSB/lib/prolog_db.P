@@ -8,6 +8,7 @@ directory, and running:
 
 xsb -e "[xsbdoc], xsbdoc(prolog_db_format,pdf),halt."
 
+Update all this do to use is_set/2, in_set/2, in_model/2.
 ************/
 
 /***
@@ -913,6 +914,66 @@ short-hand for the actual prefix term @pred{r(_,_,_)}.  ").
 
 /***********************************************************/
 
+:- comment(is_set/2, "@pred{is_set(?Set,+SetExpr)} evaluates the set
+expression @var(SetExpr} and unifies it with @var{Set}. (It can be
+seen as analgous to is/2, which evaluates expressions over the umeric
+algegra.)").
+
+is_set(S,SE) :-
+    eval_set_expr(SE,SB),
+    intern_termhash(SB,S1),
+    S = S1.
+
+eval_set_expr((SE1+SE2),S) :- !,
+    (SE1 @= [_|_]
+     ->	eval_set_expr(SE2,S2),
+        assert_in_db_b(SE1,S2,S)
+     ; SE2 @= [_|_]
+     ->	eval_set_expr(SE1,S1),
+        assert_in_db_b(SE2,S1,S)
+     ;	eval_set_expr(SE1,S1),
+        eval_set_expr(SE2,S2),
+        union_db_b(S1,S2,S)
+    ).
+eval_set_expr((SE1*SE2),S) :- !,
+    eval_set_expr(SE1,S1),
+    eval_set_expr(SE2,S2),
+    intersect_db_b(S1,S2,S).
+eval_set_expr((SE1-SE2),S) :- !,
+    (SE2 @= [_|_]
+     ->	eval_set_expr(SE1,S1),
+        retractall_in_db_b(SE2,SE1,S)
+     ;	eval_set_expr(SE1,S1),
+        eval_set_expr(SE2,S2),
+        difference_db_b(S1,S2,S)
+    ).
+eval_set_expr(xor(SE1,SE2),S) :- !,
+    eval_set_expr(SE1,S1),
+    eval_set_expr(SE2,S2),
+    sym_diff_db_b(S1,S2,S).
+eval_set_expr(select(InPref,OutPref,SE),S) :- !,
+    eval_set_expr(SE,S1),
+    select_db_b(InPref,OutPref,S1,S).
+eval_set_expr(findall(V,Goal),S) :- !,
+    findall_db(V,Goal,S).
+eval_set_expr([],S) :- !, S = [].
+eval_set_expr(SE,S) :- 
+    atom(SE),
+    intern_termhash(S,SE),
+    S \== SE,
+    !.
+eval_set_expr(SE,S) :-
+    assert_in_db_b(SE,[],S).
+
+
+in_set(Fact,Set) :-
+    eval_set_expr(Set,SB),
+    lookup_trie_vdict([Fact],true,_Vars,SB).
+
+in_model(Goal,Set) :-
+    eval_set_expr(Set,SB),
+    in_db_b(Goal,SB).
+
 :- comment(assert_in_db/3, "@pred{assert_in_db(+Clause,+DB0,?DB)} adds
 a clause, @var{Clause}, (or a sequence of clauses, if @var{Clause} is
 a list of clauses) to @var{DB0} to generate @var{DB}. ").
@@ -940,6 +1001,7 @@ assert_list([Clause|Clauses]) :-
     assert(Clause),
     assert_list(Clauses).
 
+/**
 assert_in_db_b(Clauses,DB0,DB) :-
     (Clauses == []
      ->	DB0 = DB
@@ -947,7 +1009,20 @@ assert_in_db_b(Clauses,DB0,DB) :-
      ->	assert1_in_db_b(Clause,DB0,DB1),
 	assert_in_db_b(MClauses,DB1,DB)
      ;	assert1_in_db_b(Clauses,DB0,DB)
+    ).**/
+
+assert_in_db_b(Cs,DB0,DB) :-
+    (Cs == []
+    ->	DB = DB0
+    ; Cs = [_|_]
+    ->	assert_list_in_db_b(Cs,DB0,DB)
+    ;	assert1_in_db_b(Cs,DB0,DB)
     ).
+
+assert_list_in_db_b([],DB,DB).
+assert_list_in_db_b([C|Cs],DB0,DB) :-
+    assert1_in_db_b(C,DB0,DB1),
+    assert_list_in_db_b(Cs,DB1,DB).
 
 :- comment(assert1_in_db/3, "@pred{assert1_in_db(+Clause,+DB0,?DB)}
 asserts a single clause, @var{Clause}, into @var{DB0}, generating
@@ -983,10 +1058,11 @@ assert_in_db(Clauses,H) :-
 :- mode add(+,-).
 add(Clauses,H) :- assert_in_db(Clauses,H).
 
-:- export add_to_trie_dict/6.
+%%:- export add_to_trie_dict/6.
 add_to_trie_dict(Head,Body,Ni,No,Dict0,Dict) :-
     (ground([Head|Body])
-     ->	add_trie_dict([Head],Body,Dict0,Dict)
+     ->	No = Ni,
+        add_trie_dict([Head],Body,Dict0,Dict)
      ;	copy_term([Head|Body],[Head1|Body1]),
 	my_numbervars([Head1|Body1],Ni,No),
 	add_trie_dict([Head1],Body1,Dict0,Dict)
@@ -1075,7 +1151,7 @@ add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,Depth,Tree) :-
     Index is (HashCode >> Depth) /\ 3,
     OIndex is (OHashCode >> Depth) /\ 3,
     (Index =\= OIndex
-     -> updated_leaf_rtl(Index,OIndex,rtl(Key,Val,[]),ORTL,Tree)
+     -> (updated_leaf_rtl(Index,OIndex,rtl(Key,Val,[]),ORTL,Tree)->true;fail)
      ;  updated_leaf_rtl_same(Index,NT,Tree),
 	NDepth is Depth + 2,
 	add_pair_to_empty_radix_tree(HashCode,Key,Val,OHashCode,ORTL,NDepth,NT)
@@ -1159,7 +1235,7 @@ lookup_trie_vars(Term,Body,Vars,Dict,RTerms) :-
     Key = '_$Var$'(VNo),
     lookup_radix_dict_det([],Key,RTL,Dict),
     rtl_member(Key,Val,RTL),
-%%    integer(VNo),  % shouldn't be required, since DB must be ground
+%%    integer(VNo),  % shouldnt be required, since DB must be ground
     log_ith(VNo,Vars,Term),
     lookup_trie_vdict(RTerms,Body,Vars,Val).
     
@@ -1207,9 +1283,9 @@ lookup_trie_dict(Terms,Dict) :-
 	lookup_trie_dict(NNTerms,Val)
     ).
 
-varno(Var) :- nonvar(Var), Var = '_$Var$'(VNo), integer(VNo).
+varno(Var) :- nonvar(Var), Var = '_$Var$'(VNo), atomic(VNo).
 
-varno(Var,VNo) :- nonvar(Var), Var = '_$Var$'(VNo), integer(VNo).
+varno(Var,VNo) :- nonvar(Var), Var = '_$Var$'(VNo), atomic(VNo).
 
 
 lookup_radix_dict(RTL,Tree) :-
@@ -1228,6 +1304,8 @@ lookup_radix_dict_det(_,Key,RTL,Dict) :-
 %%    should succeed binding _h691 to value gotten from V1...
 %%    needed for handling:
 %%  assert_in_db(p('_$Var$'(X)),DB),trace,clause_in_db(p('_$Var$'(1)),true,DB).
+
+%%:- export rtl_member/3.
 rtl_member(K,V,rtl(K1,V1,RTL)) :-
     (RTL \== []
      ->	rtl_member2(K,V,K1,V1,RTL)
@@ -1691,8 +1769,9 @@ count_in_db(Pref,DB,Count) :-
     cvt_pa(Pref,Prefa),
     gensym(ctr,Ctr),
     conset(Ctr,0),
+    eval_set_expr(DB,S),
     (do_all
-     clause_in_db(Prefa,_,DB),
+     clause_in_db_b(Prefa,_,S),
      coninc(Ctr)
     ),
     conget(Ctr,Count).
@@ -1703,7 +1782,7 @@ count_in_db(Pref,DB,Count) :-
 of clauses in @var{DB} in @var{Count}.  ").
 :- mode size_db(+,?).
 size_db(H,Cnt) :-
-    intern_termhash(DB,H),
+    eval_set_expr(H,DB),
     size_db_b(DB,Cnt).
 
 size_db_b(DB,Cnt) :-
@@ -1799,8 +1878,8 @@ intersect_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth,T) :-
     intersect_tries(RT04,RT14,Depth1,RT4),
     raise_subtree(rt(RT1,RT2,RT3,RT4),T).
 
-
-order_intersect([],L,L).
+%% first 2 clauses for final body, last 3 for another trie
+order_intersect([],_L,[]).  %% TEST!!
 order_intersect(L1,L2,L3) :- L1 = [_|_],
     order_intersect_list(L1,L2,L3).
 order_intersect(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
@@ -1824,6 +1903,33 @@ order_intersect_list(L1,L2,L3) :- L1 = [V1|L1r],
 	)
     ).
 
+:- export test_intersect/0.
+:- import for/3 from basics.
+:- import writeln/1,cputime/1 from standard.
+
+test_intersect :-
+    Len = 300000,
+    Len2 is Len // 2,
+    Len3 is Len // 3,
+    Len6 is Len // 6,
+    findall(X,(for(I,0,Len2),X is I*2),Xs),
+    assert_in_db(Xs,[],DB1),
+%    swrite_db(DB1),nl,
+    findall(X,(for(I,0,Len3),X is I*3),Ys),
+    assert_in_db(Ys,[],DB2),
+%    swrite_db(DB2),nl,
+    findall(X,(for(I,0,Len6),X is I*6),Zs),
+    assert_in_db(Zs,[],DB6),
+%    swrite_db(DB6),nl,
+
+    cputime(T0),
+    intersect_db(DB1,DB2,DB3),
+    cputime(T1),
+    Time is T1-T0,
+%    swrite_db(DB3),nl,
+    DB3 == DB6,
+    writeln(succeeded_in(Time)).
+
 rtl_intersect([],_,[]).
 rtl_intersect(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
     (RTL2 == []
@@ -1834,11 +1940,13 @@ rtl_intersect(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
 	 -> rtl_intersect(RTL1r,RTL2,RTL3)
 	 ;  Cmp =:= 0
 	 -> order_intersect(Vs1,Vs2,Vs3),
-	    (Vs3 == []
-	     ->	rtl_intersect(RTL1r,RTL2r,RTL3)
-	     ;	RTL3 = rtl(K1,Vs3,RTL3r),
-		rtl_intersect(RTL1r,RTL2r,RTL3r)
-	    )
+%%	    (Vs3 == []  % unnec optimization
+%%	     ->	rtl_intersect(RTL1r,RTL2r,RTL3)
+%%	     ;	RTL3 = rtl(K1,Vs3,RTL3r),
+%%		rtl_intersect(RTL1r,RTL2r,RTL3r)
+%%	    ) 
+	    RTL3 = rtl(K1,Vs3,RTL3r),
+	    rtl_intersect(RTL1r,RTL2r,RTL3r)
 	 ;  rtl_intersect(RTL1,RTL2r,RTL3)
 	)
     ).
@@ -1862,6 +1970,7 @@ intersect_tries_ind_recur_r(rt(_,_,RT3,_),RTL,D,rt([],[],ST,[]),2) :-
     intersect_tries(RT3,RTL,D,ST).
 intersect_tries_ind_recur_r(rt(_,_,_,RT4),RTL,D,rt([],[],[],ST),3) :-
     intersect_tries(RT4,RTL,D,ST).
+
 
 /***********************************************************/
 
@@ -2012,9 +2121,14 @@ terms in prolog DB, @var{DB1}, are a subset of the terms in prolog DB,
 @pred{DB2}, and fails otherwise.").
 :- mode subset_db(+,+).
 subset_db(H1,H2) :-
-    intern_termhash(DB1,H1),
-    intern_termhash(DB2,H2),
-    subset_db_b(DB1,DB2).
+    (var(H1)
+     -> eval_set_expr(H2,DB2),
+        gen_subsets_db_b(DB2,DB1),
+	intern_termhash(DB1,H1)
+     ;	eval_set_expr(H1,DB1),
+        eval_set_expr(H2,DB2),
+	subset_db_b(DB1,DB2)
+    ).
 
 :- comment(subset_in_db/3, "@pred{subset_in_db(+Pref1,+Pref2,+DB)}
 succeeds if the tuples specified by prefix term @var{Pref1} are a
@@ -2054,14 +2168,6 @@ subset_with_rtl(RTLA,RTB,Depth,Key) :- RTB = rt(_,_,_,_),
     subset_tries_ind_recur_l(RTLA,RTB,Depth1,NInd).
     
 :- index subset_with_rt/3-2.
-/*** rt structure can never! be subset of rtl structure
-subset_with_rt(RTA,RTLB,Depth) :- RTLB = rtl(Key,_,_),
-    fail, % multiple cant be subset of one.
-    hash_key([],Key,Hash),
-    NInd is (Hash >> Depth) /\ 3,
-    Depth1 is Depth + 2,
-    subset_tries_ind_recur_r(RTA,RTLB,Depth1,NInd).
-  **/
 subset_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth) :-
     Depth1 is Depth + 2,
     subset_tries(RT01,RT11,Depth1),
@@ -2102,19 +2208,6 @@ rtl_subset(RTL1,RTL2) :- RTL1 = rtl(K1,V1,RTL1r),
         rtl_subset(RTL1r,RTL2r)
      ;  rtl_subset(RTL1,RTL2r)
     ).
-/***rtl_subset(RTL1,RTL2) :- RTL1 = rtl(K1,V1,RTL1r),
-    (RTL1 == []
-     ->	fail
-     ;	RTL2 = rtl(K2,V2,RTL2r),
-	term_compare(K1,K2,Cmp),
-	(Cmp < 0
-	 -> fail
-	 ;  Cmp =:= 0
-	 -> order_subset(V1,V2),
-	    rtl_subset(RTL1r,RTL2r)
-	 ;  rtl_subset(RTL1,RTL2r)
-	)
-    ).***/
 
 :- index subset_tries_ind_recur_l/4-4.
 subset_tries_ind_recur_l(RTL,rt(RT1,_,_,_),D,0) :-
@@ -2126,17 +2219,19 @@ subset_tries_ind_recur_l(RTL,rt(_,_,RT3,_),D,2) :-
 subset_tries_ind_recur_l(RTL,rt(_,_,_,RT4),D,3) :-
     subset_tries(RTL,RT4,D).
 
-/** not make sense...
-:- index subset_tries_ind_recur_r/4-4.
-subset_tries_ind_recur_r(rt(RT1,_,_,_),RTL,D,0) :-
-    subset_tries(RT1,RTL,D).
-subset_tries_ind_recur_r(rt(_,RT2,_,_),RTL,D,1) :-
-    subset_tries(RT2,RTL,D).
-subset_tries_ind_recur_r(rt(_,_,RT3,_),RTL,D,2) :-
-    subset_tries(RT3,RTL,D).
-subset_tries_ind_recur_r(rt(_,_,_,RT4),RTL,D,3) :-
-    subset_tries(RT4,RTL,D).
-*****/
+%% generate all subsets:  retract-based a little faster than assert-based
+gen_subsets_db_b([],[]).
+gen_subsets_db_b(DB,SDB) :-
+    findall(T,lookup_trie_vdict([T],true,_,DB),TList),
+    destruct_subset(TList,DB,SDB).
+
+destruct_subset([],DB,DB).
+destruct_subset([T|Ts],DB,SDB) :-
+    destruct_subset(Ts,DB,SDB1),
+    (retractall_in_db_b(T,SDB1,SDB)
+    ;
+     SDB = SDB1
+    ).
 
 /********************************************************/
 
@@ -2284,8 +2379,8 @@ sym_diff_tries_ind_recur_r(rt(RT1,RT2,RT3,RT4),RT,D,rt(RT1,RT2,RT3,ST),3) :-
 the prolog databases @var{DB1} and @var{DB2} are disjoint.").
 :- mode disjoint_db(+,+).
 disjoint_db(H1,H2) :-
-    intern_termhash(DB1,H1),
-    intern_termhash(DB2,H2),
+    eval_set_expr(H1,DB1),
+    eval_set_expr(H2,DB2),
     disjoint_db_b(DB1,DB2).
 
 :- comment(disjoint_in_db/3, "@pred{disjoint_in_db(+Pref1,+Pref2,+DB)}
@@ -3005,7 +3100,9 @@ prolog db @var{DB}. The elements are written (in no particular order)
 on a single lince, separated by commas and terminated by a period
 (full stop).").
 :- mode write_db(+).
-write_db(DB) :- write_db(userout,DB).
+write_db(DB) :- write_db(userout,DB,0).
+
+swrite_db(DB) :- write_db(userout,DB,1).
 
 :- comment(write_label_db/2,"@pred{write_label_db(+Label,+DB)} first
 writes the term @var{Label} followed by a colon.  Then it uses
@@ -3052,11 +3149,18 @@ writeln_label_db(Filename,Label,DB) :-
 :- comment(write_db/2, "@pred{write_db(+OutFile,+DB)} is like @pred{write_db(+DB)} but writes its output to the file @var{OutFile}").
 :- mode write_db(+,+).
 write_db(Filename,DB) :-
+    write_db(Filename,DB,0).
+
+write_db(Filename,DB,Sort) :-
     (Filename == userout
      ->	OStr = userout
      ;	open(Filename,write,OStr)
     ),
-    findall((Head:-Body),clause_in_db(Head,Body,DB),Clauses),
+    findall((Head:-Body),clause_in_db(Head,Body,DB),Clauses0),
+    (Sort =:= 1
+     ->	sort(Clauses0,Clauses)
+     ;	Clauses = Clauses0
+    ),
     (Clauses = [Clause1|ClauseR]
      ->	write_clause(OStr,Clause1),
 	write_db_list(OStr,ClauseR),
@@ -3103,10 +3207,12 @@ write_clause(OStr,Clause) :-
      ;	write(OStr,Clause)
     ).
 
-:- comment(pure_in_db/2, "@pred{pure_in_db(+G,+DB)} has the
-same functionality as @pred{in_db(G,DB)}, but it is implemented
-without cuts, so it can be used when this file is loaded into a DB by
-@pred{load_in_db/2}. ").
+:- comment(pure_in_db/2, "@pred{pure_in_db(+G,+DB)} has the same
+functionality as @pred{in_db(G,DB)}, but it is implemented without
+cuts, so it can be used when this file is loaded into a DB by
+@pred{load_in_db/2}. It also is lazy in applying unnumbervars so for
+early-failing clause bodies, literals after the failure are not
+unnumbervarred.").
 :- mode pure_in_db(?,+).
 pure_in_db(G,H) :-
     (H == module
@@ -3550,7 +3656,7 @@ select_db_b(TermI,TermO,DB0,DB) :-
 
 select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
 %%    standard:writeln(sft(TermI,TermO)),
-    (TermI == TermO
+    (TermI == TermO, is_most_general_term(TermO)
      -> NRT = RT0 %,standard:writeln(short_circuit(TermI))
     ;  (TermI == []
        -> match_key_new_terms(TermO,KO,NTermsO),
@@ -3577,7 +3683,7 @@ select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
    is allowed.  This elimination of duplicates can be expensive.  We
    might want to try to special-case situations we can determine
    cannot produce duplicates.  Or look at this closer to see how to
-   improve efficienty. */
+   improve its efficiency. */
 select_all_radix([],_,_,_,NRT,NRT).
 select_all_radix(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
     RT0 = rtl(_,_,_),
@@ -3686,8 +3792,8 @@ runs (at worst) in time proportional to the size of the smaller set. "
 ).
 :- mode compare_size_db(+,+,?).
 compare_size_db(H1,H2,Order) :-
-    intern_termhash(DB1,H1),
-    intern_termhash(DB2,H2),
+    eval_set_expr(H1,DB1),
+    eval_set_expr(H2,DB2),
     compare_size_db_b(DB1,DB2,Order).
 
 compare_size_db_b(DB1,DB2,Order) :-
@@ -3736,7 +3842,7 @@ process_next_tree_comp(rtl(_K,V,RTL),OTs,[V,RTL|OTs],C,C) :- !.
 process_next_tree_comp([T1|T1s],OTs,NTs,C,C) :- !, append_ne([T1|T1s],OTs,NTs).
 process_next_tree_comp(_T,OTS,OTS,C,NC) :- NC is C + 1.
 
-%% filter out []'s early.
+%% filter out []s early.
 append_ne([],L,L).
 append_ne([X|L1],L2,L3) :-
     (X == []
@@ -3816,17 +3922,99 @@ gdb(DB) :-
      ;	new_db(DB)
     ).
 
+/***********************************************************/
+
+/* The following predicates allow a user to collect all lookups to a
+ * given Prolog_db set.  The idea is allow a programmer to determine
+ * all lookups to a set during a computation and use that to determine
+ * if a future call with a related set can use the answers to the
+ * logged call.  Thus the log includes lookups over backtracking.  So
+ * this collects globally all terms T in any call to
+ * log_fact_in_db(E,Set), and associates with this a global variable
+ * named Set (i.e., the constant that identifies the set.)  The calls
+ * are accumulated over backtracking.  The log set should be used for
+ * testing for table reuse only after the table using the logged set
+ * is completed.
+
+To do this:
+   1. call log_set(Set) to set up the global variable that will collect the logged set.
+   2. call log_fact_in_db(E,Set) whenever you want E logged.
+   3. call unlog_set(Set) to eliminate the log for Set.
+   4. call get_lookup_log(Set,LoggedSet) to get the current logged set of term for set Set.
+
+If this turns out to be useful, we might consider a better interface
+for this, perhaps with a flag, parameterized by the set to log for,
+and then fact_in_db would do the logging.  Maybe...
+
+Test with:
+:- assert_in_db([a,b,c,d],DB),log_set(DB),log_fact_in_db(b,DB),log_fact_in_db(d,DB),\+log_fact_in_db(e,DB),write_db(DB),nl,get_lookup_log(DB,DBL),write_db(DBL),nl,assert_in_db([b,c,d,f],SDB), consistent_with_ground_log(SDB,DB),write_db(SDB),nl.
+
+*/
+
+:- export log_fact_in_db/2, log_set/1, unlog_set/1, get_lookup_log/2.
+:- export consistent_with_ground_log/2.
+
+:- import term_set_arg/4 from machine.
+:- import globalvar/2 from globalvar.
+  
+log_fact_in_db(E,Set) :-
+    log_the_lookup(E,Set),
+    fact_in_db(E,Set).
+
+log_set(Set) :-
+    globalvar(Set,TSet),
+    TSet = set_log(_),
+    term_set_arg(TSet,1,[],1).
+
+unlog_set(Set) :-
+    globalvar(Set,TSet),
+    TSet = set_log(_),
+    term_set_arg(TSet,1,_,1).
+
+get_lookup_log(Set,OTSet) :-
+    globalvar(Set,TSet),
+    TSet = set_log(OTSet).
+    
+% assume all terms, saved and logged, are ground
+consistent_with_ground_log(Set,LoggedSet) :-
+    get_lookup_log(LoggedSet,Log),
+    intersect_db(LoggedSet,Log,MustIn),
+    subset_db(MustIn,Set),
+    difference_db(Log,LoggedSet,NotIn),
+    disjoint_db(NotIn,Set).
+
+log_the_lookup(E,Set) :-
+    globalvar(Set,TSet),
+    TSet = set_log(OTSet),
+    (var(OTSet)
+     -> true
+     ;	assert_in_db(E,OTSet,NTSet),
+        (NTSet == OTSet
+	 ->  true
+	 ;   term_set_arg(TSet,1,NTSet,1)
+	)
+    ).
+
+/*************************************************/
+
+
+
 
 %%prolog_db_bi(_,_,_,_) :- '_$builtin'(82).
 
 /********************************************************/
 
 /* test predicates to support "existential" variables in clauses.
-   Every veriable is treated aa an existention.  Such a DB will be
-   called as DBE, and will be of the form dbe(PDB,N,Vars) where PDB is
-   a prolog db, N is the maximum number of variables in Vars, a
-   log-list of variables/values. 
-   Note (maybe bug?) cannot have variables as body.
+   Every veriable is treated aa an existential.  If this works out, we
+   can have two forms of variables, universal and existential.  Such a
+   DB will be called as DBE, and will be of the form dbe(PDB,N,Vars)
+   where PDB is a prolog db, N is the maximum number of variables in
+   Vars, a log-list of variables/values.  Note (maybe bug?) cannot
+   have variables as body.
+
+?- assert_in_dbe([p(X,Y),q(Y)],[],DBE).
+?- assert_in_dbe(p(X,f(Y)),dbe([],0,Vars),DBE), Y=b, fact_in_dbe(p(a,f(B)),DBE).
+?- assert_in_dbe([p(X,Y,c,Z),q(X)],dbe([],0,Vars),DBE), Y=f(Z,X), fact_in_dbe(p(a,f(b,U),C,Z),DBE), fact_in_dbe(q(W),DBE).
 */
 
 :- export assert_in_dbe/3.
@@ -3876,87 +4064,180 @@ add_new_vars([V|Vs],M0,M,Vars) :-
     add_new_vars(Vs,M1,M,Vars).
 
 :- export fact_in_dbe/2.
-fact_in_dbe(Head,dbe(H,_M,Vars)) :-
-    intern_termhash(DB,H),
+fact_in_dbe(Head,dbe(DB,_M,Vars)) :-
     lookup_trie_vdict([Head],true,Vars,DB).
+
+%% reindex(DBE0,DBE) to copy and incorporate all bound existential
+%% vars into DB, and reset N to 0 and Vars to _.  This would make a
+%% "copy" of DBE0.
 
 /********************************************************/
 
+/********** for displaying tries *****************/
+:- export trie_to_lists/2.
+:- export lists_to_trie/2.
+:- export member_trie/2.
+:- export print_lists_as_trie/2, print_lists_as_trie/3.
+:- export linearize_term/2.
 
-end_of_file.
+/* These routines manage tries represented as nested lists.  Such a
+   trie represents set of lists.  (The lists must not include on list
+   that is a properprefixe of another).
+   For example, the set of length-3 lists:
+   [[a,b,c],[a,b,d],[a,b,k],[a,c,c],[a,c,f],[b,d,d],[b,f,f]]
+   is represetned by the trie:
+   [a,[b,[c,[],d,[],k,[]],c,[c,[],f,[]]],b,[d,[d,[]],f,[f,[]]]]
+   The routinse are:
+   lists_to_trie(Lists,Trie) converts a list of fixed-length lists to a trie
+   trie_to_lists(Trie,Lists) converts a trie to a list of fixed-length lists
+   member_trie(List,Trie) succeeds is List is in the trie; can be used to
+        generate all lists in the trie.
+   print_lists_as_trie(Stream,Lists) prints the set of fixed-length
+        list formated as a trie on the Stream
+   linearize_term(Term,List) transforms an arbitrary term into list
+        that is the preorder traversal of the term tree.  Functions are
+        represented by a name/arity term.
 
-Extra stuff that may come in handy??
+   I have not found these predcicates to be of much use.  But they can
+   be used for learning about tries, and exploring what specific tries
+   look like.
 
-radix_tree_size(T,Size) :-
-     gensym('_ctr',Ctr),
-     conset(Ctr,0),
-     (do_all
-      lookup_radix_dict(RTL,T),
-      rtl_member(K,_,RTL),
-      coninc(Ctr)
-     ),
-     conget(Ctr,Size).
+**/
 
-:- table radix_tree_max_depth(_,lattice(max/3)).
-max(A,B,C) :- (A > B -> C = A ; C = B).
-radix_tree_max_depth(rtl(_,_,_),1).
-radix_tree_max_depth(rt(R1,R2,R3,R4),K) :-
-    (radix_tree_max_depth(R1,K0)
-     ;
-     radix_tree_max_depth(R2,K0)
-     ;
-     radix_tree_max_depth(R3,K0)
-     ;
-     radix_tree_max_depth(R4,K0)
-    ),
-    K is K0 + 1.
+/***  Example lists and trie.
+[[0,1,2],[0,1,3],[1,2,3],[1,2,4],[1,3,5]]
 
+[0,  [1,  [2, [],
+           3, []],
+     ],
+ 1,  [2,  [3,[],
+           4,[]],
+     3,   [5,[]]
+    ]
+]
+[0,[1,[2,[],3,[]]],1,[2,[3,[],4,[]],3,[5,[]]]]
+***/
 
-hash_bin(Term,BinList0,BinList) :-
-    hash_key([],Term,X),
-    (X =\= 0
-     ->	Bit is X /\ 3,
-	X1 is X >> 2,
-	tobin(X1,[Bit|BinList0],BinList)
-     ;	BinList = BinList0
+trie_to_lists([],[[]]).
+trie_to_lists([N,SubTrie|Trie],List) :-
+    trie_to_lists(SubTrie,List1),
+    prependall(List1,N,List2),
+    (Trie == []
+     ->	List = List2
+     ;	append(List2,List3,List),
+	trie_to_lists(Trie,List3)
     ).
 
-delete_from_radix_tree(Key,Val,Vars,Tree0,Tree) :-
-    ValTrans = lambda(OV,NV,order_delete(OV,Val,NV)),
-    delete_radix_vdict(Key,ValTrans,Vars,Tree0,Tree).
+prependall([],_,[]).
+prependall([L|Ls0],N,[[N|L]|Ls]) :-
+    prependall(Ls0,N,Ls).
 
-%% unused??
-delete_list_from_radix_tree([],T,T).
-delete_list_from_radix_tree([K-V|KVs],T0,T) :-
-    delete_from_radix_tree(K,V,_Vars,T0,T1),
-    delete_list_from_radix_tree(KVs,T1,T).
+lists_to_trie(Lists,Trie) :-
+    sort(Lists,SLists),
+    slists_to_trie(SLists,Trie).
 
+slists_to_trie([[]],[]).
+slists_to_trie(Lists,Trie) :-
+    Lists = [[N|_]|_],
+    lists_to_trie(Lists,N,Trie).
 
-dump_radix_tree(T) :-
-    (valid_radix_tree(T)
-     ->	(do_all
-	 find_in_trie(K,V,T),
-	 writeln((K:-V))
-	)
-     ;	misc_error('Cannot dump; Invalid radix tree')
+lists_to_trie(Lists,N,Trie) :-
+    remove_lead(Lists,N,Trimmed,M,Rest),
+    slists_to_trie(Trimmed,SubTrie),
+    (Rest \== []
+     ->	Trie = [N,SubTrie|MoreTrie],
+        lists_to_trie(Rest,M,MoreTrie)
+     ;	Trie = [N,SubTrie]
     ).
 
-valid_radix_tree([]).
-valid_radix_tree(rtl(_,_,RTL)) :-
-    valid_rtl(RTL).
-valid_radix_tree(T) :- T = rt(RT1,RT2,RT3,RT4),
-    raise_subtree(T,TT),
-    T == TT,
-    valid_radix_tree(RT1),
-    valid_radix_tree(RT2),
-    valid_radix_tree(RT3),
-    valid_radix_tree(RT4).
+remove_lead([],_,[],?,[]).
+remove_lead([FirstList|RestList],N,Trimmed,M,Rest) :-
+    FirstList = [M0|SubList],
+    (N == M0
+     ->	Trimmed = [SubList|NTrimmed],
+	remove_lead(RestList,N,NTrimmed,M,Rest)
+     ;	Rest = [FirstList|RestList],
+        Trimmed = [],
+        M = M0
+    ).
 
-valid_rtl([]).
-valid_rtl(rtl(_,_,RTL)) :- valid_rtl(RTL).
+member_trie([],[]).
+member_trie([E|List],[E,SubTrie|_Trie]) :-
+    member_trie(List,SubTrie).
+member_trie(List,[_,_|Trie]) :-
+    Trie \== [],
+    member_trie(List,Trie).
 
-delete_list_from_trie([],Dict,Dict).
-delete_list_from_trie([H-B|List],Dict0,Dict) :-
-    delete_trie_vdict([H],B,_,Dict0,Dict1),
-    delete_list_from_trie(List,Dict1,Dict).
+print_lists_as_trie(OStr,Lists) :-
+	print_lists_as_trie(OStr,Lists,5).
+
+print_lists_as_trie(OStr,Lists,Maxentrylen) :-
+    sort(Lists,SLists),
+    SLists = [First|Rest],
+    writeln_list(First,Maxentrylen,OStr),
+    print_as_trie(Rest,First,Maxentrylen,OStr).
+
+:- import tab/2, atom_length/2 from standard.
+:- import nl/1, number_codes/2 from standard.
+% Ind could be coputed from length of pref??
+print_as_trie([],_Prev,_Max,_OStr).
+print_as_trie([Next|SLists],Prev,MaxLen,OStr) :-
+    remove_longest_common_prefix(Next,Prev,0,N,Suff),
+    Ind is N * MaxLen,
+    tab(OStr,Ind),
+    writeln_list(Suff,MaxLen,OStr),
+    print_as_trie(SLists,Next,MaxLen,OStr).
+
+remove_longest_common_prefix(Suff,[],N,N,Suff) :- !.
+remove_longest_common_prefix([],_,N,N,[]).
+remove_longest_common_prefix([V|Vs],[V1|V1s],N0,N,Suff) :-
+    (V == V1
+    ->	N1 is N0+1,
+        remove_longest_common_prefix(Vs,V1s,N1,N,Suff)
+    ;	Suff = [V|Vs],
+        N = N0
+    ).
+
+writeln_list([],_Maxentrylen,OStr) :-
+    nl(OStr).
+writeln_list([V|Vs],Maxentrylen,OStr) :-
+    write(OStr,V),
+    (Vs \== []
+     ->	(integer(V)
+	 ->  integer_length(V,Alen)
+	 ;   atom_length(V,Alen)
+	),
+        Tab is Maxentrylen - Alen,
+        tab(OStr,Tab),
+        writeln_list(Vs,Maxentrylen,OStr)
+     ;	nl(OStr)
+    ).
+
+/* not quite right due to rounding error? */
+integer_length(Int,Len) :-
+    number_codes(Int,Codes),
+    length(Codes,Len).
+
+
+/* turn term into preordered list of atoms/integers.  Predicate
+sybmold become atoms, e.g., 'p/2' */
+linearize_term(Term,List) :-
+    linearize_term(Term,List,[]).
+
+linearize_term(Term,List0,List) :-
+    (compound(Term)
+     ->	functor(Term,_Mod,Pred,Ari),  %ignore mod for now
+	concat_atom([Pred,'/',Ari],PredName),
+	List0 = [PredName|List1],
+	Term =.. [_|Args],
+	linearize_terms(Args,List1,List)
+     ;	List0 = [Term|List]
+    ).
+
+linearize_terms([],List,List).
+linearize_terms([V|Vs],List0,List) :-
+    linearize_term(V,List0,List1),
+    linearize_terms(Vs,List1,List).
+
+
 
