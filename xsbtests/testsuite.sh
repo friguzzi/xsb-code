@@ -169,6 +169,7 @@ GREP="grep -i"
 MSG_FILE=/tmp/xsb_test_msg.$USER
 LOG_FILE=/tmp/xsb_test_log.$USER
 RES_FILE=/tmp/xsb_test_res.$USER
+WARN_FILE=/tmp/xsb_test_warn.$USER
 
 if test ! -x "$XEMU" -a -z "$windows" -a -z "$windows64"; then
     echo "Can't execute $XEMU"
@@ -209,6 +210,11 @@ fi
 if test -f "$RES_FILE"; then
   echo "There was an old $RES_FILE: removing..."
   rm -f $RES_FILE
+fi
+
+if test -f "$WARN_FILE"; then
+  echo "There was an old $WARN_FILE: removing..."
+  rm -f $WARN_FILE
 fi
 
 
@@ -294,6 +300,10 @@ $GREP "predicate undefined" $LOG_FILE >> $RES_FILE
 $GREP "Memory violation" $LOG_FILE >> $RES_FILE
 #dont want -i here
 grep Error $LOG_FILE >> $RES_FILE
+
+# Configuration-dependent test skips are not errors.  Keep them out of
+# RES_FILE and report their distinct marker after a successful run.
+grep -F "CONFIGURATION WARNING:" $LOG_FILE | sort -u > $WARN_FILE
 echo "-----------------------------------------"
 
 if test "$Mac_DATE" = 1; then
@@ -321,10 +331,15 @@ if test -s $RES_FILE; then
 	rm -f $MSG_FILE
 else
 	echo "PASSED testsuite for $XEMU on $HOSTNAME"
+	if test -s $WARN_FILE; then
+		echo "Configuration warnings:"
+		cat $WARN_FILE
+	fi
 	rm -f $NEW_LOG
 fi
 
 rm -f $RES_FILE
+rm -f $WARN_FILE
 rm -f $lockfile
 
 echo "Done `date`"
