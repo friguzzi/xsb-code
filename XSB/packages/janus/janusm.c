@@ -134,18 +134,20 @@ Integer get_safe_python_size(PyObject *pyObj) {
 // On ubuntu sizeof(size_t) is 8.
 // check_glstack overflow expands by Overflow margin + input
 void ensureXSBStackSpace(CTXTdeclc PyObject *pyObj,int flag) {
+  /* Both callers are arity-six predicates.  Preserve the result in reg[6]
+     as well as the inputs when heap collection or stack expansion moves it. */
   if (flag & SIZECHECK) {
     Integer size = get_safe_python_size(pyObj);
-    check_glstack_overflow(5,pcreg,2*size*sizeof(size_t));
+    check_glstack_overflow(6,pcreg,2*size*sizeof(size_t));
   }
   else if (PyList_Check(pyObj) || PySet_Check(pyObj)) {
-    check_glstack_overflow(5,pcreg,8*PyList_Size(pyObj)*sizeof(size_t));
+    check_glstack_overflow(6,pcreg,8*PyList_Size(pyObj)*sizeof(size_t));
   }
   else if (PyDict_Check(pyObj)) {
-    check_glstack_overflow(5,pcreg,24*PyDict_Size(pyObj)*sizeof(size_t));
+    check_glstack_overflow(6,pcreg,24*PyDict_Size(pyObj)*sizeof(size_t));
   }
   else if (PyTuple_Check(pyObj)) {
-    check_glstack_overflow(5,pcreg,4*PyTuple_Size(pyObj)*sizeof(size_t));
+    check_glstack_overflow(6,pcreg,4*PyTuple_Size(pyObj)*sizeof(size_t));
   }
 }
 
