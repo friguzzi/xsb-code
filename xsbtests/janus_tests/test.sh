@@ -30,6 +30,11 @@ echo "uname for this system is $u";
     # XEMU and options must be together in quotes
 ../nosorttest.sh "$XEMU $options" test_janus_plg "test"
 ../nosorttest.sh "$XEMU $options" test_py_pp "test"  # no . needed here
+for interface in func dot; do
+    for flags in 0 1; do
+        ../nosorttest.sh "$XEMU $options" jns_return_gc "test($interface,$flags)"
+    done
+done
 echo "-------------------------------------------------------"
 
 $XEMU << EOF
