@@ -16,6 +16,26 @@ test :-
 	file_io:file_close(STDWARN),
 	open(file(temp1),read,Port1),
 	open(file(temp),append,Port2),
-	file_io:copyIOport(Port1,Port2),
+	copy_preproc_output(Port1,Port2),
 	close(Port1),
 	close(Port2).
+
+% The preprocessor starts another XSB process whose load messages may include
+% CPU times.  Normalize those messages to the untimed form in the reference.
+copy_preproc_output(In,Out) :-
+        (file_io:file_read_line_list(In,Line) ->
+            normalize_load_time(Line,Normalized),
+            file_io:file_write_line(Out,Normalized,0),
+            copy_preproc_output(In,Out)
+        ; true).
+
+normalize_load_time([91|Rest],Normalized) :-
+        basics:append(Module,Tail,Rest),
+        basics:append(" loaded, cpu time used: ",Suffix,Tail),
+        basics:append(_,Seconds,Suffix),
+        basics:append(" seconds]",Ending,Seconds),
+        (Ending = "\n" ; Ending = "\r\n" ; Ending = []),
+        !,
+        basics:append(" loaded]",Ending,Untimed),
+        basics:append([91|Module],Untimed,Normalized).
+normalize_load_time(Line,Line).

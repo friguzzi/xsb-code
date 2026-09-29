@@ -17,6 +17,7 @@ options=$2
 ../gentest.sh "$XEMU $options" boyer_assert "boyer."
 #---------------------------------------
 ../gentest.sh "$XEMU $options" load_backsuite "test."
+../gentest.sh "$XEMU $options" test_storage_reclaim "test."
 #---------------------------------------
 ../gentest.sh "$XEMU $options" test_retract_gc "test."
 #---------------------------------------
