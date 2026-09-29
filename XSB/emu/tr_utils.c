@@ -2241,6 +2241,15 @@ static void insertLeaf(IGRptr r, BTNptr leafn)
   r -> leaves = p;
 }
 
+/* Compare addresses without dereferencing the leaves or ordering unrelated
+   C pointers.  UInteger is XSB's pointer-sized unsigned integer type. */
+static int compare_garbage_leaves(const void *left, const void *right)
+{
+  UInteger a = (UInteger) *(BTNptr const *)left;
+  UInteger b = (UInteger) *(BTNptr const *)right;
+  return (a > b) - (a < b);
+}
+
 /*
   This feature does not yet support shared tries or call subsumption.
  */
@@ -2248,7 +2257,8 @@ void reclaim_uninterned_nr(CTXTdeclc Integer rootidx)
 {
   IGRptr r = getAndRemoveIGRnode(CTXTc rootidx);
   IGLptr l, p;
-  BTNptr leaf;
+  BTNptr leaf, *leaves;
+  size_t count = 0, unique_count, i;
 
   if (r!=NULL)
     l = r-> leaves;
@@ -2257,11 +2267,31 @@ void reclaim_uninterned_nr(CTXTdeclc Integer rootidx)
 
   mem_dealloc(r,sizeof(InternGarbageRoot),TABLE_SPACE);
 
+  /* Reinsertion can revive a leaf without removing earlier disposal records.
+     Preserve that history for undo until reclamation, then deduplicate it
+     before inspecting or freeing any leaf.  After delete_branch(), the leaf's
+     header belongs to the structure manager and is no longer trie metadata. */
+  for (p = l; p != NULL; p = p->next)
+    count++;
+  if (count == 0)
+    return;
+  leaves = (BTNptr *)mem_alloc(count * sizeof(BTNptr),TABLE_SPACE);
+  i = 0;
   while(l != NULL){
-    /* printf("Loop b %p\n", l); */
-    leaf = l -> leaf;
+    leaves[i++] = l -> leaf;
     p = l -> next;
     mem_dealloc(l,sizeof(InternGarbageLeaf),TABLE_SPACE);
+    l = p;
+  }
+  qsort(leaves,count,sizeof(BTNptr),compare_garbage_leaves);
+  unique_count = 1;
+  for (i = 1; i < count; i++) {
+    if (leaves[i] != leaves[unique_count-1])
+      leaves[unique_count++] = leaves[i];
+  }
+
+  for (i = 0; i < unique_count; i++) {
+    leaf = leaves[i];
     switch_to_trie_assert;
     if(IsDeletedNode(leaf)) {
       //      SYS_MUTEX_LOCK(MUTEX_TRIE);
@@ -2278,8 +2308,8 @@ void reclaim_uninterned_nr(CTXTdeclc Integer rootidx)
     }
 
     switch_from_trie_assert;
-    l = p;
   }
+  mem_dealloc(leaves,count * sizeof(BTNptr),TABLE_SPACE);
 }
 
 /*----------------------------------------------------------------------*/
