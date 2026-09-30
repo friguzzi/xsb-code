@@ -128,3 +128,5 @@
 :- import xsb_configuration/2 from xsb_configuration.
 
 :- import sort/2 from setof.
+
+:- import (/)/2 from usermod.
