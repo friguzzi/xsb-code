@@ -552,7 +552,7 @@ put_byte(S_or_A,C) :-
 :- mode read_term(?,?).
 read_term(T,List):- 
 	read_term_check(List,read_term/2),
-	stat_flag(CURRENT_INPUT, File), 
+	stat_flag(CURRENT_INPUT, File),
 	stat_flag(TOKENIZE_DQ_AS_ATOM,OLDDQA),
 	stat_flag(TOKENIZE_VARIABLES_AS_ATOMS,OLDVAA),
 	(member(double_quoted_as_atoms,List)
@@ -602,6 +602,7 @@ jns_read_term(Istr,T,List):-
 %	 ;  true
 %	),
 %	catch(file_read(Istr, T,Vlist),Ball,reset_read_flags_throw(OLDDQA,OLDVAA,Ball)),
+        integer(Istr),  % needed for mode checking; why not check_open_stream...
 	file_read(Istr, T,Vlist),
 %	stat_set_flag(TOKENIZE_DQ_AS_ATOM,OLDDQA),
 %	stat_set_flag(TOKENIZE_VARIABLES_AS_ATOMS,OLDVAA),

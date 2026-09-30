@@ -35,7 +35,7 @@
 	process_control/2,
 	exec/1, list_directory/2.
 :- export sys_chdir/2, sys_access/3, sys_stat/3, sys_link/3,
-	sys_mkdir/2, sys_rmdir/2,
+        sys_mkdir/2, sys_rmdir/2, sys_create/2,
 	sys_unlink/2, sys_exit/1, sys_rename/3,
         sys_filecopy/3, sys_fileappend/3,
         sys_file_realpath/3,
