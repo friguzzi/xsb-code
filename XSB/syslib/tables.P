@@ -211,7 +211,7 @@ t_not_variant(Subgoal,AnsSetStatus,SF,PTCP):-
 	     is_incomplete(SF,PTCP), % suspend if is incomplete, succeed if complete
 %% DSW deleted: 10/30/2021
 %% following causes problems with aggregation, with resid program being partial.
-%% Not needed for testsuite. Is it even right? Can't always answer complete here?
+%% Not needed for testsuite. Is it even right? Cant always answer complete here?
 %%	     ensure_answer_completed(Subgoal,SF),
 	     slg_not(SF) ).
 
@@ -1411,7 +1411,7 @@ forest_log_overview:-
 	count_ecs(Len),
 	format("   ~D subgoals were early-completed.~n",[Len]),
 	total_noncompleted_subgoals(NonComp),
-	format("   ˜D subgoals were not completed in the log.~n",[NonComp]),
+	format("   ~D subgoals were not completed in the log.~n",[NonComp]),
 	count_pos_calls(Calls,New,Incomplete,Completed),
 	format("   There were a total of ~D positive tabled subgoal calls:~n",[Calls]),
 	format("      ~D were calls to new subgoals~n",[New]),
@@ -1547,19 +1547,17 @@ scc_has_delay(Scc):-
 
 :- mode analyze_an_scc(+,+,?).
 analyze_an_scc(Scc,File,Abstraction_in):-
-  functor(Abstraction_in,F,A),
-  (F = ':',A = 2 -> 
-    arg(1,Abstraction_in,Module),arg(2,Abstraction_in,Abstraction) 
- ; Module = usermod,Abstraction = Abstraction_in),
- count_subgoals_in_scc(Scc,Subgoals),
- count_backlinks_in_scc(Scc,Links,Ninks),
- Density is (Subgoals+Links)/Subgoals,
- format("There are ~D subgoals and ~D links (average of ~f edges per subgoal) within the SCC~n",	[Subgoals,Links,Density]),
-%	format("There are ~D subgoals and ~D links (average of ~f edges per subgoal) within the SCC~n"
- format("There are ~D negative edges resulting in 0 delays and 0 simplifications~n",
+	functor(Abstraction_in,F,A),
+	(F = ':',A = 2 -> 
+	    arg(1,Abstraction_in,Module),arg(2,Abstraction_in,Abstraction) 
+	  ; Module = usermod,Abstraction = Abstraction_in),
+	count_subgoals_in_scc(Scc,Subgoals),
+	count_backlinks_in_scc(Scc,Links,Ninks),
+	Density is (Subgoals+Links)/Subgoals,
+	format("There are ~D subgoals and ~D links (average of ~f edges per subgoal) within the SCC~n",
+		[Subgoals,Links,Density]),
+	format("There are ~D negative edges resulting in 0 delays and 0 simplifications~n",
 		[Ninks]),
-%	format("There are ~D negative edges resulting in 0 delays and 0 simplifications~n",
-%		[Ninks]),
 	nl,count_preds(Scc,Module,Abstraction),
 	nl,report_links(Scc,File,Module,Abstraction).
 
@@ -1935,8 +1933,8 @@ sdg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegS
         format("Subgoal: ~q~n",Subgoal),
 	(integer(Level) -> 
 	   Index is Level - Base,
-format("        SCC: ~D; Number of calls to this subgoal ~D; Number of answers ~D~n",[Index,CallsTo,Answers])
-         ; format("        Number of calls to this subgoal ~D; Number of answers ~D~n",[CallsTo,Answers]) ),
+	   format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Index,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
 	(PosSFList == [] -> true 
           ; get_subgoal_list(PosSFList,AVL,PosSubgList),
 	    format("        Affects positively ",[]),
@@ -1963,8 +1961,8 @@ idg_print_each_subgoal([subgoal(Subgoal,Level,_SF,CallsTo,Answers,PosSFList,NegS
         numbervars(Subgoal),
         format("Tabled Subgoal: ~q~n",Subgoal),
 	(integer(Level) -> 
-	   format("        SCC: ~D; Number of calls to this subgoal ~D; Number of answers ~D~n",[Level,CallsTo,Answers])
-         ; format("        Number of calls to this subgoal ~D; Number of answers ~D~n",[CallsTo,Answers]) ),
+	   format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Level,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
 	(PosSFList == [] -> true 
           ; get_subgoal_list(PosSFList,AVL,PosSubgList),
 	    format("        Affects positively ",[]),
@@ -2033,8 +2031,8 @@ print_each_subgoal_no_deps([subgoal(Subgoal_orig,Level,_Key,CallsTo,Answers,_Pos
         format("Subgoal: ~q~n",Subgoal),
         (integer(Level) ->
            Index is Level - Base,
-           format("        SCC: ~D; Number of calls to this subgoal ~D; Number of answers ~d~n",[Index,CallsTo,Answers])
-         ; format("        Number of calls to this subgoal ~D; Number of answers ~D~n",[CallsTo,Answers]) ),
+           format("        SCC: ~d; Number of calls to this subgoal ~d; Number of answers ~d~n",[Index,CallsTo,Answers])
+         ; format("        Number of calls to this subgoal ~d; Number of answers ~d~n",[CallsTo,Answers]) ),
         print_each_subgoal_no_deps(R,Base).
 
 get_subgoals_base_level(SDG,Base):- 
@@ -2278,9 +2276,9 @@ max_incomplete_subgoals_default_handler:-
 
 max_incomplete_subgoals_header:- 
   inc_subg_analysis_info(SubgNum,SCCNumber),
-  format("There are currently ~D incomplete tabled subgoals, which exceeds the limit set by the flag~n",
+  format("There are currently ~d incomplete tabled subgoals, which exceeds the limit set by the flag~n",
          [SubgNum]),
-  format("'max_incomplete_subgoals'.  These subgoals are in ~D separate recursive components.~n",[SCCNumber]),
+  format("'max_incomplete_subgoals'.  These subgoals are in ~d separate recursive components.~n",[SCCNumber]),
   format("~n"),
   format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
@@ -2315,12 +2313,12 @@ max_scc_subgoals_header:-
   current_prolog_flag(max_scc_subgoals,Max),
   scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers),
 %  writeln(scc_subg_analysis_info(NumSubgoals,TotEdges,NumAnswers)),
-  format("A recursive component containing ~D incomplete tabled subgoals is currently under evaluation.~n",
+  format("A recursive component containing ~d incomplete tabled subgoals is currently under evaluation.~n",
 	 [NumSubgoals]), 
-  format("The size of this recursive component exceeds the limit of ~D set by the flag 'max_scc_subgoals'.~n",[Max]),
-  format("Together, the total number of dependency edges among all subgoals in this recursive component is ~D~n",[TotEdges]),
-  format("and the total number of answers for all subgoals in this component is ~D~n",[NumAnswers]),
-  format("~n  * To continue, reset the flag and then type Ctrl-D~n",[]),
+  format("The size of this recursive component exceeds the limit of ~d set by the flag 'max_scc_subgoals'.~n",[Max]),
+  format("Together, the total number of dependency edges among all subgoals in this recursive component is ~d~n",[TotEdges]),
+  format("and the total number of answers for all subgoals in this component is ~d~n",[NumAnswers]),
+  format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
    format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]),!.
    max_scc_subgoals_header.
@@ -2413,7 +2411,7 @@ max_answers_for_subgoal_default_handler:-
 
 max_answers_for_subgoal_header:- 
   current_prolog_flag(max_answers_for_subgoal,Max),
-  format("~D answers derived for a tabled subgoal~n",[Max]),
+  format("~d answers derived for a tabled subgoal~n",[Max]),
   format("~n  * To continue, reset the flag and then type Ctrl-d~n",[]),
   format("  * To abort, enter the command 'abort/0'~n",[]),
   format("  * To inspect the incomplete tabled subgoals, enter the command 'show_incomplete_subgoals'~n",[]).
@@ -2439,7 +2437,7 @@ max_memory_default_handler:-
 
 max_memory_header:- 
   current_prolog_flag(max_memory,Max_mem),
-  format("~nThe maximum user-set memory of ~D has been exceeded~n",[Max_mem]),
+  format("~nThe maximum user-set memory of ~d has been exceeded~n",[Max_mem]),
   format("Details can be seen by typing statistics/0~n",[]),
   format("To support debugging and diagnosis, the limit has been increased by 20\\%.~n",[]),
   format("~n  * To continue set the flag to allow more memory, and then type Ctrl-d~n",[]),
@@ -2818,7 +2816,97 @@ explain_u_val_1(SF,_BratLeaf,FlounderedLeaf,_AnswerLeaf,floundered,_Type):-
 	get_returns(SF,ret(FlounderedLeaf),_AnsLeaf).
 %explain_u_val_1(SF,BratLeaf,FlounderedLeaf,AnswerLeaf,negative_loops,Type):- 
 
-/* ---------------------- end of file tables.P ------------------------ */
+/* dump_tables/0/1: prints out tables; 0-ary all tables; 1-ary prints
+tables of predicates provided in argument list.  */
+:- export dump_tables/0, dump_tables/1.
+:- import functor/4 from standard.
+
+dump_tables :-
+    findall(Mod:Pred/Arity,
+	    tabled_pred(Mod,Pred,Arity),
+	    TPreds),
+    dump_tables(TPreds).    
+
+tabled_pred(Module,Pred,Arity) :-
+    current_predicate(Module:Pred/Arity),
+    Module:Pred/Arity \== usermod:':'/2, % messes up later calls
+    functor(Term,Pred,Arity),	% very awkward that this must be done
+    predicate_property(Module:Term,tabled).
+
+
+dump_tables([PSpec|PSpecs]) :- !,
+    dump_tables(PSpec),
+    dump_tables(PSpecs).
+dump_tables(PSpec) :-
+    (PSpec = Pred/Arity
+     ->	(ground(PSpec)
+	 -> functor(Spec,Pred,Arity),
+	    dump_table(Spec)
+	 ;  dump_tables(usermod:PSpec)
+	)
+     ; PSpec = Mod:Pred/Arity
+     ->	(ground(PSpec)
+	 -> functor(Spec,Mod,Pred,Arity),
+	    dump_table(Spec)
+	 ;  findall(Mod:Pred/Arity,tabled_pred(Mod,Pred,Arity),ASpecs),
+	    dump_tables(ASpecs)
+	)
+     ;	dump_table(PSpec)
+    ).
+
+dump_table([]) :- !.
+dump_table(Spec) :-
+    functor(Spec,Mod,_Pred,_Arity),
+    findall(t(Spec,SGF,Tmpl),
+	    get_calls(Spec,SGF,Tmpl),
+	    AllTables),
+    sort(AllTables,AllTablesSorted),
+    (do_all
+     member(t(Spec,SGF,Tmpl),AllTablesSorted),
+     copy_term(Spec-Tmpl,CSpec-_),
+     numbervars(CSpec),
+     ( Mod == usermod
+      -> true
+      ;	 write(Mod),
+         write(':')
+     ),
+     write(CSpec),write(': '),
+     findall(p(Tmpl,DLs),
+	     get_returns_and_dls(SGF,Tmpl,DLs),
+	     AllAns),
+     sort(AllAns,AllAnsS),
+     write_all_ans(AllAnsS)
+    ).
+     
+write_all_ans([]) :- nl.
+write_all_ans([Ans]) :- !,
+    write_one_ans(Ans),
+    nl.
+write_all_ans([Ans|AnsS]) :-
+    write_one_ans(Ans),
+    writeln(','),
+    write_all_ans(AnsS).
+
+write_one_ans(Ans) :-
+    copy_term(Ans,AnsC),
+    numbervars(AnsC),
+    AnsC = p(Tmpl,DLs),
+    Tmpl =.. [_|AnsL],
+    (AnsL == []
+     ->	write(true)
+     ; AnsL = [A]
+     ->  write(A)
+     ;	 write(AnsL)
+    ),
+    (DLs == []
+     ->	 true
+     ;	 write(':-'),
+         write(DLs)
+    ).
+
+
+
+/* ----------------tri------ end of file tables.P ------------------------ */
 /* 07/05/01  -- work area for functions under development */
 
 %find_components(Call):- 

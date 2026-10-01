@@ -8,7 +8,43 @@ directory, and running:
 
 xsb -e "[xsbdoc], xsbdoc(prolog_db_format,pdf),halt."
 
-Update all this do to use is_set/2, in_set/2, in_model/2.
+join(Tmp1,Tmp2,TmpOut,DB1,DB2,DBOut): with the same sequence of
+variables in the same order.  Variables common to all three Tmps must
+appear first in the same order in all Tmps.  All variables in TmpOut
+must appear in either Tmp1 or Tmp2.  In each Tmp variables must be
+distinct.
+
+e.g. join(p(A,B,C),q(A,B,D),r(A,B,C,D),+PDB,+QDP,-RDB).
+or  join(p(A,B,C),q(A,B),r(A,B,C),+PDB,+QDP,-RDB).
+
+join(a(A,B),a(B,C),a(A,B,C),ADB,ADB,NDB),
+reorder(a(A,B),a(B,A),ADB,AIDB)   (a.k.a. reindex)
+join(a(A,C),a(A,B,C),a(A,B,C),AIDB,NDB,NNDB)
+  for this: go to common end of A, then for every B, intersect Cs.
+
+Or do we want different argument order? with templates
+   immediately preceding their DBs, like:
+join(a(A,B),ADB,a(B,C),ADB,a(A,B,C),NDB),
+reorder(a(A,B),ADB,a(B,A),AIDB)   (a.k.a. reindex)
+join(a(A,C),AIDB,a(A,B,C),NDB,a(A,B,C),NNDB)
+
+This last finds for each ai, its set of c's, and then intersects it with
+every set of C's at the end of every si-b? path.
+
+
+Add predicate join(Pref1,Pref2,Pref3,DB1,DB2,DBOut) Pref1, Pref2 and
+Pref3 must have a common prefix of variables, which are the join
+variables.  The result is, as if defined by a Prolog rule:
+   DB3 = {Pref3: Pref1 in_set DB1, Pref2 in_set DB2}
+
+Add predicate semijoin(Pref1,Pref2,DB1,DB2,DB3) where the variables in
+Pref1 are a subset of variables in Pref2.  The variables common to
+Pref1 and Pref2 must appear in the same order in each Pref, but,
+unlike in join, they do not need to be prefixes.
+
+The result is
+   DB3 = {Pref2: Pref1 in_set DB1, Pref2 in_set DB2}
+
 ************/
 
 /***
@@ -918,27 +954,27 @@ short-hand for the actual prefix term @pred{r(_,_,_)}.  ").
 expression @var(SetExpr} and unifies it with @var{Set}. (It can be
 seen as analgous to is/2, which evaluates expressions over the umeric
 algegra.)").
+:- import op/3 from standard.
+:- op(200,xfy,(#)).
 
 is_set(S,SE) :-
     eval_set_expr(SE,SB),
-    intern_termhash(SB,S1),
-    S = S1.
+    intern_termhash(SB,S).
 
+:- export is_set_b/2.
+is_set_b(S,SE) :-
+    eval_set_expr(SE,SB),
+    intern_term(SB,S).
+
+% input expression over db-names, output db-term
 eval_set_expr((SE1+SE2),S) :- !,
-    (SE1 @= [_|_]
-     ->	eval_set_expr(SE2,S2),
-        assert_in_db_b(SE1,S2,S)
-     ; SE2 @= [_|_]
-     ->	eval_set_expr(SE1,S1),
-        assert_in_db_b(SE2,S1,S)
-     ;	eval_set_expr(SE1,S1),
-        eval_set_expr(SE2,S2),
-        union_db_b(S1,S2,S)
-    ).
+    eval_set_expr(SE1,S1),
+    eval_set_expr(SE2,S2),
+    union_db_b(S1,S2,S).
 eval_set_expr((SE1*SE2),S) :- !,
     eval_set_expr(SE1,S1),
     eval_set_expr(SE2,S2),
-    intersect_db_b(S1,S2,S).
+    intersect_db_b(S1,S2,1,S).  % assuming ground??
 eval_set_expr((SE1-SE2),S) :- !,
     (SE2 @= [_|_]
      ->	eval_set_expr(SE1,S1),
@@ -956,19 +992,30 @@ eval_set_expr(select(InPref,OutPref,SE),S) :- !,
     select_db_b(InPref,OutPref,S1,S).
 eval_set_expr(findall(V,Goal),S) :- !,
     findall_db(V,Goal,S).
+eval_set_expr(SE,S) :- SE=[_|_], !, assert_in_db(SE,[],S). %for indexing)
 eval_set_expr([],S) :- !, S = [].
-eval_set_expr(SE,S) :- 
-    atom(SE),
-    intern_termhash(S,SE),
-    S \== SE,
+eval_set_expr(SE,DB) :- 
+    atom(SE),            % assume a set name
+    intern_termhash(DB,SE),
+    DB \== SE,
     !.
-eval_set_expr(SE,S) :-
+eval_set_expr(SE,S) :- % otherwise assume is a value
     assert_in_db_b(SE,[],S).
-
 
 in_set(Fact,Set) :-
     eval_set_expr(Set,SB),
-    lookup_trie_vdict([Fact],true,_Vars,SB).
+    lookup_trie_vdict([Fact],[],true,_Vars,SB). % think about Vars later
+
+/**  replace previous wiht this??
+in_set(Clause,Set) :-
+    eval_set_expr(Set,SB),
+    SB \== [],			% nothing is in the empty set
+    (Clause = (Head:-Body)
+     ->	true
+     ;	Head = Clause, Body = true
+    ),
+    lookup_trie_vdict([Head],[],Body,_Vars,SB). % think about Vars later
+***/
 
 in_model(Goal,Set) :-
     eval_set_expr(Set,SB),
@@ -977,6 +1024,8 @@ in_model(Goal,Set) :-
 :- comment(assert_in_db/3, "@pred{assert_in_db(+Clause,+DB0,?DB)} adds
 a clause, @var{Clause}, (or a sequence of clauses, if @var{Clause} is
 a list of clauses) to @var{DB0} to generate @var{DB}. ").
+
+% ALLOW {...} BRACKETING TO INDICATE A SET, TO ALLOW IS_SET(S,{A,B,C}).
 :- mode assert_in_db(?,+,?).
 assert_in_db(Clauses,H0,H) :-
     (H0 == module
@@ -1062,19 +1111,23 @@ add(Clauses,H) :- assert_in_db(Clauses,H).
 add_to_trie_dict(Head,Body,Ni,No,Dict0,Dict) :-
     (ground([Head|Body])
      ->	No = Ni,
-        add_trie_dict([Head],Body,Dict0,Dict)
+        add_trie_dict([Head],[],Body,Dict0,Dict)
      ;	copy_term([Head|Body],[Head1|Body1]),
 	my_numbervars([Head1|Body1],Ni,No),
-	add_trie_dict([Head1],Body1,Dict0,Dict)
+	add_trie_dict([Head1],[],Body1,Dict0,Dict)
     ).
 
-:- mode add_trie_dict(+,?,+,-).
-add_trie_dict(KeyTerms,Value,Dict0,Dict) :-
-    (KeyTerms \== []
-     ->	next_prefix_symbol(KeyTerms,Key,NKeyTerms),
+:- mode add_trie_dict(+,+,?,+,-).
+add_trie_dict(KeyTerms,At,Value,Dict0,Dict) :-
+    (KeyTerms == At,
+     (var(KeyTerms) ; is_most_general_term(KeyTerms))
+     ->	(KeyTerms == []
+	 -> order_insert(Dict0,Value,Dict)
+	 ;  Dict = Value
+	)
+     ;	next_prefix_symbol(KeyTerms,Key,NKeyTerms),
 	add_radix_dict(Key,NewSubDict,Dict0,Dict,OldSubDict),
-	add_trie_dict(NKeyTerms,Value,OldSubDict,NewSubDict)
-     ;	order_insert(Dict0,Value,Dict)
+	add_trie_dict(NKeyTerms,At,Value,OldSubDict,NewSubDict)
     ).
 
 order_insert(ACVs,V,NVs) :-
@@ -1202,7 +1255,7 @@ clause_in_db(Head,Body,Vars,H) :-
     (H == module
      ->	clause(Head,Body)
      ;	intern_termhash(DB,H),
-	lookup_trie_vdict([Head],Body,Vars,DB)
+	lookup_trie_vdict([Head],[],Body,Vars,DB)
     ).
 
 :- comment(fact_in_db/2, "@pred{fact_in_db(?Fact,+DB)} unifies, in
@@ -1213,39 +1266,44 @@ fact_in_db(Head,H) :-
     intern_termhash(DB,H),
     (DB == internalDB
      ->	call0(Head)
-     ;	lookup_trie_vdict([Head],true,_Vars,DB)
+     ;	lookup_trie_vdict([Head],[],true,_Vars,DB)
     ).
 
 clause_in_db_b(Head,Body,Dict) :-
-    lookup_trie_vdict([Head],Body0,Vars,Dict),
+    lookup_trie_vdict([Head],[],Body0,Vars,Dict),
     (Body0 == true
      ->	Body = true
      ;	pdb_unnumbervars(Body0,0,Body,Vars)
     ).
 
-lookup_trie_vdict([],Body,_Vars,Dict) :- 
-    member(Body,Dict).
-lookup_trie_vdict(Terms,Body,Vars,Dict) :- Terms = [Term|RTerms],
-    lookup_trie_vars(Term,Body,Vars,Dict,RTerms).
-lookup_trie_vdict(Terms,Body,Vars,Dict) :- Terms = [_|_],
-    lookup_trie_novars(Terms,Body,Vars,Dict).
+
+lookup_trie_vdict(Terms,Tail,Body,Vars,Dict) :-
+    (Terms == []
+     -> member(Body,Dict)
+     ; Terms == Tail  % not nec?, is_most_general_term(Terms)
+     ->	Body = Dict
+     ;	Terms = [Term|RTerms],
+        (lookup_trie_vars(Term,Tail,Body,Vars,Dict,RTerms)
+	 ;
+	 lookup_trie_novars(Terms,Tail,Body,Vars,Dict)
+	)
+    ).
 
 %% handle vars in DB
-lookup_trie_vars(Term,Body,Vars,Dict,RTerms) :-
+lookup_trie_vars(Term,Tail,Body,Vars,Dict,RTerms) :-
     Key = '_$Var$'(VNo),
     lookup_radix_dict_det([],Key,RTL,Dict),
     rtl_member(Key,Val,RTL),
-%%    integer(VNo),  % shouldnt be required, since DB must be ground
     log_ith(VNo,Vars,Term),
-    lookup_trie_vdict(RTerms,Body,Vars,Val).
+    lookup_trie_vdict(RTerms,Tail,Body,Vars,Val).
     
 %% when no vars in DB
-lookup_trie_novars(Terms,Body,Vars,Dict) :- 
+lookup_trie_novars(Terms,Tail,Body,Vars,Dict) :- 
     next_prefix_symbol(Terms,Key,NTerms),
-    (nonvar(Key), \+varno(Key)  %functor or constant?, this handles $var(_)
+    (nonvar(Key), \+varno(Key)  %functor or constant?, not $var(_)
      -> lookup_radix_dict_det([],Key,RTL,Dict),
 	rtl_member_det(Key,Val,RTL),
-	lookup_trie_vdict(NTerms,Body,Vars,Val)
+	lookup_trie_vdict(NTerms,Tail,Body,Vars,Val)
      ;  (var(Key)
 	 -> lookup_radix_dict(RTL,Dict),
 	    rtl_member(Key,Val,RTL)
@@ -1254,7 +1312,7 @@ lookup_trie_novars(Terms,Body,Vars,Dict) :-
 	),
 	Key =.. [_|NArgs],  %cannot use new builtin due to $Var proc
 	append(NArgs,NTerms,NNTerms),
-	lookup_trie_vdict(NNTerms,Body,Vars,Val)
+	lookup_trie_vdict(NNTerms,Tail,Body,Vars,Val)
     ).
 
 :- comment(fact_in_gdb/2, "@pred{fact_in_gdb(?Term,+DB)}
@@ -1417,7 +1475,7 @@ delete_trie_vdict(Terms,Body,Vars,Dict0,Dict) :- Terms = [Frst|NTermsT],
 	 ;  Key = VKey
 	),
 	(var(Key)
-	 -> findall(Terms,lookup_trie_vdict(Terms,Body,Vars,Dict0),TermsList),
+	 -> findall(Terms,lookup_trie_vdict(Terms,[],Body,Vars,Dict0),TermsList),
 	    TermsList \== [],
 	    delete_list_from_trie_list(TermsList,Body,Vars,Dict0,Dict)
 	 ;  ValTrans = lambda(OSDict,SDict,delete_trie_vdict(NTerms,Body,Vars,OSDict,SDict)),
@@ -1554,6 +1612,7 @@ union_db(H1,H2,H) :-
     union_db_b(DB1,DB2,DB),
     intern_termhash(DB,H).
 
+:- export union_db_b/3.
 union_db_b(DB1,DB2,DB3) :-
     union_tries(DB1,DB2,0,DB3).
 
@@ -1636,26 +1695,26 @@ rtl_union(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
 
 order_union([],L,L).
 order_union(L1,L2,L3) :- L1 = [_|_],
-    order_union_list(L1,L2,L3).
+    order_disjoin_list(L1,L2,L3).
 order_union(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
     union_db_b(Dict1,Dict2,Dict3).
 order_union(Dict1,Dict2,Dict3) :- Dict1 = rt(_,_,_,_),
     union_db_b(Dict1,Dict2,Dict3).
 
-order_union_list([],L,L).
-order_union_list(L1,L2,L3) :- L1 = [V1|L1r],
+order_disjoin_list([],L,L).
+order_disjoin_list(L1,L2,L3) :- L1 = [V1|L1r],
     (L2 == []
      ->	L3 = L1
      ;	L2 = [V2|L2r],
 	L3 = [V|L3r],
 	(V1 @< V2
 	 -> V = V1,
-	    order_union_list(L1r,L2,L3r)
+	    order_disjoin_list(L1r,L2,L3r)
 	 ;  V1 == V2
 	 -> V = V1,
-	    order_union_list(L1r,L2r,L3r)
+	    order_disjoin_list(L1r,L2r,L3r)
 	 ;  V = V2,
-	    order_union_list(L1,L2r,L3r)
+	    order_disjoin_list(L1,L2r,L3r)
 	)
     ).
 
@@ -1812,12 +1871,48 @@ a prolog DB, in @var{DB}, that is the intersection of the two input
 databases.  This is done by traversing the two input tries in concert
 and in the process generating the output trie.  This allows the output
 trie to share subterms with the input tries, and to perhaps avoid
-traversing large portions of the input tries.  ").
+traversing large portions of the input tries.  
+
+This algorithm is correct for ground databases ONLY.  I.e., databases
+with variables are NOT handled correctly.  However, ground RULES are
+handled correctly.  Two rules with the same head intersect to a rule
+with that head and a new body that is the conjunction of the two rule
+bodies.  This preserves the LFP semantics. I.e.,
+
+For any parameter set Q and any element x, 
+   x in F_{A*B)(Q) iff x in F_A(Q) and x in F_B(Q).  
+
+E.g.  Let A = \{a:-b\}, B = \{a:-c\}. Then for any parameter set Q, a
+in F_{a:-b,c)(Q) iff a in F_{a:-b}(Q) and a in F_{a:-c}(Q), since if b
+and c are in Q, then both sides are true; otherwise both sides are
+false.  ").  
+
+/* DOE SYNTACTIC INTERSECTION, NOT SEMANTICALLY CORRECT, E.G.
+  [p(X)]*[p(a)] IS SYNTACTIC [], SEMANTIC [p(a)].
+  SHOULD BE FIXED (at cost of one radix tree lookup for $VAR$)
+   */
+
+/* Add complement (unary -) that copies the heads and negates the
+ * bodies: only valid for nonrecursive rules. (WIth rec rules, gives
+ * the complement of the base case(s) and recursive rules end up
+ * ignored, since ev erything in the complement of the full definition
+ * is alredy in the complement of the base case.  MAKES SENCE ONLY FOR
+ * NONRECURSIVE RULES, AND EVEN THEN IS A LITTLE WEIRD.
+   */
+
 :- mode intersect_db(+,+,?).
 intersect_db(H1,H2,H) :-
     intern_termhash(DB1,H1),
     intern_termhash(DB2,H2),
-    intersect_db_b(DB1,DB2,DB),
+    intersect_db_b(DB1,DB2,[],DB),  % []=>ground, _=>nonground so vars
+    intern_termhash(DB,H).
+
+:- export intersect_ngdb/3.  % handle variables
+:- mode intersect_ngdb(+,+,?).
+intersect_ngdb(H1,H2,H) :-
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
+    intersect_db_b(DB1,DB2,_V,DB),  % vars=>nonground so vars
     intern_termhash(DB,H).
 
 :- comment(intersect_in_db/5,
@@ -1829,79 +1924,158 @@ term @var{P3}.  (See @pred{is_prefix_term/2} and
 @pred{apply_op_in_db/6} for discussions of prefix terms.)").
 :- mode intersect_in_db(?,?,?,+,?).
 intersect_in_db(P1,P2,P3,DB0,DB) :-
-    apply_op_in_db(lambda(A,B,C,intersect_db_b(A,B,C)),P1,P2,P3,DB0,DB).
+    apply_op_in_db(lambda(A,B,C,intersect_db_b(A,B,1,C)),P1,P2,P3,DB0,DB).
 
-intersect_db_b(T0,T1,T) :-
-    intersect_tries(T0,T1,0,T).
+intersect_db_b(T0,T1,Vs,T) :-   % G=1/0=ground/nonground
+    (Vs == []
+     ->	intersect_tries(T0,T1,Vs,0,T)
+     ;	intersect_tries_with_vars(T0,T1,Vs,T)
+    ).
 
-intersect_tries(T1,T2,Depth,T) :-
+/*******
+  Var intersect examples:
+  [p(X,Y,b)] * [p(a,Z,b),p(b,Z,b)]]
+***/
+:- import writeln/1,nl/0 from standard.
+
+/* This implementation is not right, and should not be used.  It is
+more complicated to do this right.  I may look into it.  My current
+idea is to write a xelect(+Goal,+DBI,-DB) predicate such that DB is
+the set of Goal instances true in DBI.  I.e., implementable as
+findall_db(Goal,in(Goal,DBI),DB), but more efficiently implemented by
+traversing Goal and DBI together so as not to have to copy unnecessary
+tries.  I guess like select_in_db but not requiring a Prefex
+seclection term.
+   */
+
+intersect_tries_with_vars(T0,T1,Vs,T) :-
+%%	debugger:trace,
+    findall(RTL,lookup_trie_vdict(['_$Var$'(_VNo)|Tail],Tail,RTL,Vs,T0),VRTLs0),
+    (VRTLs0 \== []
+     -> findall(Val,(lookup_trie_vdict([Val|Tail],Tail,_RTL,Vs,T1),Val\='_$Var$'(_)),Vals1)
+     ;	Vals1 = []
+    ),
+    findall(RTL,lookup_trie_vdict(['_$Var$'(_VNo)|Tail],Tail,RTL,Vs,T1),VRTLs1),
+    (VRTLs1 \== []
+     ->	findall(Val,(lookup_trie_vdict([Val|Tail],Tail,_RTL,Vs,T0),Val\='_$Var$'(_)),Vals0)
+     ;	Vals0 = []
+    ),
+    prefix_vals(VRTLs0,Vals1,T0,T0N),
+    prefix_vals(VRTLs1,Vals0,T1,T1N),
+%%    writeln(T0N),
+%%    writeln(T1N), nl,
+    intersect_tries(T0N,T1N,Vs,0,T).
+  
+prefix_vals([],_Vals,T,T).
+prefix_vals([RTL|VRTLs],Vals,T0,T) :-
+    suff_rtls(Vals,RTL,T0,T1),
+    prefix_vals(VRTLs,Vals,T1,T).
+
+%%what if a var matchesa var.  I.e. no val to expand with
+%%is_set(S1,[p(X,Y)]),is_set(S2,[p(a,Z)]),intersect_ngdb(S1,S2,S3),write_db(S3),nl.
+%% empty, because vY is var(0) and X is var(1)... should match unifying vars in Vars.
+suff_rtls([],_RTL,T,T).
+suff_rtls([Val|Vals],RTL,T0,T) :-
+%%    writeln(adding_to(Val,T0)),
+% need 2 steps: add val to front of rtl, and then union that with T0
+    add_trie_dict([Val|Tail],Tail,RTL,T0,T0a),
+    union_db_b(T0,T0a,T1),
+%%    writeln(to_get(T1)),nl,
+    suff_rtls(Vals,RTL,T1,T).
+
+/**/
+
+intersect_tries(T1,T2,Vs,Depth,T) :-
     (T1 \== T2
-     ->	intersect_tries0(T1,T2,Depth,T)
+     ->	intersect_tries0(T1,T2,Vs,Depth,T)
      ;	T = T1
     ).
 
-intersect_tries0([],_T,_,[]).
-intersect_tries0(RTLA,RTLB,Depth,T) :- RTLA = rtl(K1,_,_),
-    intersect_with_rtl(RTLA,RTLB,Depth,T,K1).
-intersect_tries0(RTA,RTLB,Depth,T) :- RTA = rt(_,_,_,_),
-    intersect_with_rt(RTA,RTLB,Depth,T).
 
-:- index intersect_with_rtl/5-2.
-intersect_with_rtl(_T,[],_Depth,[],_K1).
-intersect_with_rtl(RTLA,RTLB,_Depth,T,K1) :- RTLB = rtl(K2,_,_),
+%% use lookup_trie_vars, to process vars???
+intersect_tries0([],_T,_,_,[]).
+intersect_tries0(RTLA,RTLB,Vs,Depth,T) :- RTLA = rtl(K1,_,_),
+    intersect_with_rtl(RTLA,RTLB,Vs,Depth,T,K1).
+intersect_tries0(RTA,RTLB,Vs,Depth,T) :- RTA = rt(_,_,_,_),
+    intersect_with_rt(RTA,RTLB,Vs,Depth,T).
+
+:- index intersect_with_rtl/6-2.
+intersect_with_rtl(_T,[],_Vs,_Depth,[],_K1).
+intersect_with_rtl(RTLA,RTLB,Vs,_Depth,T,K1) :- RTLB = rtl(K2,_,_),
     hash_key([],K1,Hash1),
     hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
-     ->	rtl_intersect(RTLA,RTLB,T)
+     ->	rtl_intersect(RTLA,RTLB,Vs,T)
      ;	T = []
     ).
-intersect_with_rtl(RTLA,RTB,Depth,T,Key) :- RTB = rt(_,_,_,_),
+intersect_with_rtl(RTLA,RTB,Vs,Depth,T,Key) :- RTB = rt(_,_,_,_),
     hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
-    intersect_tries_ind_recur_l(RTLA,RTB,Depth1,T0,NInd),
+    intersect_tries_ind_recur_l(RTLA,RTB,Vs,Depth1,T0,NInd),
     raise_subtree(T0,T).
     
-:- index intersect_with_rt/4-2.
-intersect_with_rt(_T,[],_Depth,[]).
-intersect_with_rt(RTA,RTLB,Depth,T) :- RTLB = rtl(Key,_,_),
+:- index intersect_with_rt/5-2.
+intersect_with_rt(_T,[],_Vs,_Depth,[]).
+intersect_with_rt(RTA,RTLB,Vs,Depth,T) :- RTLB = rtl(Key,_,_),
     hash_key([],Key,Hash),
     NInd is (Hash >> Depth) /\ 3,
     Depth1 is Depth + 2,
-    intersect_tries_ind_recur_r(RTA,RTLB,Depth1,T0,NInd),
+    intersect_tries_ind_recur_r(RTA,RTLB,Vs,Depth1,T0,NInd),
     raise_subtree(T0,T).
-intersect_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth,T) :-
+intersect_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Vs,Depth,T) :-
     Depth1 is Depth + 2,
-    intersect_tries(RT01,RT11,Depth1,RT1),
-    intersect_tries(RT02,RT12,Depth1,RT2),
-    intersect_tries(RT03,RT13,Depth1,RT3),
-    intersect_tries(RT04,RT14,Depth1,RT4),
+    intersect_tries(RT01,RT11,Vs,Depth1,RT1),
+    intersect_tries(RT02,RT12,Vs,Depth1,RT2),
+    intersect_tries(RT03,RT13,Vs,Depth1,RT3),
+    intersect_tries(RT04,RT14,Vs,Depth1,RT4),
     raise_subtree(rt(RT1,RT2,RT3,RT4),T).
 
 %% first 2 clauses for final body, last 3 for another trie
-order_intersect([],_L,[]).  %% TEST!!
-order_intersect(L1,L2,L3) :- L1 = [_|_],
-    order_intersect_list(L1,L2,L3).
-order_intersect(Dict1,Dict2,Dict3) :- Dict1 = rtl(_,_,_),
-    intersect_db_b(Dict1,Dict2,Dict3).
-order_intersect(Dict1,Dict2,Dict3) :- Dict1 = rt(_,_,_,_),
-    intersect_db_b(Dict1,Dict2,Dict3).
+order_intersect([],_L,_Vs,[]).  %% TEST!!
+order_intersect(L1,L2,_Vs,L3) :- L1 = [_|_],
+    order_conjoin_list(L1,L2,L3).
+order_intersect(Dict1,Dict2,Vs,Dict3) :- Dict1 = rtl(_,_,_),
+    intersect_db_b(Dict1,Dict2,Vs,Dict3).
+order_intersect(Dict1,Dict2,Vs,Dict3) :- Dict1 = rt(_,_,_,_),
+    intersect_db_b(Dict1,Dict2,Vs,Dict3).
 
-
-order_intersect_list([],_L,[]).
-order_intersect_list(L1,L2,L3) :- L1 = [V1|L1r],
-    (L2 == []
-     ->	L3 = []
-     ;	L2 = [V2|L2r],
-	term_compare(V1,V2,Ord),
-	(Ord < 0
-	 -> order_intersect_list(L1r,L2,L3)
-	 ;  Ord =:= 0
-	 -> L3 = [V1|L3r],
-	    order_intersect_list(L1r,L2r,L3r)
-	 ;  order_intersect_list(L1,L2r,L3)
-	)
+%%order_conjoin_list(L1,L2,_L3) :- standard:writeln(called_ocl(L1,L2)), fail.
+order_conjoin_list(L1,L2,L3) :-
+    (L2 == [true]
+     ->	L3 = L1
+     ; L1 == [true]
+     ->	L3 = L2
+     ;	distrib_and_assoc(L1,L2,L3U,[]),
+        sort(L3U,L3)  % be sure canonical...
     ).
+
+distrib_and_assoc([],_,M,M).
+distrib_and_assoc([D1|D1s],D2s,A0,A) :-
+    conj_to_each(D2s,D1,A0,A1),
+    distrib_and_assoc(D1s,D2s,A1,A).
+
+conj_to_each([],_,A,A).
+conj_to_each([R|Rs],L,[P|A0],A) :-
+    (L == true
+     ->	P = R
+     ; R == true
+     ->	P = L
+     ; L @> R  % mkes more canonical, but less predictable...
+     ->	right_assoc((R,L),P)
+     ;	right_assoc((L,R),P)
+    ),
+    conj_to_each(Rs,L,A0,A).
+
+right_assoc(X,X).  % dont add linear factor...
+/*right_assoc(UA,RA) :-
+    (UA = ((A,B),C)
+     ->	right_assoc((A,B,C),RA)
+     ; UA = (A,B)
+     ->	RA = (A,RAs),
+        right_assoc(B,RAs)
+     ;	RA = UA
+    ).*/
 
 :- export test_intersect/0.
 :- import for/3 from basics.
@@ -1930,46 +2104,46 @@ test_intersect :-
     DB3 == DB6,
     writeln(succeeded_in(Time)).
 
-rtl_intersect([],_,[]).
-rtl_intersect(RTL1,RTL2,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
+rtl_intersect([],_,_Vs,[]).
+rtl_intersect(RTL1,RTL2,Vs,RTL3) :- RTL1 = rtl(K1,Vs1,RTL1r),
     (RTL2 == []
      ->	RTL3 = []
      ;	RTL2 = rtl(K2,Vs2,RTL2r),
 	term_compare(K1,K2,Cmp),
 	(Cmp < 0
-	 -> rtl_intersect(RTL1r,RTL2,RTL3)
+	 -> rtl_intersect(RTL1r,RTL2,Vs,RTL3)
 	 ;  Cmp =:= 0
-	 -> order_intersect(Vs1,Vs2,Vs3),
+	 -> order_intersect(Vs1,Vs2,Vs,Vs3),
 %%	    (Vs3 == []  % unnec optimization
-%%	     ->	rtl_intersect(RTL1r,RTL2r,RTL3)
+%%	     ->	rtl_intersect(RTL1r,RTL2r,Vs,RTL3)
 %%	     ;	RTL3 = rtl(K1,Vs3,RTL3r),
-%%		rtl_intersect(RTL1r,RTL2r,RTL3r)
+%%		rtl_intersect(RTL1r,RTL2r,Vs,RTL3r)
 %%	    ) 
 	    RTL3 = rtl(K1,Vs3,RTL3r),
-	    rtl_intersect(RTL1r,RTL2r,RTL3r)
-	 ;  rtl_intersect(RTL1,RTL2r,RTL3)
+	    rtl_intersect(RTL1r,RTL2r,Vs,RTL3r)
+	 ;  rtl_intersect(RTL1,RTL2r,Vs,RTL3)
 	)
     ).
 
-:- index intersect_tries_ind_recur_l/5-5.
-intersect_tries_ind_recur_l(RTL,rt(RT1,_,_,_),D,rt(ST,[],[],[]),0) :-
-    intersect_tries(RTL,RT1,D,ST).
-intersect_tries_ind_recur_l(RTL,rt(_,RT2,_,_),D,rt([],ST,[],[]),1) :-
-    intersect_tries(RTL,RT2,D,ST).
-intersect_tries_ind_recur_l(RTL,rt(_,_,RT3,_),D,rt([],[],ST,[]),2) :-
-    intersect_tries(RTL,RT3,D,ST).
-intersect_tries_ind_recur_l(RTL,rt(_,_,_,RT4),D,rt([],[],[],ST),3) :-
-    intersect_tries(RTL,RT4,D,ST).
+:- index intersect_tries_ind_recur_l/6-6.
+intersect_tries_ind_recur_l(RTL,rt(RT1,_,_,_),Vs,D,rt(ST,[],[],[]),0) :-
+    intersect_tries(RTL,RT1,Vs,D,ST).
+intersect_tries_ind_recur_l(RTL,rt(_,RT2,_,_),Vs,D,rt([],ST,[],[]),1) :-
+    intersect_tries(RTL,RT2,Vs,D,ST).
+intersect_tries_ind_recur_l(RTL,rt(_,_,RT3,_),Vs,D,rt([],[],ST,[]),2) :-
+    intersect_tries(RTL,RT3,Vs,D,ST).
+intersect_tries_ind_recur_l(RTL,rt(_,_,_,RT4),Vs,D,rt([],[],[],ST),3) :-
+    intersect_tries(RTL,RT4,Vs,D,ST).
 
-:- index intersect_tries_ind_recur_r/5-5.
-intersect_tries_ind_recur_r(rt(RT1,_,_,_),RTL,D,rt(ST,[],[],[]),0) :-
-    intersect_tries(RT1,RTL,D,ST).
-intersect_tries_ind_recur_r(rt(_,RT2,_,_),RTL,D,rt([],ST,[],[]),1) :-
-    intersect_tries(RT2,RTL,D,ST).
-intersect_tries_ind_recur_r(rt(_,_,RT3,_),RTL,D,rt([],[],ST,[]),2) :-
-    intersect_tries(RT3,RTL,D,ST).
-intersect_tries_ind_recur_r(rt(_,_,_,RT4),RTL,D,rt([],[],[],ST),3) :-
-    intersect_tries(RT4,RTL,D,ST).
+:- index intersect_tries_ind_recur_r/6-6.
+intersect_tries_ind_recur_r(rt(RT1,_,_,_),RTL,Vs,D,rt(ST,[],[],[]),0) :-
+    intersect_tries(RT1,RTL,Vs,D,ST).
+intersect_tries_ind_recur_r(rt(_,RT2,_,_),RTL,Vs,D,rt([],ST,[],[]),1) :-
+    intersect_tries(RT2,RTL,Vs,D,ST).
+intersect_tries_ind_recur_r(rt(_,_,RT3,_),RTL,Vs,D,rt([],[],ST,[]),2) :-
+    intersect_tries(RT3,RTL,Vs,D,ST).
+intersect_tries_ind_recur_r(rt(_,_,_,RT4),RTL,Vs,D,rt([],[],[],ST),3) :-
+    intersect_tries(RT4,RTL,Vs,D,ST).
 
 
 /***********************************************************/
@@ -2158,7 +2332,7 @@ subset_with_rtl(RTLA,RTLB,_Depth,K1) :- RTLB = rtl(K2,_,_),
     hash_key([],K1,Hash1),
     hash_key([],K2,Hash2),
     (Hash1 =:= Hash2
-     ->	rtl_subset(RTLA,RTLB)
+     ->	rtl_subset(RTLA,RTLB) 
      ;	fail
     ).
 subset_with_rtl(RTLA,RTB,Depth,Key) :- RTB = rt(_,_,_,_),
@@ -2174,6 +2348,8 @@ subset_with_rt(rt(RT01,RT02,RT03,RT04),rt(RT11,RT12,RT13,RT14),Depth) :-
     subset_tries(RT02,RT12,Depth1),
     subset_tries(RT03,RT13,Depth1),
     subset_tries(RT04,RT14,Depth1).
+%??subset_with_rt(rt(RT01,RT02,RT03,RT04),rtl(RT11,RT12,RT13,RT14),Depth) :-
+
 
 order_subset([],_L).
 order_subset(L1,L2) :- L1 = [_|_],
@@ -2222,7 +2398,7 @@ subset_tries_ind_recur_l(RTL,rt(_,_,_,RT4),D,3) :-
 %% generate all subsets:  retract-based a little faster than assert-based
 gen_subsets_db_b([],[]).
 gen_subsets_db_b(DB,SDB) :-
-    findall(T,lookup_trie_vdict([T],true,_,DB),TList),
+    findall(T,lookup_trie_vdict([T],[],true,_,DB),TList),
     destruct_subset(TList,DB,SDB).
 
 destruct_subset([],DB,DB).
@@ -2850,7 +3026,6 @@ prefix_term(PT,Prefix,TailVars) :-
 	prefix_term(NTerms,PrefixT,TailVars)
     ).
 
-
 /*** Seems of no use; idea was to subset DB to only needed part to
 maximize table use for incremental computation, but would only table
 the DB lookup which is about as fast as table lookup anyway.
@@ -2870,7 +3045,7 @@ split_prefix_term_b0(Terms,Tail,DB0,DB) :- Terms = [Term|Terms1],
     ).
     
 split_clause_in_db_b(Terms,Body,DB) :-
-    lookup_trie_vdict(Terms,Body0,Vars,DB),
+    lookup_trie_vdict(Terms,[],Body0,Vars,DB),
     pdb_unnumbervars(Body0,0,Body,Vars).
 ***/
 
@@ -3035,7 +3210,7 @@ in_db_b(table(G),DB) :- !, in_db_table(G,DB).
 in_db_b(xact(G),DB) :- !, phrase(G,DB,DB).  % for transaction logic, if useful.
 in_db_b(G,_DB) :- functor(G,F,A), standard_symbol(F,A,_), !,
     call0(G).
-in_db_b(G,DB) :- lookup_trie_vdict([table(G)],true,_,DB), !,
+in_db_b(G,DB) :- lookup_trie_vdict([table(G)],[],true,_,DB), !,
     in_db_table(G,DB).
 in_db_b(G,DB) :-
     clause_in_db_b(G,B,DB),
@@ -3156,6 +3331,15 @@ write_db(Filename,DB,Sort) :-
      ->	OStr = userout
      ;	open(Filename,write,OStr)
     ),
+    write_db_s(OStr,DB,Sort),
+    write(OStr,'.'),
+    (Filename == userout
+     ->	true
+     ;	close(OStr)
+    ).
+
+% write without trailing fullstop
+write_db_s(OStr,DB,Sort) :-
     findall((Head:-Body),clause_in_db(Head,Body,DB),Clauses0),
     (Sort =:= 1
      ->	sort(Clauses0,Clauses)
@@ -3163,13 +3347,8 @@ write_db(Filename,DB,Sort) :-
     ),
     (Clauses = [Clause1|ClauseR]
      ->	write_clause(OStr,Clause1),
-	write_db_list(OStr,ClauseR),
-	write(OStr,'.')
-     ;	write(OStr,'(empty).')
-    ),    
-    (Filename == userout
-     ->	true
-     ;	close(OStr)
+	write_db_list(OStr,ClauseR)
+     ;	write(OStr,'(empty)')
     ).
     
 :- comment(writeln_db/2, "@pred{writeln_db(+OutFile,+DB)} writes the
@@ -3227,7 +3406,7 @@ pure_in_db_b(G,Vars,DB) :-
      ;	G \== true,functor(G,F,A),std_xsb:standard_symbol(F,A,_)
      ->	pdb_unnumbervars(G,0,G0,Vars), call_c(G0)
 %%     ;	clause_in_db_b(G,B,DB),
-     ;  pdb_unnumbervars(G,0,G0,Vars), lookup_trie_vdict([G0],B,Vars1,DB),
+     ;  pdb_unnumbervars(G,0,G0,Vars), lookup_trie_vdict([G0],[],B,Vars1,DB),
 	pure_in_db_b(B,Vars1,DB)
     ).
 
@@ -3256,12 +3435,21 @@ new_db([]).
 :- comment(is_db/1, "@pred{is_db(+DB)} succeeds if @var{DB} looks to
 have the form of a valid database reference."  ).
 :- mode is_db(+).	   
-is_db(H) :-
+/**is_db(H) :-
     atom(H),
     (H == []
      ->	true
      ;	intern_termhash(DB,H),
 	DB \== H
+    ).**/
+
+:- import substring/4 from string.
+is_db(H) :-
+    atom(H),
+    (H == []
+     ->	true
+     ;	substring(H,0,4,PRE),
+        PRE = '}]]}'
     ).
 	       
 :- comment(load_in_db/2, "@pred{load_in_db(+FileName,-DB)} reads the
@@ -3635,83 +3823,120 @@ reorder_trie_rtl(rtl(K,Dict,RTLs),Terms,ReordVars,OutPrefTail,OutSubDict0,OutSub
 
 /********************************************************/
 
-:- comment(select_db/4,"@pred{select_db(+InTerm,+OutTerm,+DB0,-DB)}
-selects a subDB from @var{DB0}, tranforming tuples, and returning the
-result in @var{DB}.  It can do equi-selects and projectios.
-@var{InTerm} and @var{OutTerm} are terms that determine the selection
-and transformation.  All variables in @var{OutTerm} must (already)
-appear in @var{InTerm}.  The effect is of
-findall_db(OutTerm,in_db(InTerm,DB0),DB), but this should generally be
-more efficient. Either term can be a variable.  ").
+/* want a select_db/3 that takes goal and db and returns a db of all *
+instances of goal that unify.  Similar to current select_db/4 but *
+output template is same an input and no constraint that selection term
+be a prefix term. THis is changed code from select_db/4.  The old code
+(for recovery) is in prolog_db_old_code.P */
 
-select_db(PrefI,PrefO,H0,H) :-
+:- comment(select_db/4," @pred{select_db(+InTerm,+OutTerm,+DB0,-DB)}
+has the semantics of findall_db(OutTerm,in_db(InTerm,DB0),DB), but is
+normally more efficient, avoiding traversal of much of the input trie
+as possible.  The variables in @var{OutTerm} must be a subset of those
+in @var{InTerm}.  This can be used to implement database operations of
+select, project and reorder (and reindex).  Terms in DB0 must all be
+facts.  It doesnt (yet) handle bodies.)  ").
+
+/* ONLY WORKS FOR GROUND DB's, SHOULD FIX! */
+
+:- export select_db/3.
+select_db(Goal,H0,H) :-
+    select_db(Goal,Goal,H0,H).
+
+:- export select_db/4.
+select_db(TermI,TermO,H0,H) :-
     intern_termhash(DB0,H0),
-    select_db_b(PrefI,PrefO,DB0,DB),
+    select_db_b(TermI,TermO,DB0,DB),
     intern_termhash(DB,H).
 
 % assume variables in TermI include all variables in TermO
-% Attempt...
-select_db_b(TermI,TermO,DB0,DB) :-
-    select_from_trie(DB0,[TermI],[TermO],[],DB).
 
-select_from_trie(RT0,TermI,TermO,NRT0,NRT) :-
-%%    standard:writeln(sft(TermI,TermO)),
+select_db_b(TermI,TermO,DB0,DB) :-
+    split_hb(TermI,HeadI,BodyI),
+    split_hb(TermO,HeadO,BodyO),
+    select_from_trie(DB0,[HeadI],BodyI,[HeadO],BodyO,[],DB).
+
+split_hb(Term,Head,Body) :-
+    (Term = (Head :- Body)
+     ->	true
+     ;	Head = Term,
+	Body = true
+    ).
+
+select_from_trie(RT0,TermI,BodyI,TermO,BodyO,NRT0,NRT) :-
+%    print_db_as_trie_b(RT0,ent(TermI,TermO,NRT0)),
+%    standard:writeln(ent_sft(TermI,TermO,RT0,NRT)), standard:nl,
     (TermI == TermO, is_most_general_term(TermO)
-     -> NRT = RT0 %,standard:writeln(short_circuit(TermI))
-    ;  (TermI == []
-       -> match_key_new_terms(TermO,KO,NTermsO),
-	  add_radix_dict(KO,SRT0,NRT0,NRT,ONRT),
-	  select_from_trie(RT0,TermI,NTermsO,ONRT,SRT0)
-       ;  match_key_new_terms(TermI,KI,NTermsI),
-	  (nonvar(KI)
-	  -> lookup_radix_dict_det([],KI,RTL,RT0),
-	     rtl_member(KI,SHT0,RTL),
-	     select_from_trie(SHT0,NTermsI,TermO,NRT0,NRT)
-	  ; TermO == []
-	  -> NRT = [true]
-	  ;  match_key_new_terms(TermO,KO,NTermsO),
-	     (var(KO)
-	      -> select_all_radix(RT0,KI,NTermsI,TermO,NRT0,NRT)
-	      ;  add_radix_dict(KO,SRT0,NRT0,NRT,ONRT),
-		 select_from_trie(RT0,TermI,NTermsO,ONRT,SRT0)
-	     )
-	  )
+     ->	%%standard:writeln(finished(RT0,TermI,BodyI,BodyO)),
+        (TermI == []  % entire input selector tranversed, so match bodies.
+	 -> match_bodies(RT0,BodyI,BodyO,NRT)
+	 ;  NRT = RT0  % otherwise, all answers are in the common tail
 	)
+     ; TermI == []  %At end of input, process extra output as nec
+     -> %standard:writeln(endinp(RT0)),
+        match_key_new_terms(TermO,KO,NTermsO),
+        add_radix_dict(KO,SRT0,NRT0,NRT,ONRT),
+	select_from_trie(RT0,TermI,BodyI,NTermsO,BodyO,ONRT,SRT0)
+     ;  match_key_new_terms(TermI,KI,NTermsI),
+	(nonvar(KI)
+	 -> lookup_radix_dict_det([],KI,RTL,RT0),
+	    rtl_member(KI,SHT0,RTL),
+	    select_from_trie(SHT0,NTermsI,BodyI,TermO,BodyO,NRT0,NRT)
+	 ; TermO == []
+	 ->  NRT = [true]
+	 ;  match_key_new_terms(TermO,KO,NTermsO),
+	    (var(KO)
+	     -> select_all_radix(RT0,KI,NTermsI,BodyI,TermO,BodyO,/*NRT0,*/NRT)
+	     ;  add_radix_dict(KO,SRT0,NRT0,NRT,ONRT),
+		select_from_trie(RT0,TermI,BodyI,NTermsO,BodyO,ONRT,SRT0)
+	    )
+	)
+    ).  %, standard:writeln(ret(NRT)).
+
+match_bodies(DBBodies,BodyI,BodyO,NDBBodies) :-
+    (var(BodyI)
+     ->	(BodyI == BodyO
+	 -> NDBBodies = DBBodies
+	 ; nonvar(BodyO)
+	 ->  NDBBodies = [BodyO]
+	 ;  writeln('No unbound vars in Bodies???'),fail
+	)
+     ;	match_body_list(DBBodies,BodyI,BodyO,NDBBodies)
+    ).
+
+match_body_list([],_BodyI,_BodyO,[]).
+match_body_list([DBody|DBBodies],BodyI,BodyO,NDBBodies) :-
+    copy_term(BodyI-BodyO,CBodyI-CBodyO),
+    (DBody = CBodyI
+     ->	NDBBodies = [CBodyO|NNDBB],
+        match_body_list(DBBodies,BodyI,BodyO,NNDBB)
+     ;	match_body_list(DBBodies,BodyI,BodyO,NDBBodies)
     ).
 
 /* We have to do unions here, because projection (and transformation)
-   is allowed.  This elimination of duplicates can be expensive.  We
-   might want to try to special-case situations we can determine
-   cannot produce duplicates.  Or look at this closer to see how to
-   improve its efficiency. */
-select_all_radix([],_,_,_,NRT,NRT).
-select_all_radix(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
-    RT0 = rtl(_,_,_),
-    select_all_rtl(RT0,KI,NTermsI,NTermO,NRT0,NRT).
-select_all_radix(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
-    RT0 = rt(RT1,RT2,RT3,RT4),
-    select_all_radix(RT1,KI,NTermsI,NTermO,NRT0,NRT1),
-    select_all_radix(RT2,KI,NTermsI,NTermO,NRT1,NRT2),
-    select_all_radix(RT3,KI,NTermsI,NTermO,NRT2,NRT3),
-    select_all_radix(RT4,KI,NTermsI,NTermO,NRT3,NRT).
+   is allowed.  Doing unions is asymptotically faster than doing each
+   separately since unions are "set operations".  But may be slower if
+   unioned sets are singletons.
+*/
 
-/****select_all_radix([],_,_,_,[]).
-select_all_radix(RT0,KI,NTermsI,NTermO,NRT) :-
+/*** uses unions **/
+select_all_radix([],_,_,_BI,_,_BO,[]).
+select_all_radix(RT0,KI,NTermsI,BI,NTermO,BO,NRT) :-
     RT0 = rtl(_,_,_),
-    select_all_rtl(RT0,KI,NTermsI,NTermO,[],NRT).
-select_all_radix(RT0,KI,NTermsI,NTermO,NRT) :-
+    select_all_rtl(RT0,KI,NTermsI,BI,NTermO,BO,[],NRT).
+select_all_radix(RT0,KI,NTermsI,BI,NTermO,BO,NRT) :-
     RT0 = rt(RT1,RT2,RT3,RT4),
-    select_all_radix(RT1,KI,NTermsI,NTermO,NRT1),
-    select_all_radix(RT2,KI,NTermsI,NTermO,NRT2),
+    select_all_radix(RT1,KI,NTermsI,BI,NTermO,BO,NRT1),
+    select_all_radix(RT2,KI,NTermsI,BI,NTermO,BO,NRT2),
     union_db_b(NRT1,NRT2,NRT2a),
-    select_all_radix(RT3,KI,NTermsI,NTermO,NRT3),
+    select_all_radix(RT3,KI,NTermsI,BI,NTermO,BO,NRT3),
     union_db_b(NRT3,NRT2a,NRT3a),
-    select_all_radix(RT4,KI,NTermsI,NTermO,NRT4),
-    union_db_b(NRT4,NRT3a,NRT). *****/
+    select_all_radix(RT4,KI,NTermsI,BI,NTermO,BO,NRT4),
+    union_db_b(NRT4,NRT3a,NRT).
 
-select_all_rtl([],_KI,_NTermsI,_NTermO,NRT,NRT).
-select_all_rtl(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
-    copy_term(t(KI,NTermsI,NTermO),t(NKI,NNTermsI,NNTermO)),
+select_all_rtl([],_KI,_NTermsI,_BI,_NTermO,_BO,NRT,NRT).
+select_all_rtl(RT0,KI,NTermsI,BI,NTermO,BO,NRT0,NRT) :-
+    copy_term(t(KI,NTermsI,BI,NTermO,BO),t(NKI,NNTermsI,NBI,NNTermO,NBO)),
     RT0 = rtl(NKI0,Dict,RTL),
     (NKI0 = functor(Mod,Fun,Ari)
      -> functor(NKI,Mod,Fun,Ari),
@@ -3719,8 +3944,9 @@ select_all_rtl(RT0,KI,NTermsI,NTermO,NRT0,NRT) :-
 	append(Args,NNTermsI,NNTermsI2)
      ;  NKI = NKI0, NNTermsI2 = NNTermsI
     ),
-    select_from_trie(Dict,NNTermsI2,NNTermO,NRT0,NRT1),
-    select_all_rtl(RTL,KI,NNTermsI2,NNTermO,NRT1,NRT).
+    select_from_trie(Dict,NNTermsI2,NBI,NNTermO,NBO,NRT0,NRT1),
+    select_all_rtl(RTL,KI,NNTermsI2,NBI,NNTermO,NBO,NRT1,NRT).
+
 
 :- comment(project_in_db/5,
 "@pred{project_in_db(+PrefI,+NArgs,+PrefO,+DB0,?DB)} creates a new
@@ -4065,7 +4291,7 @@ add_new_vars([V|Vs],M0,M,Vars) :-
 
 :- export fact_in_dbe/2.
 fact_in_dbe(Head,dbe(DB,_M,Vars)) :-
-    lookup_trie_vdict([Head],true,Vars,DB).
+    lookup_trie_vdict([Head],[],true,Vars,DB).
 
 %% reindex(DBE0,DBE) to copy and incorporate all bound existential
 %% vars into DB, and reset N to 0 and Vars to _.  This would make a
@@ -4239,5 +4465,166 @@ linearize_terms([V|Vs],List0,List) :-
     linearize_term(V,List0,List1),
     linearize_terms(Vs,List1,List).
 
+/******** debugging: print DB as a 4-way branching trie  */
+:- export print_db_as_trie/2.
+:- import tab/1 from standard.
 
+print_db_as_trie(H,Msg) :-
+    intern_termhash(DB,H),
+    print_db_as_trie_b(DB,Msg).
+
+print_db_as_trie_b(DB,Msg) :-
+    write(Msg),writeln(':'),
+    print_db_as_trie_int(DB,2).
+
+%%rint_db_as_trie(T,_Ind) :- writeln(T),fail.
+print_db_as_trie_int(rt(T1,T2,T3,T4),Ind) :-
+    print_db_as_trie_int(T1,Ind),
+    print_db_as_trie_int(T2,Ind),
+    print_db_as_trie_int(T3,Ind),
+    print_db_as_trie_int(T4,Ind).
+print_db_as_trie_int(rtl(A,N,M),Ind) :-
+    tab(Ind),write(A),write(': '),writeln(M),
+    NInd is Ind+2,
+    (N = [_|_]
+     ->	true
+     ;	print_db_as_trie_int(N,NInd)
+    ).
+print_db_as_trie_int(A,Ind) :-
+    var(A), !,
+    writeln_inn(Ind,A).
+print_db_as_trie_int(A,Ind) :-
+    atomic(A),
+    writeln_inn(Ind,A).
+
+writeln_inn(Ind,Term) :-
+    (Term \== []
+     ->	tab(Ind),writeln(Term)
+     ;	true
+    ).
+
+/********* setify/2 to turn arg vals into set of vals **********/
+:- export setify/2.
+:- import tunionof/3 from taggregate.
+:- import excess_vars/4 from setof.
+:- import arg/3 from standard.
+:- import intern_term/2 from machine.
+
+setify(I,Goal) :- integer(I), !, setify([I],Goal).
+setify([],Goal) :- call_c(Goal).
+setify([I|Is],Goal) :-
+    arg(I,Goal,SV),
+    var(SV),  % throw error if nonvar
+    excess_vars(Goal,SV,[],CVars),
+    copy_term(Goal-CVars,NGoal-CVars),
+    arg(I,NGoal,NV),
+    tunionof(NV,setify(Is,NGoal),SV).
+
+
+
+/**********************************************************
+    use new predicates that process subtries to write
+    relational operators.
+should not be here:
+  use tunionof/3 and tintersectof/3 from taggregate.
+
+**********************************************************/
+/*********
+%set_union(Tmpl,Goal,Res)
+do_union(X,Y,Z) :- union_db_b(X,Y,ZT), intern_term(ZT,Z).
+:- table set_union(^,_,lattice(do_union/3)).
+set_union(Tmpl,Goal,Tmpl) :- writeln(set_union_entered),call(Goal).
+
+do_intersect(X,Y,Z) :- intersect_db_b(X,Y,ZT), intern_term(ZT,Z).
+:- table set_intersect(^,_,lattice(do_intersect/3)).
+set_intersect(Tmpl,Goal,Tmpl) :- call(Goal).
+**************/
+
+/******** xprod seems to work, but not too interesting...?
+% for now assume vars are right....
+:- import intern_term/2 from machine.
+
+:- export xprod/6.
+xprod(PA1,H1,PA2,H2,PAX,HX) :-
+    intern_termhash(DB1,H1),
+    intern_termhash(DB2,H2),
+    xprod_b(PA1,DB1,PA2,DB2,PAX,DBXA),
+    intern_termhash(DBXA,HX).
+
+xprod_b(PA1,DB1,PA2,DB2,PAX,DBX) :-
+    set_union(DBXV,xprod_s(PA1,DB1,PA2,DB2,PAX,DBXV),DBX).	
+
+xprod_s(P1/A1,DB1,P2/A2,DB2,PX/AX,DBX) :-
+    AX =:= A1+A2,
+
+    functor(Tmp1,P1,A1), Tmp1 =.. [P1|Vars1],
+    functor(Tmp2,P2,A2), Tmp2 =.. [P2|Vars2],
+    functor(TmpX,PX,AX), TmpX =.. [PX|VarsX],
+    append(Vars1,Vars2,VarsX),
+
+    % how about intermed supporting: lookup([Tmp2],0,DB2,SubTrie2) where:
+    % 0 is the position before all args  (See elow, too much inefficent recomp?)
+    lookup_trie_vdict([Tmp2],Vars2,SubTrie2,_V,DB2),
+
+    % would be lookup([Tmp1],A1,DB1,DB1,_true)  to bind Tmp1 vars
+    lookup_trie_vdict([Tmp1],[],_true,_,DB1),
+    % and sim: add_trie([TmpX],2,SubTrie2,[],DBX)
+    add_trie_dict([TmpX],Vars2,SubTrie2,[],DBXT),
+    intern_term(DBXT,DBX).
+
+%straighten out [p(A,B)] and trie for [A,B} for both input and output DBs!!
+*************************/
+/******************  BEGIN: COMMENT OUT ****
+selproj(ITmp,IH,OTmp,OH) :-
+    intern_termhash(IDB,IH),
+    ITmp =.. [_P|IVars],
+    lookup_trie_vdict([ITmp],IVars,ITrieArgs,_,IDB), %What is ITrieList?
+    OTmp =.. [_Q|OVars],
+    selproj_s(IVars,ITrieArgs,OVars,ODB),
+    add_trie_dict(ITmp,IVars,ODB,[],ODB1),
+    intern_termhash(ODB1,OH).
+
+
+selproj_s(IVars,IDB,OVars,ODB) :-
+    set_union(DB,selproj_sect(IVars,IDB,OVars,DB),ODBT),
+    intern_term(ODBT,ODB).
+
+% IDB is list 
+selproj_sect(IVars,IDB,OVars,ODB) :-
+    skip_vars(IVars,OVars,ISkip,ISkipR,IKeep,IKeepR,_OKeep,OKeepR),
+    (ISkip == []
+     ->	SubTrie0 = ODB
+     ;	lookup_trie_vdict(IDB,ISkipR,IDB1,_,DB0)
+    ),
+    lookup_trie_vdict(ISkipR,IKeepR,SubTrie1,_,SubTrie0),  %should bind OKeep
+    selproj_s(IKeepR,OKeepR,SubTrie1),
+    add_trie_dict(OVars,OKeepR,SubTrie1,[],DB).
+
+next_part(IVars,OVars,ISkip,ISkipRest,IKeep,IKeepRest,OKeep,OKeepRest) :-
+    longest_skip(IVars,OVars,ISkip,ISkipRest),
+    longest_keep(ISkipRest,OVars,IKeep,IKeepRest,OKeep,OKeepRest).
+
+longest_skip([],_OVars,[],[]).
+longest_skip([IV|IVars],OVars,ISkip,ISkipRest) :-
+    IVars = [IV|IVarsR],
+    (member_ee(IV,OVars)
+     ->	ISkip = [],
+	ISkipRest = IVars
+     ;	ISkip = [IV|ISkipR],
+        longest_skip(IVarsR,OVars,ISkipR,ISkipRest)
+    ).
+
+longest_keep([],_,[],[],[],[]).
+longest_keep(IVars,OVars,IKeep,IKeepRest,OKeep,OKeepRest) :-
+    (lappend(IKeep,IKeepRest,IVars),
+     for_all(member(V,IKeep),member_ee(V,OVars))
+     ->	(lappend(OKeep,OKeepRest,OVars),
+	 sublist(OKeep,IKeep),
+	 sublist(IKeep,OKeep)
+	->  true
+	;   writeln(error1),fail
+	)
+     ;	writeln(error2),fail
+    ).
+************** END: COMMENT OUT  ******/
 

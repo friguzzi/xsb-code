@@ -43,6 +43,7 @@ DSW: 3/04 rewritten to single pass for efficiency
 */
  
 :- mode concat_atom(?,?).
+
 concat_atom(List,Atom) :-
     (atom(Atom)
      ->	atom_codes(Atom,AtomCodes),
@@ -59,11 +60,12 @@ atomlist_to_codelist([A|As],[C|Cs]) :-
      ; number(A)
      ->	number_codes(A,C)
      ; A @= @(_)
-     ->	A = @(At), atom_codes(At,C)
+     ->	A = @(At), atom(At), atom_codes(At,C)
      ;	A = C
     ),
     atomlist_to_codelist(As,Cs).
 
+:- mode bind_atoms(?,+).
 bind_atoms([],[]).
 bind_atoms([AC|ACs],BCs) :-
     (ACs == []
@@ -78,9 +80,6 @@ bind_atoms([AC|ACs],BCs) :-
      ;	append(AC,BCr,BCs),
 	bind_atoms(ACs,BCr)
     ).
-
-
-
 
 c_atom(A,L0,L) :-
 	(A == []
@@ -101,7 +100,7 @@ c_atom(A,L0,L) :-
 		 ;  number(A)
 		 ->	number_codes(A,AC)
 		 ;  A @= @(_)
-		 ->     A = @(At), atom_codes(At,AC)
+		 ->     A = @(At), atom(At), atom_codes(At,AC)
 		 ;	warning(('concat_atom failed due to element: ',A)),
 			fail
 		),
@@ -110,7 +109,6 @@ c_atom(A,L0,L) :-
 		 ;	append(AC,L0,L)
 		)
 	).
-
 
 %---
 :- mode concat_atom(?,+,?).

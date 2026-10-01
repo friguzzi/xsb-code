@@ -831,7 +831,10 @@ parse_directive(include(FileIn), _QrList,_SymTab,ModName,ModStruct) :- !,
           ;	(FileIn = library(File1) -> File = File1 ; File = FileIn),
 		check_atom(File,'parse_directive/5',1),
 		(search_module(File, _Dir, _Newame, Ext, Base, _Obj) ->
-		    concat_atom([Base,'.',Ext],PFile),
+		    (Ext == ''
+		     -> PFile = Base
+		     ;  concat_atom([Base,'.',Ext],PFile)
+		    ),
 		    parse1(ModName,PFile,ModStruct)
 		;   
 % TLS: existence errors may not work here if we're inside an if / then / else.
@@ -976,6 +979,8 @@ parse_directive(Directive,_QrList,_SymTab,_ModName,_ModStruct) :-
 	option(ciao_directives),
 	included_ciao_directive(Directive), % ignore ciao directives
 	!.
+parse_directive(intercept(PredCList),_QrList,SymTab,_ModName,_ModStruct) :- !,
+	parse_comma_list(PredCList,SymTab,(intercept),(intercept)).
 parse_directive(Query,QrList,SymTab,_ModName,_ModStruct) :-  %% else its a query
 	parse_query(Query, QrList, SymTab).
 %parse_directive(use_incremental_dynamic(Skels),QrList,SymTab,_ModName,_ModStruct) :- !,
@@ -987,7 +992,6 @@ parse_directive(Query,QrList,SymTab,_ModName,_ModStruct) :-  %% else its a query
 %parse_directive(use_opaque_tabling(Skels),QrList,SymTab,_ModName,_ModStruct) :- !,
 %	parse_comma_list(Skels,SymTab,[tabled],(use_opaque_tabling)),
 %	parse_query(use_opaque_tabling(Skels), QrList, SymTab).
-
 %--------
 
 parse_multifile((Skel1,Skel2),QrList,SymTab,ModName) :- !,
@@ -1127,6 +1131,7 @@ parse_query(B, List, SymTab) :-
 /*	information in symbol table).  It also does the same for	*/
 /*	parallel/table lists.						*/
 /*======================================================================*/
+:- import '/'/2 from usermod.
 
 parse_comma_list((Pred, Preds), SymTab, SymbolProp, Directive) :- 
 	!,
@@ -1533,11 +1538,19 @@ trans_goals(Term, Goal, SymTab, VidIn, VidOut) :-
 		Term1 =.. [P|RawArgs]
 	 ;	functor(Term, P, A),
 		(inline_predicate(P, A)
-		 ->	Goal = inlinegoal(P, A, ArgList)
-		 ;	Goal = goal(Sym, ArgList), sym_insert(P, A, _Prop, SymTab, Sym)
-		),
-		Term =.. [P|RawArgs0],
-		fix_for_0_ary_preds(P,A,RawArgs0,RawArgs)
+		 ->	Goal = inlinegoal(P, A, ArgList),
+			Term =.. [P|RawArgs0],
+			fix_for_0_ary_preds(P,A,RawArgs0,RawArgs)
+		 ;	sym_insert(P, A, _Prop, SymTab, Sym), 
+			(sym_prop(intercept,Sym)
+			 -> sym_insert(intercept,1,__Pr,SymTab,ISym),
+			    Goal = goal(ISym, ArgList),
+			    RawArgs = [Term]
+			 ;  Goal = goal(Sym, ArgList),
+			    Term =.. [P|RawArgs0],
+			    fix_for_0_ary_preds(P,A,RawArgs0,RawArgs)
+			) 
+		)
 	),
 	trans_args(RawArgs, ArgList, SymTab, VidIn, VidOut).
 	 

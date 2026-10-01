@@ -53,7 +53,7 @@
 
 :- import fmt_write/3 from file_io.
 
-:- import check_nonvar/3 from error_handler.
+:- import check_nonvar/3, check_ground/3 from error_handler.
 
 :- import check_open_stream_or_alias/5 from file_io.
 
@@ -442,6 +442,7 @@ format1(Stream,Control, Arguments) :-
 %	write(fmt_print(SpecList, 0, 0' , Stream)),nl,
 	fmt_print(SpecList, 0, 0' , Stream).
 
+:- import put_code/2 from standard.
 fmt_print(Specs, _, _, Stream) :-
 	fmt_print_specs(Specs, Stream, 0, 0, [], 0).
 
@@ -451,7 +452,8 @@ fmt_print_specs([fresh_line|Xs], Stream, Pos, _LastTab, Buffer, BufLen) :- !,
 	flush_buffer(Buffer, Stream),
 	(   Pos + BufLen =:= 0 ->
 	    fmt_print_specs(Xs, Stream, 0, 0, [], 0)
-	;   nl(Stream),
+%%	;   nl(Stream),  % on windows writes \r\n, not just \n
+	;   put_code(Stream,0'\n'),
 	    fmt_print_specs(Xs, Stream, 0, 0, [], 0)
 	).
 fmt_print_specs([tab_stop(Mode,N)|Xs], Stream, Pos, LastTab, Buffer, BufLen) :- !,
@@ -729,6 +731,7 @@ radix_digit_code(Digit, upper, Code) :-
 
 put_codes(_Str, []).
 put_codes(Str, [C|Cs]) :-
+	integer(C),
 	put_code(Str, C),
 	put_codes(Str, Cs).
 
@@ -749,6 +752,7 @@ list_length([_|T], Len) :-
 	Len is Len0 + 1.
 
 format_printf_float(Stream, Spec, Prec, Value) :-
+	integer(Prec),
 	number_codes(Prec, PrecCodes),
 	list_append([0'%, 0'.], PrecCodes, Prefix),
 	list_append(Prefix, [Spec], FormatCodes),
@@ -855,6 +859,7 @@ fmt_pr(Str,0'w, Arg, _) :-
 	;   write(Str, Arg)
 	).
 fmt_pr(Str,0'W, Term-Options, _) :-
+	check_ground(Options,fmt_pr/3,3),
 	(   options_ignore_ops_quoted(Options) ->
 	    write_canonical(Str, Term)
 	;   plus_term(Term, Left, Right),

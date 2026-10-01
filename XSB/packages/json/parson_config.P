@@ -79,6 +79,7 @@
 	; 
 	    (path_sysop(unlink,TrgSharedLib), ! ; true),
 	    %% Important to quote WinModDLL below!
+	    shell(['del /f /q ',TrgSharedLibDos]),  %force del since next /Y doesnt work
 	    shell(['copy /B /Y "', WinModDLL, '" ', TrgSharedLibDos]),
 	    %% In windows Objfile is created by ?- [Basename], so it
 	    %% is copied after
