@@ -1,0 +1,32 @@
+:- ensure_loaded(janus).
+:- import py_func_int/6, py_dot_int/6 from janusm.
+
+% Run each case in a fresh process.  The discarded input list leaves garbage
+% on the heap before Janus reserves space for the Python result.  Argument six
+% must remain a GC root while that reservation collects or expands the heap.
+test(Interface,Flags) :-
+    discard_list(2000000),
+    return_list(Interface,Flags,_),
+    return_list(Interface,Flags,List),
+    check_list(List,1,1000000),
+    writeln('large Python list verified').
+
+discard_list(N) :-
+    make_list(N,List),
+    py_func(jns_plg_benches,dummy(List),_).
+
+make_list(0,[]) :- !.
+make_list(N,[N|Rest]) :-
+    Next is N-1,
+    make_list(Next,Rest).
+
+return_list(func,Flags,List) :-
+    py_func_int(jns_plg_benches,makelist_ret(1000000),0,1,Flags,List).
+return_list(dot,Flags,List) :-
+    py_dot_int(jns_plg_benches,makelist_ret(1000000),0,1,Flags,List).
+
+check_list([],N,N) :- !.
+check_list([N|Rest],N,End) :-
+    N < End,
+    Next is N+1,
+    check_list(Rest,Next,End).
