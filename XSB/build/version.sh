@@ -15,7 +15,7 @@ xsb_patch_date=`echo Build date: $xsb_build_date`
 
 
 xsb_major_version=5
-xsb_minor_version=0
+xsb_minor_version=1
 xsb_patch_version="0" # must be present; otherwise, an ugly "." at the end
 #xsb_beta_version=pre
 #xsb_beta_version="eta"  # somehow works out to -beta 
@@ -35,8 +35,8 @@ xsb_patch_version="0" # must be present; otherwise, an ugly "." at the end
 #xsb_codename="Gazpatcho"         # Version 3.6 (Paulo Moura)
 #xsb_codename="Clan MacGregor"    # Version 3.7 (David's Scotch)
 #xsb_codename="Three-Buck Chuck"  # Version 3.8 Down and out in Trader Joe's
-#xsb_codename="TaB"               # Version 4.0 (Carl's wife) 
-xsb_codename="Green Tea"          # Version 4.0 (Annie) 
+#xsb_codename="TaB"               # Version 4.0 (Carl's wife Alyson) 
+xsb_codename="Green Tea"          # Version 5.0 (Annie) 
 
 # Format: YYYY-MM-DD or YYYY.MM.DD or YYYY/MM/DD
 # With this, XSB should become Y2K compliant :-)
@@ -51,5 +51,6 @@ xsb_codename="Green Tea"          # Version 4.0 (Annie)
 #xsb_release_date=2016-07-06 
 #xsb_release_date=2017-10-28
 #xsb_release_date=2021-04-01
-xsb_release_date=2022-05-15  # target (may be changed)
+xsb_release_date=2022-05-15  
+xsb_release_date=2026-10-03
 
