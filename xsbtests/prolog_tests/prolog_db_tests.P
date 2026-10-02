@@ -144,7 +144,14 @@ testdbops :-
      nl,writeln(start_intersect2),
      intersect_db(DB2,DB1,DBR),
      naive_intersect_db(DB2,DB1,DBRa),
+%%     write('PDB intersect2: '),prolog_db:write_db(DBR),nl,
+%%     write('Nav intersect2: '),prolog_db:write_db(DBRa),nl,nl,
      (DBR == DBRa -> writeln(intersect2(success)) ; writeln(intersect2(error)))
+    ),
+    (do_all
+     intersect_db(DB1,DB2,DBR1),
+     intersect_db(DB2,DB1,DBR2),
+     (DBR1 \== DBR2 -> writeln('intersect3 ERROR') ; true)
     ),
     (do_all
      nl,writeln(start_difference1),
@@ -160,9 +167,12 @@ testdbops :-
     ),
     (do_all
      nl,writeln(start_subset1),
+%%     write('  DB3: '),prolog_db:write_db(DB3),nl,nl,
+%%     write('  DB1: '),prolog_db:write_db(DB1),nl,nl,
      (subset_db(DB3,DB1) -> A=1 ; A=0),
+     (\+ (clause_in_db(H,B,DB3), \+ clause_in_db(H,B,DB1)) -> C=1 ; C=0),
      (naive_subset_db(DB3,DB1) -> B=1 ; B=0),
-     (A==B -> writeln(subset1(success)) ; writeln(subset1(error)))
+     (A==B -> writeln(subset1(success)) ; writeln(subset1(error,A,C,B)))
     ),
     (do_all
      nl,writeln(start_subset2),
@@ -228,9 +238,17 @@ naive_union_db(DB1,DB2,DB3) :-
     assert_in_db(Clauses,DB2,DB3).
 
 naive_intersect_db(DB1,DB2,DB3) :-
-    findall((H:-B),(clause_in_db(H,B,DB1),clause_in_db(H,B,DB2)),Rules),
-	new_db(DB0),
-	assert_in_db(Rules,DB0,DB3).
+    findall((H:-NB),
+            (clause_in_db(H,B1,DB1),clause_in_db(H,B2,DB2),
+             conj_bodies(B1,B2,NB)
+            ),Rules),
+    new_db(DB0),
+    assert_in_db(Rules,DB0,DB3).
+
+conj_bodies(true,B,B) :- !.
+conj_bodies(B,true,B) :- !.
+conj_bodies(B1,B2,(B1,B2)) :- B1 @=< B2, !.
+conj_bodies(B1,B2,(B2,B1)).
 
 naive_difference_db(DB1,DB2,DB3) :-
     findall((H:-B),(clause_in_db(H,B,DB1),
