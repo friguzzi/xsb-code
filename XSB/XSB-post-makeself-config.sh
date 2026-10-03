@@ -22,13 +22,20 @@ fi
 
 if [ -d ./XSB/emu -a -d ./XSB ]; then
     xsbdir="$currdir/XSB"
-    tmpxsbdir=/tmp/XSB-`date +"%y-%m-%d-%H_%M_%S"`
-    rm -rf $tmpxsbdir || \
-	(echo "***** You have no write permission for the /tmp folder: your system is misconfigured"; echo "***** Installation has failed";  exit 1)
 else
     echo "***** This script is to be run in a folder that contains ./XSB & ./XSB/emu"
     exit 1
 fi
+
+# XSB's configure script rejects source paths with spaces. Building in a
+# temporary directory and copying the result back leaves Janus paths stale.
+case "$xsbdir" in
+    *[[:space:]]*)
+        echo "***** XSB cannot be installed in a path containing whitespace: $xsbdir"
+        echo "***** Choose an installation directory without whitespace."
+        exit 1
+        ;;
+esac
 
 
 echo "+++++ Removing old files"
@@ -44,10 +51,7 @@ cp "$xsbdir/admin/MacOS/del-mac-alias" "$currdir"
 cp "$xsbdir/admin/uninstall_XSB.sh" "$currdir"
 chmod 700 "$currdir/mk-mac-alias" "$currdir/del-mac-alias" "$currdir/uninstall_XSB.sh"
 
-# Move XSB to /tmp to sidestep the problems with configuring it
-# in dirs that have spaces
-mv -f "$xsbdir" $tmpxsbdir
-cd $tmpxsbdir/build
+cd "$xsbdir/build" || exit 1
 rm -f "$currdir/xsb-install.log"
 
 echo "+++++ Configuring XSB"
@@ -56,8 +60,11 @@ echo "+++++ Configuring XSB" > "$currdir/xsb-install.log"
 echo "----- Current directory = $currdir" >> "$currdir/xsb-install.log"
 echo "" >> "$currdir/xsb-install.log"
 
-./configure --with-dbdrivers >> "$currdir/xsb-install.log" 2>&1 || \
-    (echo :ERRORS:FOUND: >> "$currdir/xsb-install.log"; echo "***** Configuration of XSB failed: see $currdir/xsb-install.log"; exit 1)
+if ! ./configure --with-dbdrivers >> "$currdir/xsb-install.log" 2>&1; then
+    echo :ERRORS:FOUND: >> "$currdir/xsb-install.log"
+    echo "***** Configuration of XSB failed: see $currdir/xsb-install.log"
+    exit 1
+fi
 
 grep "configure: error" "$currdir/xsb-install.log" > "$currdir/xsb-misc.log"
 grep "Python integration" "$currdir/xsb-install.log" >> "$currdir/xsb-misc.log"
@@ -70,21 +77,22 @@ if [ -n "$misc_errors" ]; then
 fi
 
 echo "+++++ Compiling XSB"
-./makexsb >> "$currdir/xsb-install.log" 2>&1 || \
-    (echo :ERRORS:FOUND: >> "$currdir/xsb-install.log"; echo "***** Compilation of XSB failed: see $currdir/xsb-install.log"; exit 1)
-
-# Move compiled XSB from /tmp to its intended place
-# Splitting mv into cp+rm because of what seems to be a bug in Ubuntu over W10
-cp -rf $tmpxsbdir "$xsbdir"
-rm -rf $tmpxsbdir
+if ! ./makexsb >> "$currdir/xsb-install.log" 2>&1; then
+    echo :ERRORS:FOUND: >> "$currdir/xsb-install.log"
+    echo "***** Compilation of XSB failed: see $currdir/xsb-install.log"
+    exit 1
+fi
+if grep -Eq 'ERROR: Building the Janus wheel failed|ERROR: Installing the Janus wheel failed|ERROR: Import verification failed' "$currdir/xsb-install.log"; then
+    echo :ERRORS:FOUND: >> "$currdir/xsb-install.log"
+    echo "***** Janus installation failed: see $currdir/xsb-install.log"
+    exit 1
+fi
 
 # setting up the icons
 # LINUX
 echo "+++++ Setting up icons"
 echo "+++++ Setting up icons" >> "$currdir/xsb-install.log"
 
-# important: otherwise cwd will be the deleted /tmp/XSB-23-04-21-02_01_28/build
-# and there wil be an error getcwd() failed
 cd "$currdir"
 
 
@@ -180,4 +188,3 @@ echo
 #   echo "+++++ and then reboot to ensure that the XSB icon is displayed."
 #fi
 #echo
-
