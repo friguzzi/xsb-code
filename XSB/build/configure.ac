@@ -1011,24 +1011,6 @@ if test -d "$topdir/packages/pcre"; then
     cd "$build_dir"
 fi
 
-# xsbpy package
-#if test -d "$topdir/packages/xsbpy"; then
-#    AC_CONFIG_FILES([
-#    '"${topdir}/packages/xsbpy/configvars.sh"':'"${topdir}/packages/xsbpy/configvars.in"'
-#    ])
-#AC_OUTPUT
-#
-#    cd "$topdir/packages/xsbpy"
-#    echo "***Configuring XSBPY (XSB to Python connector)"
-#    chmod 700 ./configure
-#    if test -n "${with_preferred_python}" ; then
-#        ./configure --with-preferred-python=${with_preferred_python} || xsbpy_config_failed=1
-#    else
-#        ./configure || xsbpy_config_failed=1
-#    fi
-#    cd "$build_dir"
-#fi
-
 # janus  package
 if test -d "$topdir/packages/janus"; then
     AC_CONFIG_FILES([
@@ -2130,10 +2112,6 @@ if test -f "$topdir/packages/pcre/Installation_summary" ; then
     cat "$topdir/packages/pcre/Installation_summary"
 fi
 
-#if test -f "$topdir/packages/xsbpy/Installation_summary" ; then
-#    cat "$topdir/packages/xsbpy/Installation_summary"
-#fi
-
 if test -f "$topdir/packages/janus/Installation_summary" ; then
     cat "$topdir/packages/janus/Installation_summary"
 fi
@@ -2210,13 +2188,6 @@ echo "Site libraries are to be found in ${site_prefix}"
 
 
 echo "Configuration report is saved in ./Installation_summary"
-
-#if test -n "$xsbpy_config_failed" ; then
-#   echo
-#   echo "***** xsbpy: Python integration failed: probably because pip is not installed"
-#   echo "***** To use this integration, install pip and reconfigure XSB"
-#   echo
-#fi
 
 if test -n "$janus_config_failed" ; then
    echo
