@@ -324,7 +324,7 @@ else
 	tmpdir="\$TMPROOT/selfgz\$\$\$RANDOM"
 	dashp=""
     fi
-    mkdir \$dashp \$tmpdir || {
+    mkdir \$dashp "\$tmpdir" || {
 	echo 'Cannot create target directory' \$tmpdir >&2
 	echo 'You should try option --target OtherDirectory' >&2
 	eval \$finish
