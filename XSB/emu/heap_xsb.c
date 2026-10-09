@@ -919,12 +919,17 @@ int gc_heap(CTXTdeclc int arity, int ifStringGC)
 
 /*--------------------------------------------------------------------------*/
 
+
 DllExport void glstack_ensure_space(CTXTdeclc size_t extra, int arity) {
   if ((pb)top_of_localstk < (pb)top_of_heap+(256*ZOOM_FACTOR)) {
     xsb_basic_abort("\nFatal ERROR:  -- "
 		    "Local Stack clobbered Heap --\n");
   } else {
-    if (pflags[GARBAGE_COLLECT] != NO_GC && arity < 255) {
+    if (pflags[GARBAGE_COLLECT] != NO_GC && arity < 255
+#ifdef XSBFD_GC_ON_DEMAND
+        && (pb)top_of_localstk < (pb)top_of_heap + OVERFLOW_MARGIN + extra
+#endif
+        ) {
       gc_heap(CTXTc arity,FALSE);
     }
     //    if (pflags[STACK_REALLOC] == FALSE) xsb_basic_abort(local_global_exception);
@@ -935,5 +940,3 @@ DllExport void glstack_ensure_space(CTXTdeclc size_t extra, int arity) {
 }
 
 /*--------------------------------------------------------------------------*/
-
-

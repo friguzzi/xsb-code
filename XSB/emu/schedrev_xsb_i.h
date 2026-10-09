@@ -163,7 +163,7 @@ static CPtr sched_answers(CTXTdeclc VariantSF producer_sf, CPtr *last_consumer)
 #define SCHED_HEAP_INIT_SIZE 50
 
 /* for debugging... */
-void dump_sched_heap(CTXTc Integer rt, Integer indent) {
+void dump_sched_heap(CTXTdeclc Integer rt, Integer indent) {
   Integer i;
   if (num_in_sched_heap) {
     for (i=1; i<=indent; i++) printf(" ");
@@ -173,7 +173,7 @@ void dump_sched_heap(CTXTc Integer rt, Integer indent) {
   }
 }
 
-void add_to_sched_heap(CTXTc CPtr csf) {
+void add_to_sched_heap(CTXTdeclc CPtr csf) {
   Integer i, ipar;
 
   //  printf("add %p\n",csf);
