@@ -193,7 +193,7 @@ inline static  BTNptr newCallTrie(CTXTdeclc Psc predicate) {
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-int handle_incremental_recomputation(CallLookupResults *results) {
+int handle_incremental_recomputation(CTXTdeclc CallLookupResults *results) {
   int call_found_flag;
   BTNptr leaf,Paren;  
   ALNptr pALN;
@@ -281,7 +281,7 @@ int handle_incremental_recomputation(CallLookupResults *results) {
       return XSB_SUCCESS;
 }
 
-int subsumptive_handle_incremental_recomputation(CallLookupResults *results) {
+int subsumptive_handle_incremental_recomputation(CTXTdeclc CallLookupResults *results) {
   int call_found_flag;
   BTNptr leaf,Paren;  
   ALNptr pALN;
@@ -391,7 +391,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
     if (variant_call_search(CTXTc call_info,results) == XSB_FAILURE) {
       return XSB_FAILURE;
     }
-    if (handle_incremental_recomputation(results) == XSB_SPECIAL_RETURN)
+    if (handle_incremental_recomputation(CTXTc results) == XSB_SPECIAL_RETURN)
       return XSB_SPECIAL_RETURN;
     //  TES: maybe tale out the next 2 lines
     //    CallLUR_Subsumer(*results) = CallTrieLeaf_GetSF(Paren);
@@ -400,7 +400,7 @@ int table_call_search(CTXTdeclc TabledCallInfo *call_info,
   else{
     subsumptive_call_search(CTXTc call_info,results);
 #ifdef INCR_SUBST
-    if (subsumptive_handle_incremental_recomputation(results) == XSB_SPECIAL_RETURN)
+    if (subsumptive_handle_incremental_recomputation(CTXTc results) == XSB_SPECIAL_RETURN)
       return XSB_SPECIAL_RETURN;
 #endif
   }

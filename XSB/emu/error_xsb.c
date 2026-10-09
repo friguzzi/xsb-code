@@ -1548,7 +1548,7 @@ DllExport void call_conv xsb_dbgmsg1(int log_level, char *description, ...)
 
 /*----------------------------------------------------------------------*/
 
-/* TLS: obsolete for most error types */
+/* TES: obsolete for most error types */
 void err_handle(CTXTdeclc int description, int arg, char *f,
 		int ar, char *expected, Cell found)
 {

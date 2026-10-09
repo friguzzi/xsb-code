@@ -1642,7 +1642,7 @@ DllExport int copy_term_ex(CTXTdeclc int r1,int r2)
   return(unify(CTXTc arg2, to));
 } /* copy_term */
 
-int copy_term(CTXTdecl) {return copy_term_ex(CTXTdeclc 1,2);}
+int copy_term(CTXTdecl) {return copy_term_ex(CTXTc 1,2);}
 
 int copy_term_3(CTXTdecl)
 {
@@ -1729,7 +1729,7 @@ Cell copy_term_from_thread( th_context *th, th_context *from, Cell arg1 )
   hptr = hreg ;
 
   init_findall_trail(th) ;
-  do_copy_term( th, arg1, &to, NULL, &hptr ) ;
+  do_copy_term( th, arg1, &to, &hptr ) ;
   findall_untrail(th) ;
 
   hreg = hptr ;
@@ -1737,4 +1737,3 @@ Cell copy_term_from_thread( th_context *th, th_context *from, Cell arg1 )
   return to ;
 }
 #endif
-

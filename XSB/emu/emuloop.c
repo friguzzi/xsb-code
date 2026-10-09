@@ -382,7 +382,7 @@ extern Pair build_call(CTXTdeclc Psc);
 extern int is_proper_list(Cell term);
 extern int is_most_general_term(Cell term);
 extern int is_number_atom(Cell term);
-extern int ground(Cell term);
+extern int ground(CTXTdeclc Cell term);
 extern int is_ground_subgoal(VariantSF);
 
 extern void log_prog_ctr(byte *);
@@ -550,7 +550,7 @@ int xsb_eval(CTXTdeclc Cell exp, FltInt *value);
       } else { arithmetic_abort(CTXTc op2, "compare-operator", op1); res = 0;} \
     }
 
-int num_compare(CTXTc prolog_term op1, prolog_term op2) {
+int num_compare(CTXTdeclc prolog_term op1, prolog_term op2) {
   int res;
   XSB_Deref(op1);
   XSB_Deref(op2);
@@ -2893,7 +2893,7 @@ argument positions.
       jump_cond_fail(is_number_atom(op2));
       break;
     case GROUND_TEST:
-      jump_cond_fail(ground(op2));
+      jump_cond_fail(ground(CTXTc op2));
       break;
     default: 
       xsb_error("Undefined jumpcof condition");

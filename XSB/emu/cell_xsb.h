@@ -224,7 +224,7 @@ extern unsigned long enc[], dec[];
 #define defnot_isinternstr(term) \
   (((CPtr)dec_addr(term) >= (CPtr)glstack.low) && ((CPtr)dec_addr(term) < hreg))
 
-#define isinternstr(dcell) (defnot_isinternstr((Cell)dcell)?0:isinternstr_really((Cell)(dcell)))
+#define isinternstr(dcell) (defnot_isinternstr((Cell)dcell)?0:isinternstr_really(CTXTc (Cell)(dcell)))
 
 #define isattv(dcell) (cell_tag(dcell)==XSB_ATTV)	/* dcell -> xsbBool */
 

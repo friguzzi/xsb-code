@@ -208,7 +208,7 @@ extern "C" {
 #define extern_reg_term(regnum) reg_term(CTXTc regnum)
 
 /*======================================================================*/
-DllExport extern void reset_ccall_error(CTXTdeclc);
+DllExport extern void reset_ccall_error(CTXTdecl);
 
 DllExport extern void iso_check_var(CTXTdeclc int reg_num,const char *PredString);
 						/* defined in builtin.c */

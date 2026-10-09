@@ -432,7 +432,7 @@ case PSC_GET_INCR: {
       xsb_abort("add_incr_dependency: improper input\n");
     }
     CallInfo_CallArity(callInfo) = get_arity(dp_psc);
-    tip = get_tip(dp_psc);
+    tip = get_tip(CTXTc dp_psc);
     //    printf("tip %p\n",tip);
     if (!tip) {
       xsb_abort("add_incr_dependency: %s/%d is non-incremental\n",
@@ -479,4 +479,3 @@ case PSC_GET_INCR: {
   }
   return TRUE;
 }
-

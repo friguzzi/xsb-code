@@ -211,6 +211,8 @@
 #define ATTV_UNIFY		175
 #define SLEEPER_THREAD_OPERATION 176
 #define MARK_TERM_CYCLIC        177
+#define XSBFD_FRESH_RANGE_LIST  178
+#define XSBFD_RANGE_INTERSECTION_LIST 179
 
 /* This is the builtin where people should put their private, experimental
    builtin code. SEE THE EXAMPLE IN private_builtin.c to UNDERSTAND HOW TO DO
@@ -381,4 +383,3 @@
 // BASE64_OPS sub-builtins
 #define BASE64_ENC 1
 #define BASE64_DEC 2
-

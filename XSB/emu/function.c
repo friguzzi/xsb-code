@@ -375,7 +375,7 @@ void expand_eval_stk(CTXTdecl) {
   eval_stk_size = new_size;
 }
 
-int xsb_eval_bin_op(char *op, Cell expr, FltInt fiop1, FltInt fiop2, FltInt *value) {
+int xsb_eval_bin_op(CTXTdeclc char *op, Cell expr, FltInt fiop1, FltInt fiop2, FltInt *value) {
   switch (op[0]) {
   case '+':
     if (strcmp(op,"+")==0) {
@@ -605,7 +605,7 @@ int xsb_eval_bin_op(char *op, Cell expr, FltInt fiop1, FltInt fiop2, FltInt *val
   return 1;
 }
 
-int xsb_eval_un_op(char *op, FltInt fiop1, FltInt *value) {
+int xsb_eval_un_op(CTXTdeclc char *op, FltInt fiop1, FltInt *value) {
   switch (op[0]) {
   case '-':
     if (strcmp(op,"-")==0) {
@@ -851,7 +851,7 @@ int xsb_eval(CTXTdeclc Cell expr, FltInt *value) {
 	  fiop1 = eval_stk[eval_stk_toprec-2];
 	  fiop2 = eval_stk[eval_stk_toprec-3];
 	  expr = (Cell)eval_stk[eval_stk_toprec].fival.valint;
-	  if (!xsb_eval_bin_op(get_name(op_psc),expr,fiop1,fiop2,&fiop3)) set_and_return_fail(value);
+	  if (!xsb_eval_bin_op(CTXTc get_name(op_psc),expr,fiop1,fiop2,&fiop3)) set_and_return_fail(value);
 	  eval_stk_toprec = eval_stk_toprec - arity - 2;
 	  if (eval_stk_toprec <= 0) {
 	    *value = fiop3;
@@ -860,7 +860,7 @@ int xsb_eval(CTXTdeclc Cell expr, FltInt *value) {
 	  eval_stk[eval_stk_toprec - eval_stk[eval_stk_toprec-1].fival.valint - 1] = fiop3;
 	} else if (arity == 1) {
 	  fiop1 = eval_stk[eval_stk_toprec-2];
-	  if (!xsb_eval_un_op(get_name(op_psc),fiop1,&fiop3)) set_and_return_fail(value);
+	  if (!xsb_eval_un_op(CTXTc get_name(op_psc),fiop1,&fiop3)) set_and_return_fail(value);
 	  eval_stk_toprec = eval_stk_toprec - arity - 2;
 	  if (eval_stk_toprec <= 0) {
 	    *value = fiop3;
@@ -873,4 +873,3 @@ int xsb_eval(CTXTdeclc Cell expr, FltInt *value) {
   } else set_and_return_fail(value);
   return 1;
 }
-
