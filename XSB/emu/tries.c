@@ -63,7 +63,7 @@
 #include "slgdelay.h"
 
 extern Integer intern_term_size(CTXTdeclc Cell);
-extern xsbBool is_cyclic(CTXTdeclc Cell);
+extern int is_cyclic(CTXTdeclc Cell);
 
 #define CZero (Cell)0
 

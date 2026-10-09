@@ -5535,7 +5535,9 @@ build_call_on_heap takes a subgoal pointer and builds its term onto the heap
 and returns a cs-tagged pointer to it.
 *****************************************************************************/
 
+#ifndef MULTI_THREAD
 extern Cell cell_array[MAXTERMBUFSIZE];
+#endif
 
 Cell build_call_on_heap(CTXTdeclc VariantSF subg) {
   int j;

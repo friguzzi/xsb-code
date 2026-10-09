@@ -30,6 +30,10 @@
 #include "xsb_debug.h"
 #include "xsb_config.h"
 
+#if defined(MULTI_THREAD) && !defined(WIN_NT)
+#include <sys/time.h>
+#endif
+
 #if !defined(WIN_NT)
 #include <unistd.h>
 #else
@@ -2141,4 +2145,3 @@ static void show_policy(void) {
   
 }
 */
-

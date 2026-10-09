@@ -50,7 +50,7 @@ extern int mustquote(char *);
 /* convert a term representing a parameterized module reference to a
    string. Caller must provide space and, on successful return,
    end-of-string marker. */
-int modterm_to_string(Cell term, char *string, int *loc) {
+int modterm_to_string(CTXTdeclc Cell term, char *string, int *loc) {
   char *name; int namelen;
   XSB_Deref(term);
   switch (cell_tag(term)) {
@@ -73,11 +73,11 @@ int modterm_to_string(Cell term, char *string, int *loc) {
     string[(*loc)++] = '(';
     for (j = 1; j < arity ; j++) {
       subterm = get_str_arg(term,j);
-      if (!modterm_to_string(subterm, string, loc)) return FALSE;
+      if (!modterm_to_string(CTXTc subterm, string, loc)) return FALSE;
       string[(*loc)++] = ',';
     }
     subterm = get_str_arg(term,j);
-    if (!modterm_to_string(subterm, string, loc)) return FALSE;    
+    if (!modterm_to_string(CTXTc subterm, string, loc)) return FALSE;
     string[(*loc)++] = ')';
     return TRUE;
   }
@@ -252,7 +252,7 @@ xsbBool functor4_builtin(CTXTdecl) {
       Psc modpsc;
       int arity;
       if (isref(argMod)) { // if mod (and term) are vars, assume usermod
-	atom_unify(CTXT usermod_cell, argMod);
+	atom_unify(CTXTc usermod_cell, argMod);
 	modpsc = global_mod;
       } else {
 	if (!strcmp(string_val(argMod),"usermod")) modpsc = global_mod;
@@ -261,7 +261,7 @@ xsbBool functor4_builtin(CTXTdecl) {
 	else {/* mod is structured */
 	  int loc = 0;
 	  char modname[MAXFILENAME];
-	  modterm_to_string(argMod,modname,&loc);
+	  modterm_to_string(CTXTc argMod,modname,&loc);
 	  modname[loc] = '\0';
 	  modpsc = (insert_module(0,modname))->psc_ptr;
 	}
@@ -287,7 +287,7 @@ xsbBool functor4_builtin(CTXTdecl) {
 	  new_heap_free(hreg);
 	}
       }
-      return unify(CTXT argTerm, term);
+      return unify(CTXTc argTerm, term);
     }
     else xsb_instantiation_error(CTXTc "functor/4", 1);
   }
@@ -655,7 +655,7 @@ inline static xsbBool number_to_list(CTXTdeclc int call_type)
   XSB_Deref(term);
   list = ptoc_tag(CTXTc 2);
   XSB_Deref(list);
-  if ((islist(list) && ground(list)) || isnil(list)) { /* use is: CHARS/CODES --> NUMBER */
+  if ((islist(list) && ground(CTXTc list)) || isnil(list)) { /* use is: CHARS/CODES --> NUMBER */
     term2 = list;
     do {
       XSB_Deref(term2);
@@ -1028,7 +1028,7 @@ int par_key_compare(CTXTdeclc const void * t1, const void * t2) {
 }
 
 /* defined in emuloop.c */
-extern int num_compare(CTXTc prolog_term op1, prolog_term op2);
+extern int num_compare(CTXTdeclc prolog_term op1, prolog_term op2);
 
 int par_num_compare(CTXTdeclc const void * t1, const void * t2) {
   Integer ipar, cmp, ind1, ind2;

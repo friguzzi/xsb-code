@@ -57,7 +57,7 @@
 #include "struct_intern.h"
 
 extern int is_cyclic(CTXTdeclc Cell);
-extern int ground(Cell);
+extern int ground(CTXTdeclc Cell);
 extern void printterm(FILE *, Cell, long);
 extern int compare(CTXTdeclc const void *, const void *);
 
@@ -331,7 +331,7 @@ CPtr insert_interned_rec(int reclen, struct hc_block_rec *hc_blk_ptr, CPtr termr
   return hc_term;
 }
 
-DllExport int isinternstr_really(prolog_term term) {
+DllExport int isinternstr_really(CTXTdeclc prolog_term term) {
   int areaindex, reclen;
   struct intterm_block *intterm_blk_ptr;
   CPtr tptr;

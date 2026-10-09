@@ -247,7 +247,11 @@ void xsb_timer_handler(int signo)
 /* the following function is a general format for timeout control. it takes 
    function calls which need timeout control as argument and controls the
    timeout for different platform */ 
-int make_timed_call(CTXTdeclc xsbTimeout *pptr,  void (*fptr)(xsbTimeout *))
+#ifdef MULTI_THREAD
+int make_timed_call(CTXTdeclc xsbTimeout *pptr, void *(*fptr)(void *))
+#else
+int make_timed_call(CTXTdeclc xsbTimeout *pptr, void (*fptr)(xsbTimeout *))
+#endif
 {
 #if defined(WIN_NT) || defined(MULTI_THREAD)   
   int return_msg; /* message_pump() return value */
