@@ -84,7 +84,11 @@ typedef struct xsb_timeout xsbTimeout;
 
 /* generic function to control the timeout */
 
-int make_timed_call(CTXTdeclc xsbTimeout*, void (*) (xsbTimeout*));
+#ifdef MULTI_THREAD
+int make_timed_call(CTXTdeclc xsbTimeout*, void *(*)(void *));
+#else
+int make_timed_call(CTXTdeclc xsbTimeout*, void (*)(xsbTimeout *));
+#endif
 
 // #define NEW_TIMEOUT_OBJECT  (xsbTimeout *)mem_alloc(sizeof(xsbTimeout))
 
