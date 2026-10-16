@@ -22,6 +22,9 @@
 ** 
 */
 
+#ifndef __FUNCTION_H__
+#define __FUNCTION_H__
+
 typedef struct {
   int fitype;  // 1 if int, 0 if float
   union {
@@ -51,3 +54,5 @@ typedef struct {
 #define isfiint(firec) firec.fitype
 
 #define isfiflt(firec) firec.fitype == 0
+
+#endif /* __FUNCTION_H__ */
