@@ -178,15 +178,15 @@ Note that {\tt coin.cpl}, which is not in Prolog syntax {\bf cannot}
 be loaded via the normal command to compile and load a Prolog file
 ({\tt ?- [coin]}).
 
-This commands reads  {\tt coin.cpl}, translates it into  {\tt coin.cpl.P}
-and loads   {\tt coin.cpl.P}.
+This commands reads  {\tt coin.cpl}, translates it into  {\tt coin.P}
+and loads   {\tt coin.P}.
 
 For files in the  \texttt{.pl} format, the command is
 \begin{verbatim}
 ?- load_pl(coin).
 \end{verbatim}
-that  reads  {\tt coin.pl}, translates it into  {\tt coin.pl.P}
-and loads   {\tt coin.pl.P}.
+that  reads  {\tt coin.pl}, translates it into  {\tt coin.P}
+and loads   {\tt coin.P}.
 
 You can also use command
 \begin{verbatim}
@@ -195,15 +195,12 @@ You can also use command
 that requires the full file name, including the extension, compiles it into a file with the same name with the added extension
 \texttt{.P} and loads it.
 
-You can also load directly the translated (compiled) version of a file with the command
+You can also load directly the translated (compiled) version of a file with a regular
+Prolog command, for example, you can use
 \begin{verbatim}
-?- load_comp('coin.cpl.P').
+?- [coin].
 \end{verbatim}
-of
-\begin{verbatim}
-?- load_comp('coin.pl.P').
-\end{verbatim}
-that loads directly the compiled file.
+that loads directly the compiled file \verb|coin.P|.
 
 Next, the probability of query atom \texttt{heads(coin)} can be
 computed by

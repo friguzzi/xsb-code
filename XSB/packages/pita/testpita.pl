@@ -112,9 +112,9 @@ run_tests([H|T]):-
 
 run_test(E):-
   concat_atom(['examples/',E,'.pl'],FilePl),
-  concat_atom(['examples/',E,'.P'],FileP),
-  pita:parse(E:FilePl,FileP),
-	[FileP],
+%  concat_atom(['examples/',E,'.P'],FileP),
+  pita:load(FilePl),
+%	[FileP],
   findall(usermod:test(E,T),test_couple(E,T),L),
   maplist(call,L).
 

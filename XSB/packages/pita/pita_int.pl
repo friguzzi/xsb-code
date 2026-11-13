@@ -54,9 +54,9 @@ details.
 
 
 :- import append/3, member/2, length/2, ith/3, delete_ith/4, reverse/2,
-  between/3 from basics.
+  between/3, list_last/2 from basics.
 :- import format/3 from format.
-:- import concat_atom/2 from string.
+:- import concat_atom/2, split_atom/3 from string.
 :- import
 	assoc_to_list/2,		% Assoc -> List
 	assoc_vals_to_list/2,		% Assoc -> List
@@ -1189,22 +1189,25 @@ tab_dir(M,[H:P|T],[(:- table HT)|TD],[H1:P|HL]):-
   tab_dir(M,T,TD,HL).
 
 load_cpl(File):-
-	atom_concat(File,'.cpl',FileCpl),
-  	prolog_load_context(module, M),
-	pita_input_mod(M),
-	assert(M:pita_on),
-  load(FileCpl),
-	retract(M:pita_on).
+	concat_atom([File,'.cpl'],FileCpl),
+  load(FileCpl).
 
 load_pl(File):-
-	atom_concat(File,'.pl',Filepl),
-  load(File:Filepl).
+	concat_atom([File,'.pl'],Filepl),
+  load(Filepl).
 
-load(M:File):-
-	atom_concat(File,'.P',FileP),
-	parse(M:File,FileP),
-  load_comp(M:FileP).
- 
+load(File):-
+  extract_file_name(File,FileName),
+  concat_atom([FileNoExt,'.',_], File),
+	concat_atom([FileNoExt,'.P'],FileP),
+	parse(FileName:File,FileP),
+  consult(FileP).
+
+extract_file_name(File,FileName):-
+  split_atom(File,'/',L),
+  list_last(L,File1),
+  concat_atom([FileName,'.',_Ext],File1).
+
 initialize_pita:-
   prolog_load_context(module, M),
   retractall(M:local_pita_setting(_,_)),
