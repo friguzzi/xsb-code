@@ -179,14 +179,14 @@ be loaded via the normal command to compile and load a Prolog file
 ({\tt ?- [coin]}).
 
 This commands reads  {\tt coin.cpl}, translates it into  {\tt coin.P}
-and loads   {\tt coin.P}.
+and loads   {\tt coin.P} in a module named \verb|coin|.
 
 For files in the  \texttt{.pl} format, the command is
 \begin{verbatim}
 ?- load_pl(coin).
 \end{verbatim}
 that  reads  {\tt coin.pl}, translates it into  {\tt coin.P}
-and loads   {\tt coin.P}.
+and loads   {\tt coin.P} in a module named \verb|coin|.
 
 You can also use command
 \begin{verbatim}
@@ -195,12 +195,17 @@ You can also use command
 that requires the full file name, including the extension, compiles it into a file with the same name with the added extension
 \texttt{.P} and loads it.
 
-You can also load directly the translated (compiled) version of a file with a regular
-Prolog command, for example, you can use
+With
+\begin{verbatim}
+?- parse('coin.pl','coin.P').
+\end{verbatim}
+the file \texttt{coin.pl} is parsed and the output is written to \texttt{coin.P} but it is not loaded.
+
+You can then load directly the translated file as a regular
+Prolog program, for example, you can use
 \begin{verbatim}
 ?- [coin].
 \end{verbatim}
-that loads directly the compiled file \verb|coin.P|.
 
 Next, the probability of query atom \texttt{heads(coin)} can be
 computed by

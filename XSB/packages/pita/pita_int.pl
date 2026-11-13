@@ -1200,7 +1200,7 @@ load(File):-
   extract_file_name(File,FileName),
   concat_atom([FileNoExt,'.',_], File),
 	concat_atom([FileNoExt,'.P'],FileP),
-	parse(FileName:File,FileP),
+	parse(FileName,File,FileP),
   consult(FileP).
 
 extract_file_name(File,FileName):-
@@ -1226,8 +1226,11 @@ load_comp(M:File):-
   initialize_pita,
   consult(File).
 
+parse(FileIn,FileOut):-
+  extract_file_name(FileIn,M),
+  parse(M,FileIn,FileOut).
   
-parse(M:FileIn,FileOut):-
+parse(M,FileIn,FileOut):-
   assert(pita_input_mod(M)),
   assert(prolog_load_context(module,M)),
   initialize_pita,
