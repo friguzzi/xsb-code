@@ -210,9 +210,12 @@ Prolog program, for example, you can use
 Next, the probability of query atom \texttt{heads(coin)} can be
 computed by
 \begin{verbatim}
-?- prob(heads(coin),P).
+?- prob(coin:heads(coin),P).
 \end{verbatim} 
-%
+where \texttt{coin} before the colon is the name of the module in which the program was loaded.  
+The answer will be returned in variable \texttt{P}.
+
+
 PITA, which is based on the distribution semantics
 (cf. \cite{Sato95astatistical}) will give the answer {\tt P = 0.51} to
 this query.  
