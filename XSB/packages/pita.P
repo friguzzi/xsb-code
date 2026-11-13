@@ -6,6 +6,51 @@
 
 
 :- import bootstrap_package/2 from packaging.
+:- export
+prob/2, 
+prob/3,
+prob_meta/2, 
+prob_meta/3,
+abd_prob/3,
+vit_prob/3,
+bdd_dot_file/3,
+bdd_dot_string/3,
+abd_bdd_dot_string/4,
+abd_bdd_dot_string/6,
+map_bdd_dot_string/6,
+vit_bdd_dot_string/5,
+set_pita/2,setting_pita/2,
+get_var_n/6,get_abd_var_n/6,
+load/1,load_file/1,
+parse/2,
+msw/4,
+msw/5,
+nonvar_list/1,
+set_sw/2,
+/*
+init_em/1,init_ex/2,init/1,end_em/1,end_ex/1,end/1,
+  one/2,zero/2,and/4,or/4,bdd_not/3,
+  ret_prob/3,equality/4,add_var/4,
+  add_abd_var/4,ret_abd_prob/4,
+  add_query_var/4,ret_map_prob/4,*/
+  onec/2,zeroc/2,andc/4,andcnf/4,bdd_notc/3,
+  orc/3,
+  ret_probc/3,equalityc/4,
+  or_list/3,
+  or_listc/3
+  /*
+  make_query_var/3,create_dot/3,create_dot_string/3,
+  em/9,rand_seed/1,
+  gamma_sample/3,
+  gauss_sample/3,
+  uniform_sample/1,
+  dirichlet_sample/2,
+  symmetric_dirichlet_sample/3,
+  discrete_sample/2,
+  initial_values/2*/
+  .
 
 
 :- bootstrap_package('pita', pita), [pita_int].
+
+

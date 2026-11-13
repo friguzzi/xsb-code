@@ -23,6 +23,21 @@
 **
 */
 
+:- export
+  init_em/1,init_ex/2,init/1,end_em/1,end_ex/1,end/1,
+  one/2,zero/2,and/4,or/4,bdd_not/3,
+  ret_prob/3,equality/4,add_var/4,
+  add_abd_var/4,ret_abd_prob/4,
+  add_query_var/4,ret_map_prob/4,
+  make_query_var/3,create_dot/3,create_dot_string/3,
+  em/9,rand_seed/1,
+  gamma_sample/3,
+  gauss_sample/3,
+  uniform_sample/1,
+  dirichlet_sample/2,
+  symmetric_dirichlet_sample/3,
+  discrete_sample/2.
+
 :- foreign_pred init_em(-retval) from 
 	init_em_pl:int.
 
