@@ -59,12 +59,12 @@ letter(q2,a,S):0.25;letter(q2,c,S):0.25;letter(q2,g,S):0.25;letter(q2,t,S):0.25.
 :- end_lpad.
 
 
-state_diagram(digraph(G)):-
-    findall(edge(A -> B,[label=P]),
-      (clause('next_state tabled'(A,B,_,_,_),
-        (get_var_n(_,_,_,_,Probs,_),equalityc(_,_,N,_))),
-        nth0(N,Probs,P)),
-      G).
+% state_diagram(digraph(G)):-
+%     findall(edge(A -> B,[label=P]),
+%       (clause('next_state tabled'(A,B,_,_,_),
+%         (get_var_n(_,_,_,_,Probs,_),equalityc(_,_,N,_))),
+%         nth0(N,Probs,P)),
+%       G).
 /** <examples>
 
 ?- prob(hmm([a,c]),Prob). % what is the probability that the model emits the sequence [a,c])
